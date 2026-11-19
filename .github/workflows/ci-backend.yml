@@ -3,13 +3,6 @@ name: CI Backend
 on:
   pull_request:
     branches: [main, develop]
-    paths:
-      - '.github/workflows/**'
-      - 'backend/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'README.md'
-      - 'docs/**'
 
 jobs:
   lint-typecheck-build-test:
