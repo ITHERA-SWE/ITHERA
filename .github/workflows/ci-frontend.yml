@@ -3,17 +3,11 @@ name: CI Frontend
 on:
   pull_request:
     branches: [main, develop]
-    paths:
-      - '.github/workflows/**'
-      - 'frontend/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'README.md'
-      - 'docs/**'
 
 jobs:
   lint-typecheck-build:
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: frontend
@@ -39,4 +33,3 @@ jobs:
 
       - name: Build (Vite)
         run: npm run build
-
