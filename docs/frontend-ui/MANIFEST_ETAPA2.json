@@ -1,0 +1,61 @@
+{
+  "base_commit": "7abfe0156cd947b4a940b82b764afbca2ae21f72",
+  "deleted_files": [],
+  "files": [
+    {
+      "path": "docs/frontend-ui/ETAPA2_EDITORIAL_DASHBOARD.md",
+      "base_sha256": null,
+      "result_sha256": "ec31fcde3fd383a99cf87aa32111c86c3ae225b6c7a00e89e474ede9745e85c5"
+    },
+    {
+      "path": "docs/frontend-ui/VALIDACION_DOM_ETAPA2.json",
+      "base_sha256": null,
+      "result_sha256": "5f969eefdec0a5ffb9ab183719d011a6d7935e3b1c6d2b797c3dec9399ce7459"
+    },
+    {
+      "path": "docs/frontend-ui/aplicar_etapa2.py",
+      "base_sha256": null,
+      "result_sha256": "d84b39e0cc350a75ca177def2043e55bbfff17cf399396577eb0b20520bb2a3a"
+    },
+    {
+      "path": "frontend/src/components/layout/AppLayout/AppLayout.tsx",
+      "base_sha256": "cf0496af3ac2bf494101248d6b0bdd85ca2312f55abcfd05cce478a0d9f3fa33",
+      "result_sha256": "318309b98aa43cb7bb4da8580fbfe85767283577ad08566009ed49947bb2033a"
+    },
+    {
+      "path": "frontend/src/components/layout/Navbar/Navbar.tsx",
+      "base_sha256": "767cb92c1f4e42ecccec53a9a8aca8291bc03e7c7027b33b1f2a41e07a8cbc23",
+      "result_sha256": "692ef0952e578bdd11bc426dfe45cf42cfe89b6e86bed2cb2ff84f6370f120af"
+    },
+    {
+      "path": "frontend/src/components/trip/TripNavigation.tsx",
+      "base_sha256": null,
+      "result_sha256": "f56b3827186d69ce8214f946e89076e207e54fd32c569d07a586a27ebbf16a07"
+    },
+    {
+      "path": "frontend/src/components/trip/TripOverview.tsx",
+      "base_sha256": null,
+      "result_sha256": "4c92d57ddff8eea75855dfea08719c3c5841c95f6603a4e1c9da48c26e1dc0fa"
+    },
+    {
+      "path": "frontend/src/components/trip/editorial-data.ts",
+      "base_sha256": null,
+      "result_sha256": "ba320bb56964029f21ab7e15e2a5f36dbb871054052f008acc025add9c0a0812"
+    },
+    {
+      "path": "frontend/src/components/trip/editorial.css",
+      "base_sha256": null,
+      "result_sha256": "f58dd7237fa98544a7136d5952dc4bae091cd281011e0e27f60e34b82ded174b"
+    },
+    {
+      "path": "frontend/src/pages/Itinerary/DashboardPage.tsx",
+      "base_sha256": "921e454265342d80e9ac54393accd5639518fe2450c83132066fc9d91911dabe",
+      "result_sha256": "677e420bef4005e57bbec4ab2d02012d61cbf224c48c3167f3af34ca4185a561"
+    },
+    {
+      "path": "frontend/tests/editorial-dashboard.test.mjs",
+      "base_sha256": null,
+      "result_sha256": "cd8600089c0f1b4f74b8501909355d205ceaedacc47ba549dff4c14c7cda50e0"
+    }
+  ]
+}
