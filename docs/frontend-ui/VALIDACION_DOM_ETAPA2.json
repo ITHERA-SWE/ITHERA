@@ -1,0 +1,85 @@
+{
+  "environment": "jsdom, APIs y Socket.IO locales con fixtures; sin layout/renderizado de navegador",
+  "results": [
+    {
+      "case": "Resumen usa datos del grupo, tres actividades y tres decisiones reales",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Navegación, filtro de decisiones, Atrás y groupId",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Comentarios y propuesta utilizan los modales existentes",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Cambio de viaje actualiza URL y grupo activo",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Menú Más y notificaciones cierran con Escape y devuelven foco",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Viaje finalizado mantiene lectura y oculta proponer/explorar",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Bloqueo del módulo impide proponer",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Días pasados no ofrecen nuevas propuestas",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Viajero no obtiene configuración de organizador",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Estados vacíos de agenda y decisiones diferenciados",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Sin fotografía usa fallback; URL rota cambia a fallback",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Error de carga permite reintentar",
+      "result": "PASS",
+      "consoleErrors": 1
+    },
+    {
+      "case": "Votos no disponibles no se convierten en cero; reintento recupera",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "La conexión limita las acciones de edición",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Skeleton real durante la espera de datos",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Presupuesto obligatorio sigue bloqueando el Resumen",
+      "result": "PASS",
+      "consoleErrors": 0
+    }
+  ]
+}

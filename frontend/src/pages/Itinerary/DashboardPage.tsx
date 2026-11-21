@@ -1,3 +1,5 @@
+import { EditorialError, EditorialLoading, TripDecisions, TripOverview } from "../../components/trip/TripOverview";
+import { TripNavigation } from "../../components/trip/TripNavigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -946,225 +948,6 @@ function InfoBanner({ memberCount }: { memberCount: number }) {
   );
 }
 
-function BottomNavbar({
-  activeTab,
-  onTabChange,
-  isReadOnly = false,
-}: {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-  isReadOnly?: boolean;
-}) {
-  const tabs = [
-    {
-      id: "inicio",
-      label: "Inicio",
-      color: "#1E6FD9",
-      bg: "#EEF4FF",
-      icon: (
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <polyline
-            points="9 22 9 12 15 12 15 22"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ),
-    },
-    {
-      id: "buscar",
-      label: "Vuelos y Hoteles",
-      color: "#7A4FD6",
-      bg: "#F3EEFF",
-      icon: (
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5L21 16z"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ),
-    },
-    {
-      id: "comparar",
-      label: "Comparar y Reservar",
-      color: "#F59E0B",
-      bg: "#FFF7E6",
-      icon: (
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M18 20V10M12 20V4M6 20v-6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </svg>
-      ),
-    },
-    {
-      id: "mapas",
-      label: "Mapas",
-      color: "#35C56A",
-      bg: "#EAFBF1",
-      icon: (
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <polygon
-            points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <line
-            x1="8"
-            y1="2"
-            x2="8"
-            y2="18"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <line
-            x1="16"
-            y1="6"
-            x2="16"
-            y2="22"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </svg>
-      ),
-    },
-    {
-      id: "pagar",
-      label: "Finanzas",
-      color: "#0F766E",
-      bg: "#E6FFFA",
-      icon: (
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <line
-            x1="12"
-            y1="1"
-            x2="12"
-            y2="23"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <path
-            d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </svg>
-      ),
-    },
-    {
-      id: "boveda",
-      label: "Archivos",
-      color: "#DB2777",
-      bg: "#FCE7F3",
-      icon: (
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M21 8a2 2 0 00-2-2h-3l-2-2H10L8 6H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V8z"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ),
-    },
-  ];
-
-  const visibleTabs = isReadOnly
-    ? tabs.filter((tab) => ["inicio", "pagar", "boveda"].includes(tab.id))
-    : tabs;
-
-  return (
-    <div className="flex h-16 shrink-0 items-center justify-around border-t border-[#E2E8F0] bg-white px-4 shadow-[0_-10px_24px_rgba(15,23,42,0.04)]">
-      {visibleTabs.map((tab) => {
-        const isActive = tab.id === activeTab;
-        return (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            aria-current={isActive ? "page" : undefined}
-            className={[
-              "rounded-xl px-3 py-1 font-body text-xs font-semibold transition-colors",
-              isActive
-                ? "text-[#1E0A4E]"
-                : "text-gray500 hover:bg-white hover:text-gray700",
-            ].join(" ")}
-          >
-            <span className="flex flex-col items-center gap-0.5">
-              <span
-                className="flex h-7 w-7 items-center justify-center rounded-xl transition-transform duration-200"
-                style={{
-                  color: tab.color,
-                  backgroundColor: isActive ? tab.bg : "transparent",
-                }}
-              >
-                {tab.icon}
-              </span>
-              <span>{tab.label}</span>
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 function parseCoordinate(value: unknown, axis: "lat" | "lng"): number | null {
   if (value == null) return null;
   if (typeof value === "string" && value.trim() === "") return null;
@@ -1771,20 +1554,28 @@ export function DashboardPage() {
 
   const [activeDay, setActiveDay] = useState<number | null>(null);
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
-  // El tab inicial puede venir del state del router o de un query param `tab`
-  // (usado por los enlaces de notificaciones para llevar al módulo relacionado).
-  const tabFromQuery = searchParams.get("tab");
-  const VALID_DASHBOARD_TABS = ["inicio", "pagar", "boveda"];
-  const [activeTab, setActiveTab] = useState(
-    routeState?.activeTab ??
-      (tabFromQuery && VALID_DASHBOARD_TABS.includes(tabFromQuery)
-        ? tabFromQuery
-        : "inicio"),
-  );
+  // La URL conserva la sección al recargar, usar Atrás o abrir una notificación.
+  const validTabs = ["resumen", "inicio", "buscar", "comparar", "mapas", "pagar", "boveda", "decisiones"];
+  const requestedTab = searchParams.get("tab") ?? routeState?.activeTab ?? "resumen";
+  const activeTab = validTabs.includes(requestedTab) ? requestedTab : "resumen";
+  const setActiveTab = useCallback((tab: string) => {
+    const params = new URLSearchParams(location.search);
+    const id = groupIdFromState || groupId || currentGroup?.id;
+    if (id) params.set("groupId", String(id));
+    params.set("tab", tab);
+    navigate({ pathname: "/dashboard", search: params.toString() }, {
+      state: { ...location.state, activeTab: tab },
+    });
+  }, [location.search, location.state, groupIdFromState, groupId, currentGroup?.id, navigate]);
   const [dashboardView, setDashboardView] = useState<"general" | "subgrupos">(
     "general",
   );
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [votesAvailable, setVotesAvailable] = useState(false);
+  const [membersAvailable, setMembersAvailable] = useState(false);
+  const [retryVersion, setRetryVersion] = useState(0);
+  const loadedGroupId = useRef<string | null>(null);
   const [forcedNotice, setForcedNotice] = useState<{
     title: string;
     description: string;
@@ -1955,7 +1746,7 @@ export function DashboardPage() {
     if (dashboardView === "subgrupos") {
       setDashboardView("general");
     }
-  }, [activeTab, dashboardView, isReadOnly]);
+  }, [activeTab, dashboardView, isReadOnly, setActiveTab]);
   const budgetFromSummary = Number(budgetSummary?.totalBudget ?? NaN);
   const hasSummaryBudget = Number.isFinite(budgetFromSummary);
   const groupBudgetRaw =
@@ -2051,8 +1842,19 @@ export function DashboardPage() {
     const loadDashboard = async () => {
       try {
         setIsLoading(true);
+        setLoadError(null);
+        setVotesAvailable(false);
+        setMembersAvailable(false);
+        setMembers([]);
+        setBudgetSummary(null);
+        if (loadedGroupId.current !== resolvedGroupId) {
+          loadedGroupId.current = resolvedGroupId;
+          setActiveDay(null);
+          setExpandedDay(null);
+          setDashboardView("general");
+        }
 
-        await withTimeout(
+        const verifiedGroup = await withTimeout(
           groupsService.getGroupDetails(resolvedGroupId, accessToken),
           DASHBOARD_AUX_REQUEST_TIMEOUT_MS,
         );
@@ -2110,7 +1912,7 @@ export function DashboardPage() {
         ]);
 
         const groupData =
-          groupResult.status === "fulfilled" ? groupResult.value.group : null;
+          groupResult.status === "fulfilled" ? groupResult.value.group : verifiedGroup.group;
 
         const startLocation =
           travelContextResult.status === "fulfilled"
@@ -2130,10 +1932,10 @@ export function DashboardPage() {
         }, {});
 
         if (isMounted) {
-          if (groupResult.status === "fulfilled") {
-            setGroup(groupResult.value.group);
-            saveCurrentGroup(groupResult.value.group);
-          }
+          setVotesAvailable(votesResult.status === "fulfilled");
+          setMembersAvailable(membersResult.status === "fulfilled");
+          setGroup(groupData);
+          saveCurrentGroup(groupData);
           if (membersResult.status === "fulfilled") {
             setMembers(membersResult.value.members ?? []);
           }
@@ -2160,6 +1962,7 @@ export function DashboardPage() {
         }
       } catch (error) {
         console.error("Error cargando dashboard:", error);
+        if (isMounted) setLoadError("No se pudo cargar la información del viaje. Comprueba tu conexión y vuelve a intentar.");
         if (isAccessDeniedError(error)) {
           clearCurrentGroup();
           setForcedNotice({
@@ -2189,6 +1992,7 @@ export function DashboardPage() {
     localUser?.id_usuario,
     accessToken,
     navigate,
+    retryVersion,
   ]);
 
   const reloadDashboard = useCallback(async () => {
@@ -2273,6 +2077,8 @@ export function DashboardPage() {
       return acc;
     }, {});
 
+    setVotesAvailable(votesResult.status === "fulfilled");
+    setMembersAvailable(membersResult.status === "fulfilled");
     if (groupResult.status === "fulfilled") {
       setGroup(groupResult.value.group);
       saveCurrentGroup(groupResult.value.group);
@@ -2556,14 +2362,14 @@ export function DashboardPage() {
         nonce: Date.now(),
       });
     },
-    [],
+    [setActiveTab],
   );
 
   const handleEditSubgroupSlot = useCallback((slotId: number) => {
     setActiveTab("inicio");
     setDashboardView("subgrupos");
     setEditSubgroupSlotRequest({ slotId, nonce: Date.now() });
-  }, []);
+  }, [setActiveTab]);
 
   const handleDeleteSubgroupSlot = useCallback(
     async (slotId: number) => {
@@ -3342,6 +3148,14 @@ export function DashboardPage() {
 
   return (
     <AppLayout
+      editorial
+      contextualNavigation={
+        <TripNavigation activeTab={activeTab} tripName={group?.nombre || "Tu viaje"}
+          isReadOnly={isReadOnly} isAdmin={!isLoading && !loadError && isCurrentUserAdmin} onTabChange={setActiveTab}
+          onPeople={() => navigate(`/grouppanel?groupId=${encodeURIComponent(resolvedGroupId || "")}`)}
+          onSettings={() => navigate(`/group-settings?groupId=${encodeURIComponent(resolvedGroupId || "")}`)}
+          onSubgroups={() => { setDashboardView("subgrupos"); setActiveTab("inicio"); }} />
+      }
       trip={{
         name: group?.nombre || "Itinerario",
         subtitle: group?.destino || "Destino pendiente",
@@ -3405,7 +3219,9 @@ export function DashboardPage() {
       }
     >
       {isLoading ? (
-        <DashboardSwitchLoading group={loadingGroupSnapshot} />
+        activeTab === "resumen" ? <EditorialLoading /> : <DashboardSwitchLoading group={loadingGroupSnapshot} />
+      ) : loadError ? (
+        <EditorialError message={loadError} onRetry={() => setRetryVersion(version => version + 1)} />
       ) : requiresInitialBudget && activeTab !== "pagar" ? (
         <div className="flex flex-1 items-center justify-center bg-surface px-6 py-8">
           <div className="w-full max-w-2xl rounded-2xl border border-[#E2E8F0] bg-white p-6 text-center">
@@ -3430,6 +3246,27 @@ export function DashboardPage() {
             )}
           </div>
         </div>
+      ) : activeTab === "resumen" ? (
+        <TripOverview key={group?.id} group={group} days={daysWithContext} selectedDay={activeDay}
+          memberCount={membersAvailable ? uniqueMemberCount : group?.memberCount}
+          votes={voteResultByProposal} votesAvailable={votesAvailable} membersAvailable={membersAvailable}
+          isReadOnly={isReadOnly} isOnline={areRealtimeActionsEnabled}
+          onSelectDay={setActiveDay} onPropose={openActivityModalForDay}
+          onItinerary={(day) => { if (day != null) { setActiveDay(day); setExpandedDay(day); } setDashboardView("general"); setActiveTab("inicio"); }}
+          onDecisions={() => setActiveTab("decisiones")} onExplore={() => setActiveTab("buscar")}
+          onPeople={() => navigate(`/grouppanel?groupId=${encodeURIComponent(resolvedGroupId || "")}`)}
+          onExport={handleExportConfirmedItineraryPdf}
+          onComments={(activity) => { void openChatModal(activity); }} onVoteHistory={setVoteHistoryActivity}
+          onRetry={() => setRetryVersion(version => version + 1)} />
+      ) : activeTab === "decisiones" ? (
+        <TripDecisions key={group?.id} days={daysWithContext} votes={voteResultByProposal} votesAvailable={votesAvailable} membersAvailable={membersAvailable}
+          isReadOnly={isReadOnly} onComments={(activity) => { void openChatModal(activity); }}
+          onVoteHistory={setVoteHistoryActivity}
+          onReview={(activity) => {
+            const day = days.find(item => item.activities.some(entry => entry.id === activity.id));
+            if (day) { setActiveDay(day.dayNumber); setExpandedDay(day.dayNumber); }
+            setDashboardView("general"); setActiveTab("inicio");
+          }} />
       ) : isEmpty &&
         !(activeTab === "inicio" && dashboardView === "subgrupos") ? (
         <EmptyState
@@ -4570,11 +4407,7 @@ export function DashboardPage() {
         </>
       )}
 
-      <BottomNavbar
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        isReadOnly={isReadOnly}
-      />
+
       {selectedProposal && (
         <ProposalDetailModal
           proposal={selectedProposal}

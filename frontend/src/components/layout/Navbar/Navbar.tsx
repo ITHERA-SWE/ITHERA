@@ -33,6 +33,7 @@ interface LandingNavbarProps {
 
 interface DashboardNavbarProps {
   variant: 'dashboard'
+  editorial?: boolean
   trip?: TripInfo
   user?: NavUserInfo
   isOnline?: boolean
@@ -561,6 +562,7 @@ function DashboardMobileMenu({ trip, user }: { trip: TripInfo; user: NavUserInfo
 }
 
 interface DashboardContentProps {
+  editorial?: boolean
   trip: TripInfo
   user: NavUserInfo
   isOnline: boolean
@@ -574,6 +576,7 @@ interface DashboardContentProps {
 }
 
 function DashboardNavContent({
+  editorial = false,
   trip,
   user,
   isOnline,
@@ -600,6 +603,21 @@ function DashboardNavContent({
   const [tripMenuError, setTripMenuError] = useState<string | null>(null)
   const [tripSwitchingId, setTripSwitchingId] = useState<string | null>(null)
   const tripMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const dismiss = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      if (menuOpen) menuRef.current?.querySelector('button')?.focus()
+      else if (notifOpen) notifRef.current?.querySelector('button')?.focus()
+      else if (tripMenuOpen) tripMenuRef.current?.querySelector('button')?.focus()
+      setMenuOpen(false)
+      setNotifOpen(false)
+      setTripMenuOpen(false)
+    }
+    document.addEventListener('keydown', dismiss)
+    return () => document.removeEventListener('keydown', dismiss)
+  }, [menuOpen, notifOpen, tripMenuOpen])
+
 
   useEffect(() => {
     setTripSwitchingId(null)
@@ -710,30 +728,30 @@ function DashboardNavContent({
     <>
       {/* Center — trip selector or plain title */}
       {showTripSelector ? (
-        <div ref={tripMenuRef} className="hidden md:block absolute left-1/2 -translate-x-1/2">
+        <div ref={tripMenuRef} className={editorial ? "atlas-trip-switcher" : "hidden md:block absolute left-1/2 -translate-x-1/2"}>
           <button
             onClick={() => {
               onTripSelect?.()
               setTripMenuOpen((open) => !open)
             }}
-            className="flex min-w-[250px] items-center gap-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2 hover:bg-white/20 transition-colors"
+            className={editorial ? "atlas-trip-button" : "flex min-w-[250px] items-center gap-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2 hover:bg-white/20 transition-colors"}
             aria-label="Seleccionar viaje"
             aria-expanded={tripMenuOpen}
           >
-            <span className="text-white/60 shrink-0">
+            <span className={editorial ? "atlas-muted shrink-0" : "text-white/60 shrink-0"}>
               <IconGlobe />
             </span>
             <div className="flex min-w-0 flex-1 flex-col items-start">
-              <span className="max-w-[170px] truncate font-body text-sm font-bold text-white leading-tight">{trip.name}</span>
-              <span className="max-w-[170px] truncate font-body text-[11px] text-white/60 leading-tight">{trip.subtitle}</span>
+              <span className={`max-w-[170px] truncate font-body text-sm font-bold leading-tight ${editorial ? "text-[#1E0A4E]" : "text-white"}`}>{trip.name}</span>
+              <span className={`max-w-[170px] truncate font-body text-[11px] leading-tight ${editorial ? "atlas-muted" : "text-white/60"}`}>{trip.subtitle}</span>
             </div>
-            <span className={`text-white/60 ml-0.5 shrink-0 transition-transform duration-200 ${tripMenuOpen ? 'rotate-180' : ''}`}>
+            <span className={`${editorial ? "atlas-muted" : "text-white/60"} ml-0.5 shrink-0 transition-transform duration-200 ${tripMenuOpen ? 'rotate-180' : ''}`}>
               <IconChevronDown />
             </span>
           </button>
 
           {tripMenuOpen && (
-            <div className="absolute left-1/2 top-full z-50 mt-2 w-[360px] -translate-x-1/2 overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-xl">
+            <div className={`absolute left-1/2 top-full z-50 mt-2 w-[360px] -translate-x-1/2 overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-xl ${editorial ? "atlas-trip-popover" : ""}`}>
               <div className="border-b border-[#E2E8F0] px-4 py-3">
                 <p className="font-heading text-sm font-bold text-[#1E0A4E]">Cambiar de grupo</p>
                 <p className="mt-0.5 font-body text-[11px] text-gray500">Selecciona otro viaje sin volver a Mis viajes.</p>
@@ -809,7 +827,7 @@ function DashboardNavContent({
         {onOpenChat && (
           <button
             onClick={onOpenChat}
-            className="relative hidden md:flex items-center justify-center w-9 h-9 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            className={editorial ? "atlas-nav-control" : "relative hidden md:flex items-center justify-center w-9 h-9 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"}
             aria-label={`Chat del grupo${chatUnreadCount > 0 ? ` — ${chatUnreadCount} sin leer` : ''}`}
           >
             <IconChat />
@@ -822,10 +840,10 @@ function DashboardNavContent({
         )}
 
         {/* Notifications bell */}
-        <div ref={notifRef} className="relative hidden md:flex">
+        <div ref={notifRef} className={editorial ? "relative flex" : "relative hidden md:flex"}>
           <button
             onClick={handleToggleNotif}
-            className="relative flex items-center justify-center w-9 h-9 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            className={editorial ? "atlas-nav-control" : "relative flex items-center justify-center w-9 h-9 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"}
             aria-label={`Notificaciones${unreadCount > 0 ? ` — ${unreadCount} sin leer` : ''}`}
             aria-expanded={notifOpen}
           >
@@ -838,7 +856,7 @@ function DashboardNavContent({
           </button>
 
           {notifOpen && (
-            <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-[#E2E8F0] rounded-xl shadow-lg overflow-hidden z-50 max-h-96 overflow-y-auto">
+            <div className={`absolute right-0 top-full mt-2 w-80 bg-white border border-[#E2E8F0] rounded-xl shadow-lg overflow-hidden z-50 max-h-96 overflow-y-auto ${editorial ? "atlas-notification-panel" : ""}`}>
               <div className="px-4 py-3 border-b border-[#E2E8F0] flex items-center justify-between sticky top-0 bg-white">
                 <span className="font-heading font-bold text-[#1E0A4E] text-sm">Notificaciones</span>
                 <div className="flex items-center gap-2">
@@ -911,7 +929,7 @@ function DashboardNavContent({
 
         {/* Online chip */}
         <div
-          className={`hidden md:flex items-center gap-1.5 rounded-full border px-3 py-1 ${
+          className={`${editorial ? "atlas-online-chip" : ""} hidden md:flex items-center gap-1.5 rounded-full border px-3 py-1 ${
             isOnline
               ? 'border-greenAccent/30 bg-greenAccent/20'
               : 'border-red-300/40 bg-red-500/15'
@@ -922,7 +940,7 @@ function DashboardNavContent({
             {isOnline && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-greenAccent opacity-75" />}
             <span className={`relative inline-flex h-2 w-2 rounded-full ${isOnline ? 'bg-greenAccent' : 'bg-red-400'}`} />
           </span>
-          <span className={`font-body text-xs font-medium ${isOnline ? 'text-greenAccent' : 'text-red-100'}`}>
+          <span className={`font-body text-xs font-medium ${editorial ? (isOnline ? 'atlas-online' : 'atlas-offline') : (isOnline ? 'text-greenAccent' : 'text-red-100')}`}>
             {isOnline ? 'En línea' : 'Sin conexión'}
           </span>
         </div>
@@ -953,11 +971,11 @@ function DashboardNavContent({
               )}
             </div>
             
-            <div className="hidden md:flex flex-col items-start">
-              <span className="font-body text-[13px] font-bold text-white leading-tight">{user.name}</span>
-              <span className="font-body text-[11px] text-white/50 leading-tight">{user.role}</span>
+            <div className={editorial ? "atlas-user-info" : "hidden md:flex flex-col items-start"}>
+              <span className={`font-body text-[13px] font-bold leading-tight ${editorial ? "atlas-user-name" : "text-white"}`}>{user.name}</span>
+              <span className={`font-body text-[11px] leading-tight ${editorial ? "atlas-user-role" : "text-white/50"}`}>{user.role}</span>
             </div>
-            <span className={`hidden md:block text-white/50 transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`}>
+            <span className={`hidden md:block ${editorial ? 'atlas-muted' : 'text-white/50'} transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`}>
               <IconChevronDown />
             </span>
           </button>
@@ -994,6 +1012,8 @@ function DashboardNavContent({
 // ── Navbar ────────────────────────────────────────────────────────────────────
 
 export function Navbar(props: NavbarProps) {
+  const navigate = useNavigate()
+  const isEditorial = props.variant === 'dashboard' && Boolean(props.editorial)
   const [scrolled,   setScrolled]   = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -1012,7 +1032,7 @@ export function Navbar(props: NavbarProps) {
   const isDashboard = props.variant === 'dashboard'
 
   const navBase = 'fixed top-0 left-0 right-0 z-50 h-20 px-6 flex items-center transition-all duration-300'
-  const navTheme = isDashboard
+  const navTheme = isEditorial ? 'bg-white border-b border-[#E8E5EE]' : isDashboard
     ? 'border-b border-white/10 bg-[linear-gradient(90deg,#24105E_0%,#2B1163_44%,#5B2BC0_100%)]'
     : scrolled
       ? 'bg-white/90 border-b border-[#E2E8F0] shadow-sm backdrop-blur-xl'
@@ -1028,17 +1048,17 @@ export function Navbar(props: NavbarProps) {
       : 'text-white/75 hover:bg-white/10 hover:text-white'
 
   return (
-    <nav className={[navBase, navTheme, navShadow].join(' ')}>
+    <nav aria-label={isEditorial ? "Navegación general" : undefined} className={[navBase, navTheme, navShadow, isEditorial ? "atlas-navbar" : ""].join(' ')}>
       {/* Logo */}
       <a href="/" className="shrink-0" aria-label="Ithera">
         <Logo
-          variant={isDashboard || !scrolled ? 'white' : 'color'}
-          height={isDashboard ? 64 : scrolled ? 54 : 58}
+          variant={isEditorial ? 'color' : isDashboard || !scrolled ? 'white' : 'color'}
+          height={isEditorial ? 40 : isDashboard ? 64 : scrolled ? 54 : 58}
         />
       </a>
 
       {/* Sidebar toggle — dashboard only on tablet/desktop; mobile uses its own menu button */}
-      {isDashboard && (
+      {isDashboard && !isEditorial && (
         <button
           onClick={(props as DashboardNavbarProps).onToggleSidebar}
           className="ml-2 hidden shrink-0 rounded-lg p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white md:flex"
@@ -1048,9 +1068,12 @@ export function Navbar(props: NavbarProps) {
         </button>
       )}
 
+      {isEditorial && <button type="button" className="atlas-global-link" onClick={() => navigate('/my-trips')}>Mis viajes</button>}
+
       {/* Variant content */}
       {isDashboard ? (
         <DashboardNavContent
+          editorial={props.editorial}
           trip={props.trip ?? DEFAULT_TRIP}
           user={props.user ?? DEFAULT_USER}
           isOnline={props.isOnline ?? true}
@@ -1070,14 +1093,14 @@ export function Navbar(props: NavbarProps) {
       )}
 
       {/* Mobile hamburger */}
-      <button
+      {!isEditorial && <button
         onClick={() => setMobileOpen((o) => !o)}
         className={`md:hidden ml-auto p-2 rounded-lg transition-colors ${hamburgerTheme}`}
         aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
         aria-expanded={mobileOpen}
       >
         {mobileOpen ? <IconClose /> : <IconMenu />}
-      </button>
+      </button>}
     </nav>
   )
 }

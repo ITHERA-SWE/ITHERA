@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import '../../trip/editorial.css'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Navbar } from '../Navbar'
 import type { NavUserInfo, TripInfo } from '../Navbar'
@@ -12,6 +13,8 @@ export interface TripMeta {
 
 export interface AppLayoutProps {
   children: React.ReactNode
+  editorial?: boolean
+  contextualNavigation?: React.ReactNode
   sidebarContent?: React.ReactNode
   rightPanel?: React.ReactNode
   showRightPanel?: boolean
@@ -118,6 +121,8 @@ function GeneralNav({ currentPath, onNavigate }: { currentPath: string; onNaviga
 
 export function AppLayout({
   children,
+  editorial = false,
+  contextualNavigation,
   sidebarContent,
   rightPanel,
   showRightPanel = true,
@@ -146,6 +151,20 @@ export function AppLayout({
   const tripInfo: TripInfo | undefined = trip
     ? { name: trip.name, subtitle: trip.subtitle }
     : undefined
+
+  if (editorial) {
+    return (
+      <div className="atlas-app">
+        <Navbar variant="dashboard" editorial trip={tripInfo} user={user}
+          isOnline={isOnline} showTripSelector={showTripSelector} centerTitle={centerTitle}
+          onOpenChat={onOpenChat} chatUnreadCount={chatUnreadCount} />
+        <main className="atlas-main" id="trip-content">
+          {contextualNavigation}
+          {children}
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-surface font-body">
