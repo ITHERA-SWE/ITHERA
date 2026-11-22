@@ -1,3 +1,4 @@
+import {EditorialDialog} from "../collaboration/EditorialDialog";
 import {
   useCallback,
   useEffect,
@@ -246,47 +247,14 @@ function ActionModal({
   onConfirm: () => void | Promise<void>;
   children: ReactNode;
 }) {
+  const lock = useRef(false);
+  const [localBusy,setLocalBusy] = useState(false);
+  const [localError,setLocalError] = useState("");
   if (!open) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0D0820]/70 px-4"
-      onClick={confirmLoading ? undefined : onClose}
-    >
-      <div
-        className={`max-h-[84vh] w-full overflow-y-auto rounded-2xl bg-white shadow-xl ${panelClassName}`}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="border-b border-[#E2E8F0] px-5 py-4">
-          <h3 className="font-heading text-lg font-bold text-[#1E0A4E]">
-            {title}
-          </h3>
-          <p className="mt-1 text-sm text-[#64748B]">{subtitle}</p>
-        </div>
-        <div className="px-5 py-4">{children}</div>
-        <div className="flex justify-end gap-3 border-t border-[#E2E8F0] px-5 py-4">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={confirmLoading}
-            className="rounded-xl border border-[#D7DEEA] px-4 py-2.5 text-sm font-semibold text-[#3D4A5C] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={confirmDisabled || confirmLoading}
-            aria-busy={confirmLoading}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1E6FD9] px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {confirmLoading && <InlineSpinner size={15} />}
-            {confirmLoading ? "Guardando..." : confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  const busy=confirmLoading||localBusy;
+  return <EditorialDialog title={title} onClose={onClose} busy={busy}>
+    <div className="atlas-activity-action" data-panel-size={panelClassName}><p>{subtitle}</p>{children}{localError&&<p role="alert" className="atlas-collab-error">{localError}</p>}<footer><button className="atlas-button atlas-button-secondary" disabled={busy} onClick={onClose}>Cancelar</button><button className="atlas-button atlas-button-primary" disabled={confirmDisabled||busy} aria-busy={busy} onClick={async()=>{if(lock.current)return;lock.current=true;setLocalBusy(true);setLocalError("");try{await onConfirm()}catch(e){setLocalError(e instanceof Error?e.message:"No se pudo completar la acción.")}finally{lock.current=false;setLocalBusy(false)}}}>{busy?<><InlineSpinner size={15}/> Guardando…</>:confirmLabel}</button></footer></div>
+  </EditorialDialog>;
 }
 
 const entityKey = (entity: ContextEntityRef): string =>
@@ -2348,83 +2316,15 @@ export function SubgroupSchedulePanel({
 
   return (
     <>
-      <div className="space-y-5">
-        <section className="relative mb-4 min-h-[260px] shrink-0 overflow-hidden rounded-2xl">
-          <img
-            src={group?.destino_photo_url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&h=400&fit=crop"}
-            alt={group?.destino || "Destino"}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-          <div className="relative flex min-h-[260px] flex-col justify-between p-5">
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-2 rounded-xl border border-[#BFD7FF]/50 bg-[#1E6FD9]/45 px-3 py-2 font-body text-[13px] font-bold uppercase tracking-wide text-white shadow-sm backdrop-blur-md">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/20">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M12 22s7-5.2 7-12a7 7 0 10-14 0c0 6.8 7 12 7 12z" stroke="white" strokeWidth="2" strokeLinejoin="round" />
-                    <circle cx="12" cy="10" r="2.5" stroke="white" strokeWidth="2" />
-                  </svg>
-                </span>
-                {(group?.destino || "Destino pendiente").toUpperCase()}
-              </span>
-              {(tripStartDate || tripEndDate) && (
-                <span className="inline-flex items-center gap-2 rounded-xl border border-[#FFD166]/60 bg-[#F59E0B]/80 px-3 py-2 font-body text-[13px] font-bold text-white shadow-md backdrop-blur-md">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/20">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <rect x="3" y="4" width="18" height="18" rx="2" stroke="white" strokeWidth="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                      <line x1="8" y1="2" x2="8" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                      <line x1="3" y1="10" x2="21" y2="10" stroke="white" strokeWidth="2" />
-                    </svg>
-                  </span>
-                  {tripStartDate ?? ''}{tripStartDate && tripEndDate ? ' → ' : ''}{tripEndDate ?? ''}
-                </span>
-              )}
-            </div>
-
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-xl border border-[#D8C8FF]/60 bg-[#7A4FD6]/45 px-3 py-1.5 font-body text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#D8C8FF]" />
-                Horario de subgrupos
-                <HelpButton
-                  title="Subgrupos"
-                  description="Crea horarios solo para hoy o fechas futuras del viaje. Los horarios de días pasados quedan como historial y ya no cuentan como activos."
-                  placement="right"
-                />
-              </div>
-              <h2
-                className="mb-3 font-heading text-3xl font-bold leading-tight text-white md:text-[36px]"
-                style={{ textShadow: "0 2px 16px rgba(0,0,0,0.85), 0 1px 4px rgba(0,0,0,0.6)" }}
-              >
-                {group?.nombre || "Vista de subgrupos"}
-              </h2>
-              <div className="mb-4 flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/20 px-3 py-2 font-body text-sm font-bold text-white shadow-sm backdrop-blur-md">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#35C56A]" />
-                  {actionableSlots.length} horario{actionableSlots.length !== 1 ? "s" : ""} activo{actionableSlots.length !== 1 ? "s" : ""}
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-xl border border-[#E9D5FF]/40 bg-[#7A4FD6]/35 px-3 py-2 font-body text-sm font-bold text-white shadow-sm backdrop-blur-md">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#D8C8FF]" />
-                  {actionableOptionCount} opciones disponibles
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {isAdmin && (!tripEndDate || tripEndDate >= todayValue()) && (
-                  <button
-                    type="button"
-                    onClick={openCreateSlotModal}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#35C56A] px-4 py-2.5 font-body text-base font-semibold text-white transition-opacity hover:opacity-90"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-                    </svg>
-                    Crear horario
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
+      <div className="atlas-subgroups space-y-5">
+        <header className="atlas-subgroups-heading">
+          <p className="atlas-eyebrow">PLANES PARALELOS / SUBGRUPOS</p>
+          <h2>Un viaje compartido.<br/><em>Diferentes maneras de vivirlo.</em></h2>
+          <p>{group?.nombre}{group?.destino ? ` · ${group.destino}` : ""}</p>
+          <p>{actionableSlots.length} horario(s) activo(s) · {actionableOptionCount} opciones disponibles</p>
+          <HelpButton title="Subgrupos" description="Los horarios de días pasados quedan como historial. Las validaciones de disponibilidad y participación se mantienen." placement="right" />
+          {isAdmin && (!tripEndDate || tripEndDate >= todayValue()) && <button className="atlas-button atlas-button-primary" type="button" onClick={openCreateSlotModal}>Crear horario</button>}
+        </header>
 
         {error && (
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

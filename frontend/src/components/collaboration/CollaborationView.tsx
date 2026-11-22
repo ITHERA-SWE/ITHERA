@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import type { Proposal } from '../../services/proposals'
 import type { ProposalWorkspace } from './useProposalWorkspace'
 import { EditorialDialog } from './EditorialDialog'
@@ -430,7 +430,10 @@ export function CollaborationView({
   const [category, setCategory] = useState('todas')
   const [state, setState] = useState('todas')
   const [selection, setSelection] = useState<string[] | null>(null)
-  const [selected, setSelected] = useState<string | null>(null)
+  const location = useLocation()
+  const [selected, setSelected] = useState<string | null>(() =>
+    new URLSearchParams(location.search).get('proposalId'),
+  )
   const [detail, setDetail] = useState<string | null>(null)
   const base = d.proposals.filter(
     (p) =>
