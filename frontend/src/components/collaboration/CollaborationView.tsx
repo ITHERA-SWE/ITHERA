@@ -1,52 +1,61 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import type { Proposal } from '../../services/proposals'
-import type { ProposalWorkspace } from './useProposalWorkspace'
-import { EditorialDialog } from './EditorialDialog'
-import { HotelPhoto } from '../../pages/Search/SearchResults'
-import { travelPath } from '../../pages/Search/search-data'
-import * as facts from './proposal-data'
-import './collaboration.css'
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import type { Proposal } from "../../services/proposals";
+import type { ProposalWorkspace } from "./useProposalWorkspace";
+import { EditorialDialog } from "./EditorialDialog";
+import { HotelPhoto } from "../../pages/Search/SearchResults";
+import { travelPath } from "../../pages/Search/search-data";
+import * as facts from "./proposal-data";
+import "./collaboration.css";
 
 export function ProposalFacts({
   proposal,
   compact = false,
 }: {
-  proposal: Proposal
-  compact?: boolean
+  proposal: Proposal;
+  compact?: boolean;
 }) {
-  const flight = proposal.tipo === 'vuelo',
-    hotel = proposal.tipo === 'hospedaje'
+  const flight = proposal.tipo === "vuelo",
+    hotel = proposal.tipo === "hospedaje";
   const rows = flight
     ? [
-        ['Trayecto', facts.getFlightRoute(proposal)],
-        ['Ida', facts.getOutboundText(proposal)],
-        ['Regreso', facts.getReturnText(proposal)],
-        ['Duración', facts.getDurationText(proposal)],
-        ['Escalas', facts.getSubtitle(proposal)],
-        ['Viajeros', facts.getPassengersText(proposal)],
+        ["Trayecto", facts.getFlightRoute(proposal)],
+        ["Ida", facts.getOutboundText(proposal)],
+        ["Regreso", facts.getReturnText(proposal)],
+        ["Duración", facts.getDurationText(proposal)],
+        ["Escalas", facts.getSubtitle(proposal)],
+        ["Viajeros", facts.getPassengersText(proposal)],
       ]
     : hotel
       ? [
-          ['Ubicación', facts.getRouteOrLocation(proposal)],
-          ['Estancia', facts.getOutboundText(proposal)],
-          ['Noches', facts.getDurationText(proposal)],
-          ['Valoración', facts.getHotelRatingText(proposal)],
-          ['Habitación', facts.getHotelRoomText(proposal)],
-          ['Régimen y condiciones', facts.getHotelBoardText(proposal)],
-          ['Huéspedes', facts.getHotelOccupancyText(proposal)],
+          ["Ubicación", facts.getRouteOrLocation(proposal)],
+          ["Estancia", facts.getOutboundText(proposal)],
+          ["Noches", facts.getDurationText(proposal)],
+          ["Valoración", facts.getHotelRatingText(proposal)],
+          ["Habitación", facts.getHotelRoomText(proposal)],
+          ["Régimen y condiciones", facts.getHotelBoardText(proposal)],
+          ["Huéspedes", facts.getHotelOccupancyText(proposal)],
         ]
-      : []
-  const offer = facts.getNormalizedOffer(proposal)
+      : [
+          [
+            "Ubicación",
+            facts.stringValue(
+              facts.asRecord(proposal.payload?.place)?.formattedAddress,
+            ) ||
+              facts.stringValue(proposal.payload?.ubicacion) ||
+              "Ubicación no informada",
+          ],
+        ];
+  const offer = facts.getNormalizedOffer(proposal);
   return (
     <div className="atlas-proposal-facts">
-      {proposal.tipo === 'hospedaje' && !compact && (
+      {proposal.tipo === "hospedaje" && !compact && (
         <HotelPhoto
           src={facts.getImageUrl(proposal)}
           name={facts.getTitle(proposal)}
         />
       )}
-      <p>{proposal.descripcion || 'Sin descripción adicional.'}</p>
+      <p>{proposal.descripcion || "Sin descripción adicional."}</p>
       <dl>
         {rows.map(([label, value]) => (
           <div key={label}>
@@ -61,17 +70,17 @@ export function ProposalFacts({
           <p>
             {facts.stringValue(offer.fareBrand) ||
               facts.stringValue(offer.cabinClass) ||
-              'Tarifa no informada'}
+              "Tarifa no informada"}
           </p>
           {Array.isArray(offer.baggage) ? (
             offer.baggage.map((item, i) => {
-              const baggage = facts.asRecord(item)
+              const baggage = facts.asRecord(item);
               return baggage ? (
                 <p key={i}>
-                  {String(baggage.type ?? 'Equipaje')}:{' '}
-                  {String(baggage.quantity ?? 'No informado')} pieza(s)
+                  {String(baggage.type ?? "Equipaje")}:{" "}
+                  {String(baggage.quantity ?? "No informado")} pieza(s)
                 </p>
-              ) : null
+              ) : null;
             })
           ) : (
             <p>Equipaje no informado.</p>
@@ -84,8 +93,8 @@ export function ProposalFacts({
           {facts.getHotelRooms(proposal).map((room, i) => (
             <div className="atlas-room-line" key={i}>
               <p>
-                {facts.stringValue(room.name) || 'Habitación sin nombre'} ·{' '}
-                {facts.stringValue(room.boardName) || 'Plan no informado'}
+                {facts.stringValue(room.name) || "Habitación sin nombre"} ·{" "}
+                {facts.stringValue(room.boardName) || "Plan no informado"}
               </p>
               <strong>
                 {facts.formatMoney(
@@ -96,14 +105,14 @@ export function ProposalFacts({
               </strong>
               <p>
                 {facts.stringValue(room.refundableTag) ||
-                  'Política no informada'}
+                  "Política no informada"}
               </p>
             </div>
           ))}
         </details>
       )}
     </div>
-  )
+  );
 }
 
 function ProposalPanel({
@@ -111,19 +120,19 @@ function ProposalPanel({
   data: d,
   onCheckout,
 }: {
-  proposal: Proposal
-  data: ProposalWorkspace
-  onCheckout: (p: Proposal) => void
+  proposal: Proposal;
+  data: ProposalWorkspace;
+  onCheckout: (p: Proposal) => void;
 }) {
-  const { loadComments } = d
+  const { loadComments } = d;
   useEffect(() => {
-    void loadComments(p.id)
-  }, [p.id, loadComments])
-  const result = d.results.get(p.id)
-  const commentState = d.commentStates[p.id]
-  const comments = d.comments[p.id]
-  const disabled = Boolean(d.busy) || !d.fresh
-  const finished = facts.simulationComplete(p)
+    void loadComments(p.id);
+  }, [p.id, loadComments]);
+  const result = d.results.get(p.id);
+  const commentState = d.commentStates[p.id];
+  const comments = d.comments[p.id];
+  const disabled = Boolean(d.busy) || !d.fresh;
+  const finished = facts.simulationComplete(p);
   return (
     <div className="atlas-proposal-panel">
       {d.error && (
@@ -136,11 +145,11 @@ function ProposalPanel({
           {facts.statusLabel(p.estado)}
         </span>
         <span>
-          {p.tipo === 'vuelo'
-            ? 'VUELO'
-            : p.tipo === 'hospedaje'
-              ? 'HOSPEDAJE'
-              : 'PROPUESTA'}
+          {p.tipo === "vuelo"
+            ? "VUELO"
+            : p.tipo === "hospedaje"
+              ? "HOSPEDAJE"
+              : "PROPUESTA"}
         </span>
       </div>
       <h2>{facts.getTitle(p)}</h2>
@@ -158,9 +167,9 @@ function ProposalPanel({
             <p>
               {result.votos_a_favor} a favor · {result.votos_en_contra} en
               contra · {result.abstenciones} abstenciones
-              {typeof result.votos_pendientes === 'number'
+              {typeof result.votos_pendientes === "number"
                 ? ` · ${result.votos_pendientes} por participar`
-                : ''}
+                : ""}
             </p>
             <p className="atlas-my-vote">{facts.voteLabel(result)}</p>
             {result.requiere_desempate_admin && (
@@ -171,7 +180,7 @@ function ProposalPanel({
           </>
         ) : (
           <p>
-            Participación no disponible.{' '}
+            Participación no disponible.{" "}
             <button className="atlas-text-link" onClick={() => void d.reload()}>
               Actualizar
             </button>
@@ -180,9 +189,9 @@ function ProposalPanel({
         <div className="atlas-vote-buttons">
           {(
             [
-              { id: 'a_favor', label: 'A favor' },
-              { id: 'en_contra', label: 'En contra' },
-              { id: 'abstencion', label: 'Abstenerme' },
+              { id: "a_favor", label: "A favor" },
+              { id: "en_contra", label: "En contra" },
+              { id: "abstencion", label: "Abstenerme" },
             ] as const
           ).map((v) => (
             <button
@@ -191,7 +200,7 @@ function ProposalPanel({
               disabled={disabled || !d.canVote(p)}
               onClick={() => void d.vote(p, v.id)}
             >
-              {d.busy === `${p.id}-vote` ? 'Registrando…' : v.label}
+              {d.busy === `${p.id}-vote` ? "Registrando…" : v.label}
             </button>
           ))}
         </div>
@@ -208,7 +217,7 @@ function ProposalPanel({
                 d.setEditing({
                   proposal: p,
                   title: p.titulo,
-                  description: p.descripcion ?? '',
+                  description: p.descripcion ?? "",
                 })
               }
             >
@@ -217,7 +226,7 @@ function ProposalPanel({
             <button
               disabled={disabled}
               onClick={() =>
-                d.setConfirmation({ kind: 'delete-proposal', proposal: p })
+                d.setConfirmation({ kind: "delete-proposal", proposal: p })
               }
             >
               Eliminar propuesta
@@ -230,9 +239,9 @@ function ProposalPanel({
               disabled={disabled}
               onClick={() =>
                 d.setConfirmation({
-                  kind: 'decision',
+                  kind: "decision",
                   proposal: p,
-                  decision: 'aprobar',
+                  decision: "aprobar",
                 })
               }
             >
@@ -242,9 +251,9 @@ function ProposalPanel({
               disabled={disabled}
               onClick={() =>
                 d.setConfirmation({
-                  kind: 'decision',
+                  kind: "decision",
                   proposal: p,
-                  decision: 'rechazar',
+                  decision: "rechazar",
                 })
               }
             >
@@ -255,12 +264,12 @@ function ProposalPanel({
       </div>
       {finished ? (
         <p className="atlas-collab-notice">
-          {p.tipo === 'vuelo' ? 'Compra' : 'Reserva'} simulada registrada.
+          {p.tipo === "vuelo" ? "Compra" : "Reserva"} simulada registrada.
           Consulta el comprobante en Archivos.
         </p>
       ) : (
-        p.estado === 'aprobada' &&
-        ['vuelo', 'hospedaje'].includes(p.tipo) && (
+        p.estado === "aprobada" &&
+        ["vuelo", "hospedaje"].includes(p.tipo) && (
           <div className="atlas-next-step">
             <h3>La propuesta está aprobada</h3>
             <p>
@@ -285,7 +294,7 @@ function ProposalPanel({
         {commentState?.loading && <p role="status">Cargando conversación…</p>}
         {commentState?.error ? (
           <p className="atlas-collab-error" role="alert">
-            {commentState.error}{' '}
+            {commentState.error}{" "}
             <button
               className="atlas-text-link"
               onClick={() => void d.loadComments(p.id)}
@@ -301,15 +310,15 @@ function ProposalPanel({
         ) : null}
         {(comments ?? []).map((comment) => (
           <article
-            className={`atlas-comment ${String(comment.usuarioId) === d.userId ? 'atlas-comment-own' : ''}`}
+            className={`atlas-comment ${String(comment.usuarioId) === d.userId ? "atlas-comment-own" : ""}`}
             key={comment.id}
           >
             <header>
               <strong>
                 {comment.authorName ||
                   (String(comment.usuarioId) === d.userId
-                    ? 'Tú'
-                    : 'Integrante')}
+                    ? "Tú"
+                    : "Integrante")}
               </strong>
               {comment.createdAt && (
                 <time dateTime={comment.createdAt}>
@@ -320,8 +329,8 @@ function ProposalPanel({
             {d.editingComment?.comment.id === comment.id ? (
               <form
                 onSubmit={(e) => {
-                  e.preventDefault()
-                  void d.saveComment()
+                  e.preventDefault();
+                  void d.saveComment();
                 }}
               >
                 <label htmlFor="atlas-comment-edit">Editar comentario</label>
@@ -372,7 +381,7 @@ function ProposalPanel({
                     disabled={disabled}
                     onClick={() =>
                       d.setConfirmation({
-                        kind: 'delete-comment',
+                        kind: "delete-comment",
                         proposal: p,
                         comment,
                       })
@@ -387,34 +396,34 @@ function ProposalPanel({
         <form
           className="atlas-comment-compose"
           onSubmit={(e) => {
-            e.preventDefault()
-            void d.addComment(p)
+            e.preventDefault();
+            void d.addComment(p);
           }}
         >
           <label htmlFor="atlas-comment-draft">Tu comentario</label>
           <textarea
             id="atlas-comment-draft"
-            value={d.drafts[p.id] ?? ''}
+            value={d.drafts[p.id] ?? ""}
             onChange={(e) =>
               d.setDrafts((prev) => ({ ...prev, [p.id]: e.target.value }))
             }
             disabled={!d.writable || disabled}
             placeholder={
               d.readOnly
-                ? 'Viaje de solo lectura'
-                : '¿Qué opinas de esta alternativa?'
+                ? "Viaje de solo lectura"
+                : "¿Qué opinas de esta alternativa?"
             }
           />
           <button
             className="atlas-button atlas-button-primary"
             disabled={!d.writable || disabled || !d.drafts[p.id]?.trim()}
           >
-            {d.busy === `${p.id}-comment` ? 'Enviando…' : 'Publicar comentario'}
+            {d.busy === `${p.id}-comment` ? "Enviando…" : "Publicar comentario"}
           </button>
         </form>
       </section>
     </div>
-  )
+  );
 }
 
 export function CollaborationView({
@@ -422,60 +431,62 @@ export function CollaborationView({
   mode,
   onBack,
 }: {
-  data: ProposalWorkspace
-  mode: 'compare' | 'decisions'
-  onBack: () => void
+  data: ProposalWorkspace;
+  mode: "compare" | "decisions";
+  onBack: () => void;
 }) {
-  const navigate = useNavigate()
-  const [category, setCategory] = useState('todas')
-  const [state, setState] = useState('todas')
-  const [selection, setSelection] = useState<string[] | null>(null)
-  const location = useLocation()
+  const navigate = useNavigate();
+  const [category, setCategory] = useState("todas");
+  const [state, setState] = useState("todas");
+  const [selection, setSelection] = useState<string[] | null>(null);
+  const location = useLocation();
   const [selected, setSelected] = useState<string | null>(() =>
-    new URLSearchParams(location.search).get('proposalId'),
-  )
-  const [detail, setDetail] = useState<string | null>(null)
+    new URLSearchParams(location.search).get("proposalId"),
+  );
+  const [detail, setDetail] = useState<string | null>(null);
+  const [mobileDetail, setMobileDetail] = useState(false);
   const base = d.proposals.filter(
     (p) =>
-      (mode === 'decisions' || ['vuelo', 'hospedaje'].includes(p.tipo)) &&
-      (category === 'todas' || p.tipo === category),
-  )
-  const filtered = base.filter((p) => state === 'todas' || p.estado === state)
-  const ids = selection ?? filtered.slice(0, 4).map((p) => p.id)
-  const visible = filtered.filter((p) => ids.includes(p.id)).slice(0, 4)
-  const current = filtered.find((p) => p.id === selected) ?? filtered[0] ?? null
-  const dialogProposal = d.proposals.find((p) => p.id === detail)
+      (mode === "decisions" || ["vuelo", "hospedaje"].includes(p.tipo)) &&
+      (category === "todas" || facts.proposalCategory(p) === category),
+  );
+  const filtered = base.filter((p) => state === "todas" || p.estado === state);
+  const ids = selection ?? filtered.slice(0, 4).map((p) => p.id);
+  const visible = filtered.filter((p) => ids.includes(p.id)).slice(0, 4);
+  const current =
+    filtered.find((p) => p.id === selected) ?? filtered[0] ?? null;
+  const dialogProposal = d.proposals.find((p) => p.id === detail);
   const categories = useMemo(
-    () => [...new Set(d.proposals.map((p) => p.tipo))],
+    () => [...new Set(d.proposals.map((p) => facts.proposalCategory(p)))],
     [d.proposals],
-  )
+  );
   const checkout = (p: Proposal) =>
     navigate(
       travelPath(
-        `/checkout/${p.tipo === 'vuelo' ? 'flight' : 'hotel'}/${encodeURIComponent(p.id)}`,
+        `/checkout/${p.tipo === "vuelo" ? "flight" : "hotel"}/${encodeURIComponent(p.id)}`,
         d.groupId,
       ),
-    )
-  const browse = (kind: string = 'flights') =>
-    navigate(travelPath('/search/flights-hotels', d.groupId, { mode: kind }), {
+    );
+  const browse = (kind: string = "flights") =>
+    navigate(travelPath("/search/flights-hotels", d.groupId, { mode: kind }), {
       state: { group: d.group },
-    })
+    });
   const selectedBudget =
     current &&
-    facts.getCurrency(current) === 'MXN' &&
+    facts.getCurrency(current) === "MXN" &&
     Number.isFinite(facts.getPrice(current)) &&
     d.budget &&
     Number.isFinite(d.budget.available) &&
-    facts.getPrice(current) > d.budget.available
+    facts.getPrice(current) > d.budget.available;
   const toggle = (id: string) =>
     setSelection((prev) => {
-      const list = prev ?? filtered.slice(0, 4).map((p) => p.id)
+      const list = prev ?? filtered.slice(0, 4).map((p) => p.id);
       return list.includes(id)
         ? list.filter((value) => value !== id)
         : list.length < 4
           ? [...list, id]
-          : list
-    })
+          : list;
+    });
   if (d.loading)
     return (
       <div
@@ -491,31 +502,31 @@ export function CollaborationView({
           ))}
         </div>
       </div>
-    )
+    );
   return (
     <div className="atlas-collab">
       <header className="atlas-collab-heading">
         <div>
           <p className="atlas-eyebrow">
-            {mode === 'compare'
-              ? 'ALTERNATIVAS / COMPARAR'
-              : 'COLABORACIÓN / DECISIONES'}
+            {mode === "compare"
+              ? "ALTERNATIVAS / COMPARAR"
+              : "COLABORACIÓN / DECISIONES"}
           </p>
           <h1>
-            {mode === 'compare' ? (
+            {mode === "compare" ? (
               <>
                 Diferentes caminos.
                 <br />
                 <em>Una decisión compartida.</em>
               </>
             ) : (
-              'Decidir, juntos.'
+              "Decidir, juntos."
             )}
           </h1>
           <p>
-            {mode === 'compare'
-              ? 'Revisa hasta cuatro propuestas a la vez. Elegir una opción para revisarla no registra un voto.'
-              : 'Propuestas, conversaciones y acuerdos del viaje, en un mismo lugar.'}
+            {mode === "compare"
+              ? "Revisa hasta cuatro propuestas a la vez. Elegir una opción para revisarla no registra un voto."
+              : "Propuestas, conversaciones y acuerdos del viaje, en un mismo lugar."}
           </p>
         </div>
         <div className="atlas-collab-heading-tools">
@@ -556,10 +567,10 @@ export function CollaborationView({
       {!d.writable && (
         <p className="atlas-collab-notice">
           {d.readOnly
-            ? 'Viaje de solo lectura. Puedes consultar sus propuestas y conversaciones.'
+            ? "Viaje de solo lectura. Puedes consultar sus propuestas y conversaciones."
             : !d.online
-              ? 'Sin conexión. Reconecta para participar.'
-              : 'El itinerario está bloqueado; las acciones de cambio están deshabilitadas.'}
+              ? "Sin conexión. Reconecta para participar."
+              : "El itinerario está bloqueado; las acciones de cambio están deshabilitadas."}
         </p>
       )}
       <ol className="atlas-decision-guide" aria-label="Guía del proceso">
@@ -575,26 +586,22 @@ export function CollaborationView({
             id="atlas-proposal-category"
             value={category}
             onChange={(e) => {
-              setCategory(e.target.value)
-              setSelection(null)
-              setSelected(null)
+              setCategory(e.target.value);
+              setState("todas");
+              setMobileDetail(false);
+              setSelection(null);
+              setSelected(null);
             }}
           >
             <option value="todas">Todas</option>
             {categories
               .filter(
                 (c) =>
-                  mode === 'decisions' || ['vuelo', 'hospedaje'].includes(c),
+                  mode === "decisions" || ["vuelo", "hospedaje"].includes(c),
               )
               .map((c) => (
                 <option key={c} value={c}>
-                  {c === 'vuelo'
-                    ? 'Vuelos'
-                    : c === 'hospedaje'
-                      ? 'Hoteles'
-                      : c === 'actividad'
-                        ? 'Actividades'
-                        : c}
+                  {facts.proposalCategoryLabel(c)}
                 </option>
               ))}
           </select>
@@ -605,8 +612,8 @@ export function CollaborationView({
             id="atlas-proposal-state"
             value={state}
             onChange={(e) => {
-              setState(e.target.value)
-              setSelection(null)
+              setState(e.target.value);
+              setSelection(null);
             }}
           >
             <option value="todas">Todos los estados</option>
@@ -618,7 +625,7 @@ export function CollaborationView({
           </select>
         </label>
         <span role="status">
-          {filtered.length} propuesta(s){d.refreshing ? ' · Actualizando…' : ''}
+          {filtered.length} propuesta(s){d.refreshing ? " · Actualizando…" : ""}
         </span>
         <button
           className="atlas-text-link"
@@ -628,33 +635,53 @@ export function CollaborationView({
           Actualizar
         </button>
       </div>
+      <div className="atlas-collab-filter-summary">
+        <span>
+          {filtered.length} de {d.proposals.length} propuestas guardadas del
+          viaje. Los resultados de búsqueda sin guardar no aparecen aquí.
+        </span>
+        {(category !== "todas" || state !== "todas") && (
+          <button
+            className="atlas-text-link"
+            onClick={() => {
+              setCategory("todas");
+              setState("todas");
+              setSelection(null);
+              setSelected(null);
+              setMobileDetail(false);
+            }}
+          >
+            Quitar filtros
+          </button>
+        )}
+      </div>
       {filtered.length === 0 ? (
         <section className="atlas-collab-empty">
           <h2>
             {d.proposals.length
-              ? 'No hay propuestas con estos filtros'
-              : 'Las mejores ideas aún están por llegar.'}
+              ? "No hay propuestas con estos filtros"
+              : "Las mejores ideas aún están por llegar."}
           </h2>
           <p>
             {d.proposals.length
-              ? 'Amplía la categoría o el estado para consultar otras propuestas.'
-              : 'Guarda alternativas desde Explorar para revisarlas, comentarlas y votar con tu grupo.'}
+              ? "Amplía la categoría o el estado para consultar otras propuestas."
+              : "Guarda alternativas desde Explorar para revisarlas, comentarlas y votar con tu grupo."}
           </p>
           <button
             className="atlas-button atlas-button-secondary"
             onClick={() => {
               if (d.proposals.length) {
-                setState('todas')
-                setCategory('todas')
-              } else browse()
+                setState("todas");
+                setCategory("todas");
+              } else browse();
             }}
           >
             {d.proposals.length
-              ? 'Quitar filtros'
-              : 'Explorar vuelos y hoteles'}
+              ? "Quitar filtros"
+              : "Explorar vuelos y hoteles"}
           </button>
         </section>
-      ) : mode === 'compare' ? (
+      ) : mode === "compare" ? (
         <>
           <details className="atlas-comparison-picker">
             <summary>Elegir alternativas · {visible.length} de 4</summary>
@@ -673,7 +700,7 @@ export function CollaborationView({
                       {facts.formatMoney(
                         facts.getPrice(p),
                         facts.getCurrency(p),
-                      )}{' '}
+                      )}{" "}
                       · {facts.statusLabel(p.estado)}
                     </small>
                   </span>
@@ -697,16 +724,16 @@ export function CollaborationView({
             className="atlas-comparison-columns"
             style={
               {
-                '--comparison-count': Math.max(1, visible.length),
+                "--comparison-count": Math.max(1, visible.length),
               } as React.CSSProperties
             }
           >
             {visible.map((p) => (
               <article
-                className={`atlas-comparison-option ${selected === p.id ? 'atlas-option-selected' : ''}`}
+                className={`atlas-comparison-option ${selected === p.id ? "atlas-option-selected" : ""}`}
                 key={p.id}
               >
-                {p.tipo === 'hospedaje' ? (
+                {p.tipo === "hospedaje" ? (
                   <HotelPhoto
                     src={facts.getImageUrl(p)}
                     name={facts.getTitle(p)}
@@ -715,7 +742,7 @@ export function CollaborationView({
                   <div className="atlas-flight-identity">
                     <span>
                       {(facts.asRecord(p.detalle)?.aerolinea as string) ||
-                        'Vuelo'}
+                        "Vuelo"}
                     </span>
                     <strong>{facts.getFlightRoute(p)}</strong>
                     <p>{facts.getSubtitle(p)}</p>
@@ -734,15 +761,18 @@ export function CollaborationView({
                 <div className="atlas-option-participation">
                   {d.votesAvailable && d.results.has(p.id)
                     ? `${d.results.get(p.id)!.votos_a_favor} a favor · ${d.results.get(p.id)!.votos_en_contra} en contra`
-                    : 'Participación no disponible'}
+                    : "Participación no disponible"}
                 </div>
                 <div className="atlas-option-actions">
                   <button
                     className="atlas-button atlas-button-secondary"
                     aria-pressed={selected === p.id}
-                    onClick={() => setSelected(p.id)}
+                    onClick={() => {
+                      setSelected(p.id);
+                      setMobileDetail(true);
+                    }}
                   >
-                    {selected === p.id ? 'En revisión' : 'Revisar esta opción'}
+                    {selected === p.id ? "En revisión" : "Revisar esta opción"}
                   </button>
                   <button
                     className="atlas-text-link"
@@ -766,7 +796,9 @@ export function CollaborationView({
           )}
         </>
       ) : (
-        <div className="atlas-decisions-workspace">
+        <div
+          className={`atlas-decisions-workspace ${mobileDetail ? "has-mobile-detail" : ""}`}
+        >
           <section
             className="atlas-decisions-index"
             aria-label="Listado de decisiones"
@@ -774,22 +806,25 @@ export function CollaborationView({
             {filtered.map((p) => (
               <button
                 className={
-                  current?.id === p.id ? 'atlas-decision-selected' : ''
+                  current?.id === p.id ? "atlas-decision-selected" : ""
                 }
                 key={p.id}
-                onClick={() => setSelected(p.id)}
-                aria-current={current?.id === p.id ? 'true' : undefined}
+                onClick={() => {
+                  setSelected(p.id);
+                  setMobileDetail(true);
+                }}
+                aria-current={current?.id === p.id ? "true" : undefined}
               >
                 <span className="atlas-collab-status">
                   {facts.statusLabel(p.estado)}
                 </span>
                 <h2>{p.titulo}</h2>
                 <p>
-                  {p.tipo === 'vuelo'
-                    ? 'Vuelo'
-                    : p.tipo === 'hospedaje'
-                      ? 'Hotel'
-                      : 'Propuesta'}{' '}
+                  {p.tipo === "vuelo"
+                    ? "Vuelo"
+                    : p.tipo === "hospedaje"
+                      ? "Hotel"
+                      : "Propuesta"}{" "}
                   · {facts.formatMoney(facts.getPrice(p), facts.getCurrency(p))}
                 </p>
                 {d.votesAvailable && d.results.has(p.id) && (
@@ -799,19 +834,31 @@ export function CollaborationView({
             ))}
           </section>
           {current && (
-            <ProposalPanel
-              key={current.id}
-              proposal={current}
-              data={d}
-              onCheckout={checkout}
-            />
+            <section
+              className="atlas-decision-detail"
+              aria-label="Detalle de la propuesta seleccionada"
+              tabIndex={0}
+            >
+              <button
+                className="atlas-text-link atlas-decision-mobile-back"
+                onClick={() => setMobileDetail(false)}
+              >
+                ← Volver a las propuestas
+              </button>
+              <ProposalPanel
+                key={current.id}
+                proposal={current}
+                data={d}
+                onCheckout={checkout}
+              />
+            </section>
           )}
         </div>
       )}
       {selectedBudget && (
         <p className="atlas-collab-notice">
           La opción revisada supera el disponible registrado del grupo (
-          {facts.formatMoney(d.budget!.available, 'MXN')}). Esto no convierte
+          {facts.formatMoney(d.budget!.available, "MXN")}). Esto no convierte
           divisas ni modifica las reglas de aprobación.
         </p>
       )}
@@ -837,8 +884,8 @@ export function CollaborationView({
           <form
             className="atlas-collab-edit"
             onSubmit={(e) => {
-              e.preventDefault()
-              void d.saveEdit()
+              e.preventDefault();
+              void d.saveEdit();
             }}
           >
             {d.error && (
@@ -883,11 +930,11 @@ export function CollaborationView({
       {d.confirmation && (
         <EditorialDialog
           title={
-            d.confirmation.kind === 'decision'
-              ? 'Registrar decisión'
-              : d.confirmation.kind === 'delete-proposal'
-                ? 'Eliminar propuesta'
-                : 'Eliminar comentario'
+            d.confirmation.kind === "decision"
+              ? "Registrar decisión"
+              : d.confirmation.kind === "delete-proposal"
+                ? "Eliminar propuesta"
+                : "Eliminar comentario"
           }
           onClose={() => d.setConfirmation(null)}
           busy={Boolean(d.busy)}
@@ -900,20 +947,20 @@ export function CollaborationView({
             )}
             <h3>{d.confirmation.proposal.titulo}</h3>
             <p>
-              {d.confirmation.kind === 'decision'
-                ? `Se registrará la decisión de ${d.confirmation.decision === 'aprobar' ? 'aprobar' : 'descartar'} esta propuesta. No realiza una compra ni una reserva.`
-                : 'La eliminación se reflejará para el grupo cuando el servidor la confirme.'}
+              {d.confirmation.kind === "decision"
+                ? `Se registrará la decisión de ${d.confirmation.decision === "aprobar" ? "aprobar" : "descartar"} esta propuesta. No realiza una compra ni una reserva.`
+                : "La eliminación se reflejará para el grupo cuando el servidor la confirme."}
             </p>
             <button
               className="atlas-button atlas-button-primary"
               disabled={Boolean(d.busy) || !d.fresh}
               onClick={() => void d.confirm()}
             >
-              {d.busy ? 'Procesando…' : 'Confirmar acción'}
+              {d.busy ? "Procesando…" : "Confirmar acción"}
             </button>
           </div>
         </EditorialDialog>
       )}
     </div>
-  )
+  );
 }

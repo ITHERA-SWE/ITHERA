@@ -11,10 +11,10 @@
 | Institución | Instituto Politécnico Nacional |
 | Escuela | Escuela Superior de Cómputo (ESCOM) |
 | Carrera | Ingeniería en Sistemas Computacionales |
-| Unidad de aprendizaje | Análisis y Diseño de Sistemas |
+| Unidad de aprendizaje | Ingeniería de Software |
 | Ciclo escolar | **2027/1** |
 | Grupo | **6CM3** |
-| Profesora | **Rojas Mexicano Ismael** |
+| Docente | **Ismael Rojas Mexicano** |
 | Equipo | **ITHERA** |
 
 ## Visión del proyecto
@@ -185,4 +185,4 @@ Distribuido bajo la **licencia MIT** indicada en [LICENSE](LICENSE). Se reconoce
 
 ---
 
-**ITHERA · Análisis y Diseño de Sistemas · ESCOM-IPN · 2027/1 · Grupo 6CM3**
+**ITHERA · Ingeniería de Software · ESCOM-IPN · 2027/1 · Grupo 6CM3**

@@ -1,0 +1,659 @@
+/* Etapa 9. Reglas comunes acotadas a las superficies editoriales. */
+:where(
+  .atlas-app,
+  .atlas-auth-screen,
+  .atlas-landing,
+  .atlas-collab-dialog,
+  .atlas-chat
+) {
+  --atlas-gutter: clamp(18px, 3vw, 28px);
+  --atlas-rule: #e5e0ee;
+  --atlas-ink: #1e0a4e;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+:where(
+    .atlas-app,
+    .atlas-auth-screen,
+    .atlas-landing,
+    .atlas-collab-dialog,
+    .atlas-chat
+  )
+  :where(input, select, textarea, button, a, summary):focus-visible {
+  outline: 3px solid #1e6fd9;
+  outline-offset: 3px;
+}
+:where(.atlas-app, .atlas-collab-dialog, .atlas-auth-screen, .atlas-landing)
+  :where(
+    .atlas-button,
+    .atlas-account-button,
+    .atlas-search-submit button,
+    .atlas-invite-email button,
+    .atlas-invitation-code button
+  ) {
+  min-height: 42px;
+  min-width: fit-content;
+  flex-shrink: 0;
+  padding: 10px 17px;
+  line-height: 1.45;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+:where(.atlas-app, .atlas-collab-dialog)
+  :where(.atlas-text-link, .atlas-account-link) {
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  line-height: 1.6;
+  min-height: 32px;
+}
+:where(.atlas-app, .atlas-collab-dialog) :where(input, textarea, select) {
+  max-width: 100%;
+}
+:where(.atlas-app, .atlas-collab-dialog) label:has(> select),
+:where(.atlas-app, .atlas-collab-dialog) label:has(> input) {
+  min-width: 0;
+}
+.atlas-collab-dialog {
+  padding: 0 !important;
+  max-height: calc(100dvh - 32px);
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.atlas-collab-dialog > header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #fff;
+  padding: 20px var(--atlas-gutter);
+  align-items: center;
+  gap: 16px;
+}
+.atlas-collab-dialog > header h2 {
+  margin: 0;
+  font:
+    400 clamp(25px, 3vw, 32px)/1.15 "Instrument Serif",
+    serif;
+  overflow-wrap: anywhere;
+}
+.atlas-dialog-body {
+  padding: 24px var(--atlas-gutter) 28px;
+  min-width: 0;
+}
+.atlas-dialog-body > .atlas-collab-confirm,
+.atlas-dialog-body > .atlas-collab-edit,
+.atlas-dialog-body > .atlas-proposal-panel {
+  padding: 0 !important;
+  border: 0;
+}
+.atlas-dialog-body > .atlas-account-dialog {
+  padding: 0;
+}
+.atlas-dialog-body .atlas-vault-action {
+  max-width: none;
+  width: 100%;
+}
+.atlas-dialog-body :where(form, fieldset) {
+  min-width: 0;
+}
+.atlas-dialog-body fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.atlas-dialog-body
+  :where(.atlas-account-dialog-actions, .atlas-collab-dialog-actions) {
+  border-top: 1px solid var(--atlas-rule);
+  padding-top: 20px;
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.atlas-dialog-body :where(label) {
+  line-height: 1.6;
+}
+.atlas-dialog-body .atlas-account-section {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+.atlas-dialog-body .atlas-account-field {
+  gap: 8px;
+}
+.atlas-help {
+  display: inline-flex;
+  vertical-align: middle;
+  flex: none;
+}
+.atlas-help-trigger {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border: 1px solid #d5cbe9;
+  border-radius: 50%;
+  background: #f8f5fd;
+  color: #4b2fa3;
+  font:
+    600 14px "Plus Jakarta Sans",
+    sans-serif;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.atlas-help-tooltip {
+  position: fixed;
+  z-index: 2147483000;
+  width: min(310px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  overflow-wrap: anywhere;
+  padding: 18px 20px;
+  border: 1px solid #ddd4ec;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 8px 30px #1e0a4e22;
+  color: #403652;
+  font:
+    12px/1.8 "Plus Jakarta Sans",
+    sans-serif;
+  text-align: left;
+}
+.atlas-help-tooltip strong {
+  display: block;
+  font-size: 13px;
+  color: #1e0a4e;
+}
+.atlas-help-tooltip p {
+  margin: 8px 0 0;
+}
+.atlas-view-switch {
+  display: inline-flex;
+  gap: 0;
+  max-width: 100%;
+  border-bottom: 1px solid #e4deed;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.atlas-view-switch button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 13px 20px;
+  background: transparent;
+  font:
+    600 12px "Plus Jakarta Sans",
+    sans-serif;
+  color: #676078;
+  min-height: 44px;
+}
+.atlas-view-switch button[aria-pressed="true"] {
+  border-color: #4b2fa3;
+  color: #4b2fa3;
+  background: #faf8fe;
+}
+.atlas-subgroup-days {
+  border-block: 1px solid #e7e1ef;
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  gap: 0;
+  margin-bottom: 26px;
+}
+.atlas-subgroup-days button {
+  flex: 0 0 150px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 18px 20px;
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: #1e0a4e;
+  min-height: 112px;
+}
+.atlas-subgroup-days button[aria-selected="true"] {
+  background: #f6f2fc;
+  border-bottom-color: #4b2fa3;
+}
+.atlas-subgroup-days button > span {
+  color: #4b2fa3;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.atlas-subgroup-days strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+.atlas-subgroup-days small {
+  font-size: 10px;
+  line-height: 1.8;
+  color: #746b83;
+}
+.atlas-subgroups-frame .atlas-subgroup-workspace {
+  min-width: 0;
+}
+.atlas-subgroup-workspace .atlas-subgroup-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.atlas-subgroup-workspace h1 {
+  overflow-wrap: anywhere;
+}
+.atlas-decisions-workspace {
+  align-items: start !important;
+}
+.atlas-decisions-index {
+  min-width: 0;
+}
+.atlas-decisions-index > button {
+  width: 100%;
+  min-width: 0;
+}
+.atlas-decision-detail {
+  min-width: 0;
+}
+.atlas-decision-mobile-back {
+  display: none;
+}
+.atlas-collab-filter-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  color: #70667e;
+  font-size: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e8e2ef;
+  margin-bottom: 22px;
+}
+@media (min-width: 1000px) {
+  .atlas-decisions-workspace {
+    height: clamp(420px, calc(100dvh - 225px), 850px);
+    overflow: hidden;
+    grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.28fr) !important;
+  }
+  .atlas-decisions-index,
+  .atlas-decision-detail {
+    max-height: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+  .atlas-decision-detail > .atlas-proposal-panel {
+    height: auto;
+    min-height: 100%;
+    margin: 0;
+  }
+}
+.atlas-loading {
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  color: #1e0a4e;
+  text-align: center;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+.atlas-loading.is-full {
+  min-height: 100dvh;
+  background: #fcfbfe;
+}
+.atlas-loading p {
+  font-size: 14px;
+  margin: 0;
+}
+.atlas-loading small {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #756a86;
+  max-width: 340px;
+}
+.atlas-loading-line {
+  width: min(220px, 70vw);
+  height: 3px;
+  background: #eee8f6;
+  overflow: hidden;
+  position: relative;
+}
+.atlas-loading-line:after {
+  content: "";
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: #4b2fa3;
+  animation: atlas-wait 1.5s ease-in-out infinite alternate;
+}
+@keyframes atlas-wait {
+  to {
+    transform: translateX(150%);
+  }
+}
+.atlas-toast-stack {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: min(390px, calc(100vw - 32px));
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 60dvh;
+  overflow-y: auto;
+  pointer-events: none;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+.atlas-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid #ded5ed;
+  border-left: 3px solid #4b2fa3;
+  background: #fff;
+  color: #2c2142;
+  padding: 15px 17px;
+  border-radius: 5px;
+  box-shadow: 0 7px 22px #1e0a4e18;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.atlas-toast p {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.atlas-toast > span {
+  font-size: 16px;
+  color: #4b2fa3;
+}
+.atlas-toast.is-error {
+  border-left-color: #ac3030;
+}
+.atlas-toast.is-warning {
+  border-left-color: #ad6f20;
+}
+.atlas-toast > button {
+  border: 0;
+  background: transparent;
+  padding: 0 5px;
+  color: #4b2fa3;
+  min-width: 28px;
+  min-height: 28px;
+}
+.atlas-notification-panel {
+  width: min(380px, calc(100vw - 24px)) !important;
+  border: 1px solid #ded7e9 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 14px 36px #1e0a4e20 !important;
+  max-height: min(560px, calc(100dvh - 120px)) !important;
+}
+.atlas-notification-panel > div {
+  padding: 16px !important;
+}
+.atlas-notification-panel :where(p, button) {
+  line-height: 1.65;
+}
+.atlas-notification-panel p {
+  overflow-wrap: anywhere;
+}
+.atlas-notification-panel button {
+  white-space: normal !important;
+  min-height: 34px;
+}
+.atlas-notification-panel .atlas-loading {
+  padding: 20px !important;
+}
+@media (max-width: 999px) {
+  .atlas-decisions-workspace {
+    display: block !important;
+  }
+  .atlas-decision-detail {
+    margin-top: 20px;
+  }
+  .atlas-decision-mobile-back {
+    display: inline-flex;
+    margin-bottom: 16px;
+  }
+  .atlas-decisions-workspace.has-mobile-detail .atlas-decisions-index {
+    display: none;
+  }
+  .atlas-decisions-workspace:not(.has-mobile-detail) .atlas-decision-detail {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  :where(.atlas-app, .atlas-collab-dialog, .atlas-auth-screen, .atlas-landing)
+    :where(
+      .atlas-button,
+      .atlas-account-button,
+      .atlas-invite-email button,
+      .atlas-invitation-code button
+    ) {
+    white-space: normal;
+    min-width: 0;
+    max-width: 100%;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+  .atlas-dialog-body {
+    padding: 20px 18px 24px;
+  }
+  .atlas-collab-dialog > header {
+    padding: 18px;
+  }
+  .atlas-collab-dialog {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+  }
+  .atlas-dialog-body :where(input, select, textarea) {
+    font-size: 16px;
+  }
+  .atlas-view-switch {
+    display: flex;
+  }
+  .atlas-view-switch button {
+    flex: 1;
+    padding: 12px;
+  }
+  .atlas-subgroup-days button {
+    flex-basis: 130px;
+    padding: 15px;
+  }
+  .atlas-toast-stack {
+    bottom: 12px;
+    right: 16px;
+  }
+  .atlas-notification-panel {
+    position: fixed !important;
+    right: 12px !important;
+    top: 78px !important;
+  }
+  .atlas-app .atlas-trip-collection-controls label small {
+    font-size: 10px;
+    color: #776c85;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .atlas-loading-line:after {
+    animation: none;
+    width: 100%;
+    opacity: 0.6;
+  }
+  :where(
+      .atlas-app,
+      .atlas-auth-screen,
+      .atlas-landing,
+      .atlas-chat,
+      .atlas-collab-dialog
+    )
+    * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+.atlas-app .atlas-button,
+.atlas-collab-dialog .atlas-button,
+.atlas-collab-dialog .atlas-account-button,
+.atlas-app .atlas-account-button {
+  padding: 10px 17px;
+  min-height: 42px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  min-width: fit-content;
+  word-break: normal;
+  overflow-wrap: normal;
+  line-height: 1.5;
+}
+.atlas-app .atlas-agenda-actions > button.atlas-button-primary {
+  color: #fff;
+  text-decoration: none;
+}
+.atlas-app .atlas-agenda-actions > button.atlas-button-secondary {
+  color: #4b2fa3;
+  text-decoration: none;
+}
+.atlas-app .atlas-agenda-actions > button.atlas-button-danger {
+  color: #9b2525;
+  text-decoration: none;
+}
+.atlas-app .atlas-view-switch > button {
+  color: #746981;
+  background: transparent;
+  border-radius: 0;
+}
+.atlas-app .atlas-view-switch > button[aria-pressed="true"] {
+  color: #4b2fa3;
+  background: #f7f4fc;
+}
+.atlas-app .atlas-planner-tools {
+  gap: 12px;
+}
+@media (max-width: 767px) {
+  .atlas-app .atlas-button,
+  .atlas-collab-dialog .atlas-button,
+  .atlas-collab-dialog .atlas-account-button,
+  .atlas-app .atlas-account-button {
+    min-width: 0;
+    white-space: normal;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+.atlas-chat {
+  position: fixed;
+  inset: 16px 16px 16px auto;
+  padding: 0;
+  margin: 0;
+  width: min(460px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  height: calc(100dvh - 32px);
+  max-height: 850px;
+  border: 1px solid #ded6eb;
+  border-radius: 7px;
+  overflow: hidden;
+  box-shadow: 0 18px 70px #1e0a4e33;
+  color: #1e0a4e;
+  background: #fff;
+}
+.atlas-chat::backdrop {
+  background: #1e0a4e55;
+  backdrop-filter: blur(2px);
+}
+.atlas-chat-shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.atlas-chat .atlas-chat-header {
+  background: #1e0a4e !important;
+  padding: 22px 24px;
+}
+.atlas-chat-header .font-heading {
+  font:
+    400 25px/1.1 "Instrument Serif",
+    serif;
+}
+.atlas-chat-header > div:first-child {
+  background: #ffffff22 !important;
+  border-radius: 50%;
+}
+.atlas-chat .atlas-chat-messages {
+  background: #fcfbfe;
+  padding: 20px;
+}
+.atlas-chat [data-own="true"] {
+  background: #4b2fa3 !important;
+  border-radius: 7px 7px 1px 7px;
+  box-shadow: none;
+  color: #fff;
+}
+.atlas-chat [data-own="false"] {
+  background: #fff;
+  border-color: #e7e1ed;
+  border-radius: 7px 7px 7px 1px;
+  box-shadow: none;
+}
+.atlas-chat textarea {
+  background: #faf8fd !important;
+  border: 1px solid #dfd6ee !important;
+  border-radius: 5px;
+  min-height: 44px !important;
+  padding: 11px 13px;
+  font-size: 13px;
+}
+.atlas-chat button[aria-label="Enviar mensaje"] {
+  background: #4b2fa3 !important;
+  border-radius: 5px;
+  width: 42px;
+  height: 42px;
+  box-shadow: none;
+}
+.atlas-chat .atlas-loading {
+  padding: 28px 8px;
+}
+.atlas-chat-shell > .shrink-0:last-child {
+  background: #fff !important;
+  border-top: 1px solid #e7e1ee;
+  padding: 16px 20px;
+}
+.atlas-subgroup-workspace .atlas-subgroups-heading > .atlas-help {
+  margin-right: 12px;
+}
+.atlas-subgroup-workspace .atlas-subgroups-heading > button {
+  margin-top: 10px;
+}
+@media (max-width: 600px) {
+  .atlas-chat {
+    inset: 10px;
+    width: calc(100vw - 20px);
+    height: calc(100dvh - 20px);
+    max-height: none;
+  }
+  .atlas-chat .atlas-chat-header {
+    padding: 18px;
+  }
+  .atlas-chat textarea {
+    font-size: 16px;
+  }
+  .atlas-chat .atlas-chat-messages {
+    padding: 16px;
+  }
+}

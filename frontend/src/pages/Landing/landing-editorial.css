@@ -1,0 +1,294 @@
+/* Misma estructura de landing; acabados y vista ilustrativa editoriales. */
+.atlas-landing {
+  background: #fff;
+  color: #1e0a4e;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  overflow-x: clip;
+}
+.atlas-landing :where(h1, h2, h3, .font-heading) {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+.atlas-landing h1 {
+  font-size: clamp(48px, 5vw, 80px);
+  line-height: 1.02;
+}
+.atlas-landing :where(button, a) {
+  border-radius: 5px !important;
+}
+.atlas-landing :where(button) {
+  min-height: 44px;
+  line-height: 1.5;
+}
+.atlas-landing :where(.bg-green) {
+  background: #4b2fa3 !important;
+  box-shadow: none;
+}
+.atlas-landing :where([class*="rounded-2xl"]) {
+  border-radius: 7px;
+}
+.atlas-landing :where([class*="landing-glow"]) {
+  display: none;
+}
+.atlas-landing :where(.landing-float, .landing-float-delayed) {
+  animation: none;
+}
+.atlas-landing section {
+  scroll-margin-top: 90px;
+}
+.atlas-landing figure {
+  margin: 0;
+}
+.atlas-product-preview {
+  background: #fff;
+  color: #1e0a4e;
+  border: 1px solid #ded6eb;
+  border-radius: 10px;
+  box-shadow: 0 24px 70px #13062740;
+  overflow: hidden;
+  width: 100%;
+  text-align: left;
+}
+.atlas-preview-chrome {
+  display: flex;
+  gap: 6px;
+  padding: 12px 15px;
+  background: #f7f5fa;
+  border-bottom: 1px solid #e3dced;
+}
+.atlas-preview-chrome i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c8b7e7;
+}
+.atlas-preview-chrome span {
+  margin-left: auto;
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: #72677f;
+}
+.atlas-preview-nav {
+  display: flex;
+  align-items: center;
+  gap: 19px;
+  padding: 16px;
+  font-size: 9px;
+  color: #4b2fa3;
+}
+.atlas-preview-nav img {
+  margin-right: auto;
+  max-width: 100px;
+  object-fit: contain;
+}
+.atlas-preview-cover {
+  padding: 30px 24px;
+  background:
+    linear-gradient(90deg, #1e0a4ed9, #1e0a4e55),
+    url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=300&fit=crop")
+      center/cover;
+  color: #fff;
+}
+.atlas-preview-cover > span {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+.atlas-preview-cover h2 {
+  font:
+    400 clamp(32px, 3vw, 48px)/1.05 "Instrument Serif",
+    serif;
+  margin: 14px 0 0;
+}
+.atlas-preview-cover em {
+  color: #e5dafb;
+}
+.atlas-preview-body {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 20px;
+  padding: 24px;
+}
+.atlas-preview-eyebrow {
+  font-size: 7px;
+  letter-spacing: 0.16em;
+  color: #4b2fa3;
+}
+.atlas-preview-body h3 {
+  font-size: 27px;
+  margin: 8px 0 20px;
+}
+.atlas-preview-body ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.atlas-preview-body li {
+  display: flex;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid #e7e1ee;
+}
+.atlas-preview-body li > span {
+  font-size: 8px;
+  color: #4b2fa3;
+}
+.atlas-preview-body strong {
+  font-size: 10px;
+  display: block;
+}
+.atlas-preview-body small {
+  font-size: 8px;
+  color: #756c84;
+  display: block;
+  margin-top: 5px;
+}
+.atlas-preview-body aside {
+  border-left: 1px solid #e7e1ee;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 22px;
+}
+.atlas-preview-body aside p {
+  font-size: 7px;
+  letter-spacing: 0.13em;
+  color: #4b2fa3;
+  margin: 0;
+}
+.atlas-preview-body aside strong {
+  font:
+    400 28px/1.1 "Instrument Serif",
+    serif;
+}
+.atlas-preview-body aside span {
+  font-size: 8px;
+  color: #6c5e7f;
+}
+.atlas-product-preview figcaption {
+  font-size: 8px;
+  padding: 14px 24px;
+  background: #faf8fd;
+  color: #6d617b;
+  border-top: 1px solid #e7e1ee;
+}
+.atlas-landing-demo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 60px;
+  background: #f7f4fc;
+  padding: 90px max(24px, calc((100vw - 1152px) / 2));
+}
+.atlas-landing-demo h2 {
+  font-size: clamp(36px, 4vw, 54px);
+  line-height: 1.05;
+  margin: 20px 0 24px;
+}
+.atlas-landing-demo p,
+.atlas-landing-demo li {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #756a83;
+}
+.atlas-landing-demo ul {
+  padding-left: 18px;
+}
+.atlas-landing-promises {
+  padding: 85px max(24px, calc((100vw - 1152px) / 2));
+  background: #fff;
+}
+.atlas-landing-promises h2 {
+  font-size: 44px;
+  margin: 20px 0 40px;
+}
+.atlas-landing-promises > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 35px;
+}
+.atlas-landing-promises article {
+  border-top: 1px solid #dcd2eb;
+  padding-top: 24px;
+}
+.atlas-landing-promises h3 {
+  font-size: 29px;
+  line-height: 1.1;
+  margin: 0 0 18px;
+}
+.atlas-landing-promises p {
+  font-size: 13px;
+  color: #716780;
+  line-height: 1.9;
+}
+.atlas-landing :where(input, select) {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14px;
+}
+.atlas-landing footer {
+  border-top: 1px solid #ded6eb;
+}
+@media (max-width: 900px) {
+  .atlas-landing-demo {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 64px 24px;
+  }
+  .atlas-landing-demo > div {
+    max-width: 600px;
+  }
+  .atlas-landing-promises {
+    padding: 60px 24px;
+  }
+  .atlas-landing-promises > div {
+    grid-template-columns: 1fr;
+  }
+  .atlas-landing-promises h2 {
+    font-size: 38px;
+  }
+  .atlas-landing-demo .atlas-product-preview {
+    max-width: 640px;
+    margin: auto;
+  }
+  .atlas-landing h1 {
+    font-size: clamp(44px, 8vw, 66px);
+  }
+}
+@media (max-width: 450px) {
+  .atlas-preview-body {
+    padding: 18px;
+    gap: 14px;
+  }
+  .atlas-preview-body aside {
+    padding-left: 12px;
+  }
+  .atlas-preview-body aside strong {
+    font-size: 23px;
+  }
+  .atlas-preview-nav {
+    gap: 10px;
+    font-size: 8px;
+  }
+  .atlas-preview-body h3 {
+    font-size: 24px;
+  }
+  .atlas-landing input {
+    font-size: 16px;
+  }
+  .atlas-landing [class*="grid-cols-3"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .atlas-landing section {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .atlas-landing * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

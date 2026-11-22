@@ -1,0 +1,151 @@
+.atlas-shared-itinerary {
+  background: #f7f4fc;
+  min-height: 100dvh;
+  padding: 40px 24px;
+  color: #1e0a4e;
+  font:
+    13px/1.8 "Plus Jakarta Sans",
+    sans-serif;
+}
+.atlas-shared-sheet {
+  max-width: 950px;
+  margin: auto;
+  background: white;
+  padding: 48px 55px;
+  border-top: 4px solid #4b2fa3;
+}
+.atlas-shared-sheet > header {
+  border-bottom: 1px solid #dfd5ec;
+  padding-bottom: 30px;
+  position: relative;
+}
+.atlas-shared-eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: #4b2fa3;
+  margin-top: 36px;
+}
+.atlas-shared-sheet h1 {
+  font:
+    400 clamp(40px, 5vw, 58px)/1.05 "Instrument Serif",
+    serif;
+  margin: 16px 0 24px;
+  overflow-wrap: anywhere;
+}
+.atlas-shared-print,
+.atlas-shared-error button {
+  border: 1px solid #d8cce8;
+  padding: 10px 16px;
+  min-height: 42px;
+  border-radius: 4px;
+  background: #fff;
+  color: #4b2fa3;
+  font-size: 11px;
+  margin-top: 20px;
+  cursor: pointer;
+}
+.atlas-shared-sheet small {
+  display: block;
+  color: #776980;
+  font-size: 10px;
+}
+.atlas-shared-day {
+  padding: 30px 0;
+}
+.atlas-shared-day h2 {
+  font:
+    400 32px/1.2 "Instrument Serif",
+    serif;
+  margin: 12px 0;
+}
+.atlas-shared-day > header {
+  border-bottom: 1px solid #dfd5ec;
+  break-after: avoid;
+}
+.atlas-shared-day article {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 25px;
+  border-bottom: 1px solid #eee8f4;
+  padding: 25px 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.atlas-shared-day article > div > span {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #4b2fa3;
+}
+.atlas-shared-day article p {
+  font-size: 12px;
+  color: #776980;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.atlas-shared-day h3 {
+  font:
+    400 27px "Instrument Serif",
+    serif;
+  margin: 0 0 14px;
+  overflow-wrap: anywhere;
+}
+.atlas-shared-sheet > footer {
+  border-top: 1px solid #dfd5ec;
+  padding-top: 24px;
+  font-size: 10px;
+  color: #776980;
+}
+.atlas-shared-error {
+  padding: 30px 0;
+  color: #a53030;
+}
+.atlas-shared-empty {
+  padding: 40px 0;
+}
+.atlas-shared-sheet button:focus-visible {
+  outline: 3px solid #1e6fd9;
+  outline-offset: 4px;
+}
+@page {
+  size: A4;
+  margin: 16mm 15mm;
+}
+@media print {
+  .atlas-shared-itinerary {
+    background: #fff;
+    padding: 0;
+    min-height: 0;
+  }
+  .atlas-shared-sheet {
+    padding: 0;
+    border: 0;
+    max-width: none;
+  }
+  .atlas-shared-print {
+    display: none;
+  }
+  .atlas-shared-day > header {
+    break-inside: avoid;
+  }
+  .atlas-shared-day article {
+    break-inside: avoid;
+  }
+  .atlas-shared-sheet h1 {
+    font-size: 42px;
+  }
+}
+@media (max-width: 600px) {
+  .atlas-shared-itinerary {
+    padding: 16px;
+  }
+  .atlas-shared-sheet {
+    padding: 30px 22px;
+  }
+  .atlas-shared-day article {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .atlas-shared-day > header {
+    padding-bottom: 12px;
+  }
+}

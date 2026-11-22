@@ -1,124 +1,167 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { exportService, type SharedItineraryItem, type SharedGroupInfo } from '../../services/export'
+import { Logo } from "../../components/ui/Logo";
+import { EditorialLoading } from "../../components/ui/EditorialLoading";
+import "./shared-editorial.css";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import {
+  exportService,
+  type SharedItineraryItem,
+  type SharedGroupInfo,
+} from "../../services/export";
 
 function formatDate(value?: string | null) {
-  if (!value) return 'Sin fecha'
+  if (!value) return "Sin fecha";
   try {
-    return new Intl.DateTimeFormat('es-MX', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(new Date(value))
+    return new Intl.DateTimeFormat("es-MX", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(value));
   } catch {
-    return value
+    return value;
   }
 }
 
 function formatRange(start?: string | null, end?: string | null) {
-  if (!start && !end) return 'Fechas sin definir'
-  return `${start ?? '-'} a ${end ?? '-'}`
+  if (!start && !end) return "Fechas sin definir";
+  return `${start ?? "-"} a ${end ?? "-"}`;
 }
 
 export function SharedItineraryPage() {
-  const { token } = useParams<{ token: string }>()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [group, setGroup] = useState<SharedGroupInfo | null>(null)
-  const [items, setItems] = useState<SharedItineraryItem[]>([])
-  const [expiresAt, setExpiresAt] = useState<string | null>(null)
+  const { token } = useParams<{ token: string }>();
+  const [loading, setLoading] = useState(true);
+  const [retry, setRetry] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [group, setGroup] = useState<SharedGroupInfo | null>(null);
+  const [items, setItems] = useState<SharedItineraryItem[]>([]);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
 
     async function load() {
       if (!token) {
-        setError('Token inválido')
-        setLoading(false)
-        return
+        setError("Token inválido");
+        setLoading(false);
+        return;
       }
 
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       try {
-        const response = await exportService.getSharedItinerary(token)
-        if (cancelled) return
-        setGroup(response.group)
-        setItems(response.itinerary ?? [])
-        setExpiresAt(response.tokenMeta?.expiresAt ?? null)
+        const response = await exportService.getSharedItinerary(token);
+        if (cancelled) return;
+        setGroup(response.group);
+        setItems(response.itinerary ?? []);
+        setExpiresAt(response.tokenMeta?.expiresAt ?? null);
       } catch (err) {
-        if (cancelled) return
-        setError(err instanceof Error ? err.message : 'No se pudo cargar el itinerario compartido')
+        if (cancelled) return;
+        setError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo cargar el itinerario compartido",
+        );
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) setLoading(false);
       }
     }
 
-    load()
+    load();
     return () => {
-      cancelled = true
-    }
-  }, [token])
+      cancelled = true;
+    };
+  }, [token, retry]);
 
   const groupedByDay = useMemo(() => {
-    const map = new Map<string, SharedItineraryItem[]>()
+    const map = new Map<string, SharedItineraryItem[]>();
     items.forEach((item) => {
-      const day = item.day ?? 'Sin fecha'
-      const list = map.get(day) ?? []
-      list.push(item)
-      map.set(day, list)
-    })
-    return Array.from(map.entries())
-  }, [items])
+      const day = item.day ?? "Sin fecha";
+      const list = map.get(day) ?? [];
+      list.push(item);
+      map.set(day, list);
+    });
+    return Array.from(map.entries());
+  }, [items]);
 
   return (
-    <main className="min-h-screen bg-[#F4F6F8] px-4 py-8">
-      <div className="mx-auto w-full max-w-5xl">
-        <header className="mb-6 rounded-2xl bg-[#1E0A4E] px-6 py-5 text-white shadow-lg">
-          <p className="text-xs uppercase tracking-wide text-white/70">Itinerario compartido</p>
-          <h1 className="mt-1 text-2xl font-bold">{group?.nombre ?? 'Cargando viaje...'}</h1>
-          <p className="mt-1 text-sm text-white/85">
-            {group?.destino_formatted_address ?? group?.destino ?? 'Destino sin definir'}
+    <main className="atlas-shared-itinerary">
+      <div className="atlas-shared-sheet">
+        <header>
+          <Logo variant="color" height={38} />
+          <p className="atlas-shared-eyebrow">
+            EL ATLAS DEL VIAJE / CONSULTA COMPARTIDA
           </p>
-          <p className="mt-2 text-xs text-white/75">
-            {group ? formatRange(group.fecha_inicio, group.fecha_fin) : 'Preparando fechas...'}
-          </p>
-          {expiresAt ? (
-            <p className="mt-1 text-xs text-white/65">Enlace válido hasta: {formatDate(expiresAt)}</p>
-          ) : null}
+          <h1>{group?.nombre ?? "El itinerario del viaje."}</h1>
+          {group && (
+            <>
+              <p>
+                {group.destino_formatted_address ||
+                  group.destino ||
+                  "Destino sin definir"}
+              </p>
+              <p>{formatRange(group.fecha_inicio, group.fecha_fin)}</p>
+            </>
+          )}
+          {expiresAt && (
+            <small>Enlace válido hasta {formatDate(expiresAt)}</small>
+          )}
+          <button
+            className="atlas-shared-print"
+            disabled={loading || Boolean(error)}
+            onClick={() => window.print()}
+          >
+            Imprimir / Guardar PDF
+          </button>
         </header>
-
-        {loading ? <div className="rounded-2xl bg-white p-5 text-sm text-[#475569]">Cargando itinerario...</div> : null}
-        {!loading && error ? <div className="rounded-2xl border border-[#FECACA] bg-[#FEF2F2] p-5 text-sm text-[#991B1B]">{error}</div> : null}
-
-        {!loading && !error && groupedByDay.length === 0 ? (
-          <div className="rounded-2xl bg-white p-5 text-sm text-[#475569]">No hay actividades públicas para mostrar.</div>
-        ) : null}
-
-        {!loading && !error && groupedByDay.length > 0 ? (
-          <section className="space-y-4">
+        {loading ? (
+          <EditorialLoading label="Preparando el itinerario compartido…" />
+        ) : error ? (
+          <section role="alert" className="atlas-shared-error">
+            <h2>No se pudo consultar el itinerario.</h2>
+            <p>{error}</p>
+            <button onClick={() => setRetry((value) => value + 1)}>
+              Reintentar consulta
+            </button>
+          </section>
+        ) : groupedByDay.length === 0 ? (
+          <section className="atlas-shared-empty">
+            <h2>Sin actividades para mostrar.</h2>
+            <p>
+              Este enlace solo presenta los datos compartidos del itinerario.
+            </p>
+          </section>
+        ) : (
+          <div className="atlas-shared-days">
             {groupedByDay.map(([day, dayItems]) => (
-              <article key={day} className="rounded-2xl border border-[#E2E8F0] bg-white p-4">
-                <h2 className="text-base font-bold text-[#1E0A4E]">{day}</h2>
-                <div className="mt-3 space-y-3">
-                  {dayItems.map((item) => (
-                    <div key={item.id} className="rounded-xl bg-[#F8FAFC] p-3">
-                      <p className="font-semibold text-[#1E0A4E]">{item.title}</p>
-                      {item.description ? <p className="mt-1 text-sm text-[#475569]">{item.description}</p> : null}
-                      <p className="mt-1 text-xs text-[#64748B]">
-                        {item.location ? `${item.location} · ` : ''}
+              <section key={day} className="atlas-shared-day">
+                <header>
+                  <p className="atlas-shared-eyebrow">EL PLAN DEL DÍA</p>
+                  <h2>{day}</h2>
+                </header>
+                {dayItems.map((item) => (
+                  <article key={item.id}>
+                    <div>
+                      <span>HORARIO</span>
+                      <p>
                         {formatDate(item.startsAt)}
-                        {item.endsAt ? ` a ${formatDate(item.endsAt)}` : ''}
+                        {item.endsAt && <> — {formatDate(item.endsAt)}</>}
                       </p>
                     </div>
-                  ))}
-                </div>
-              </article>
+                    <div>
+                      <h3>{item.title}</h3>
+                      {item.description && <p>{item.description}</p>}
+                      {item.location && (
+                        <p className="atlas-shared-location">{item.location}</p>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </section>
             ))}
-          </section>
-        ) : null}
+          </div>
+        )}
+        <footer>ITHERA · Planear juntos, vivir el viaje.</footer>
       </div>
     </main>
-  )
+  );
 }
-

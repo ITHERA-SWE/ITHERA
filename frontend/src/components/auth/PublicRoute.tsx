@@ -1,3 +1,4 @@
+import { EditorialLoading } from "../ui/EditorialLoading";
 import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "../../context/useAuth";
@@ -9,13 +10,8 @@ export function PublicRoute({ children }: { children: ReactNode }) {
     if (accessToken && localUser && location.pathname === "/login")
       sessionStorage.removeItem("ithera_post_login_redirect");
   }, [accessToken, localUser, location.pathname]);
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-[#344054]">
-        Cargando...
-      </div>
-    );
-  }
+  if (loading)
+    return <EditorialLoading full label="Conectando tu cuenta con ITHERA…" />;
   if (accessToken && localUser) {
     // El proveedor puede confirmar la sesión antes de resolver login(). El retorno
     // se resuelve también aquí para conservar enlaces de invitación completos.

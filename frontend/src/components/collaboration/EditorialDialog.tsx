@@ -1,39 +1,39 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from "react";
 export function EditorialDialog({
   title,
   onClose,
   children,
   busy = false,
 }: {
-  title: string
-  onClose: () => void
-  children: ReactNode
-  busy?: boolean
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+  busy?: boolean;
 }) {
-  const dialog = useRef<HTMLDialogElement>(null)
+  const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    const element = dialog.current
+    const element = dialog.current;
     const opener =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
-        : null
-    element?.showModal()
+        : null;
+    element?.showModal();
     return () => {
-      element?.close()
-      if (opener?.isConnected) opener.focus()
-    }
-  }, [])
+      element?.close();
+      if (opener?.isConnected) opener.focus();
+    };
+  }, []);
   return (
     <dialog
       ref={dialog}
       className="atlas-collab-dialog"
       aria-label={title}
       onCancel={(e) => {
-        e.preventDefault()
-        if (!busy) onClose()
+        e.preventDefault();
+        if (!busy) onClose();
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget && !busy) onClose()
+        if (e.target === e.currentTarget && !busy) onClose();
       }}
     >
       <header>
@@ -48,7 +48,7 @@ export function EditorialDialog({
           Cerrar ×
         </button>
       </header>
-      {children}
+      <div className="atlas-dialog-body">{children}</div>
     </dialog>
-  )
+  );
 }

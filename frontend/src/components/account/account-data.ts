@@ -53,3 +53,18 @@ export function documentDate(value?: string) {
       }).format(date)
     : "Fecha no informada";
 }
+
+/** Identidad de servidor: dos archivos con el mismo nombre pueden ser legítimos. */
+export function mergeTripDocuments<T extends { id: string }>(
+  current: T[],
+  incoming: T[],
+) {
+  const incomingById = new Map(incoming.map((item) => [String(item.id), item]));
+  const seen = new Set<string>();
+  return [...incomingById.values(), ...current].filter((item) => {
+    const key = String(item.id);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}

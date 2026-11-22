@@ -1,0 +1,636 @@
+{
+  "base_commit": "7abfe0156cd947b4a940b82b764afbca2ae21f72",
+  "base_overlay": "ITHERA_Editorial_Cuentas_Personas_Etapa8.zip",
+  "base_overlay_sha256": "dbc08f2927319277cf63f7337a88f1ac5c206eab29427f2304e935cc17a5e753",
+  "deleted_files": [],
+  "requires": [
+    {
+      "path": "docs/frontend-ui/MANIFEST_ETAPA2.json",
+      "sha256": "33d16dff82095ca45639429a7cbff6919e69b1306d6e4a961635175fc1fb297b"
+    },
+    {
+      "path": "docs/frontend-ui/MANIFEST_ETAPA3.json",
+      "sha256": "e96573572659da1fc06fff17addf8f3c54da94a76576353d3141f66c0e144556"
+    },
+    {
+      "path": "docs/frontend-ui/MANIFEST_ETAPA4.json",
+      "sha256": "be9d3f022dacffdcaad5d1a325c25048b0468b693f3a3296420e57fcb3676298"
+    },
+    {
+      "path": "docs/frontend-ui/MANIFEST_ETAPA5.json",
+      "sha256": "7872cd8e9ce58c9a14d1f8bb01b53b0ea3c9692d9b8f11e98be512b27e08902c"
+    },
+    {
+      "path": "docs/frontend-ui/MANIFEST_ETAPA6.json",
+      "sha256": "89b3ca08abad38f650796276a4764050f1bb9bf1caba7b1a75e3af7fead34d69"
+    },
+    {
+      "path": "docs/frontend-ui/MANIFEST_ETAPA7.json",
+      "sha256": "997e8bca7a726cee3df5f98f27d5d837404d0b5b7d125195be8a42724b3485f2"
+    },
+    {
+      "path": "docs/frontend-ui/MANIFEST_ETAPA8.json",
+      "sha256": "98b057ec13a838857cf5da440406aa079460a789bb56d2040597dc21cabbe98c"
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "sha256": "753792f299cf5d1a15c6a6b1f8a8290ac010b8b5a2b8fb54b15890b571d01632"
+    },
+    {
+      "path": "frontend/package.json",
+      "sha256": "d35963e1104d4a62feea9abf40bb9ec9cd9c3151083b590644dc40607133b63e"
+    },
+    {
+      "path": "frontend/src/App.tsx",
+      "sha256": "97f228ca67e5fef6d5f7beb4973a9d11033146bf0dfb78268f3ca0af53009a24"
+    },
+    {
+      "path": "frontend/src/components/ActivityProposalModal/ActivityProposalModal.tsx",
+      "sha256": "b9426098bb899572b583fb22aa36718264b11bc8a96a2f4208e90953224ea908"
+    },
+    {
+      "path": "frontend/src/components/ConfirmProposalModal/ConfirmProposalModal.tsx",
+      "sha256": "6bcb4f1af4b69e03106c2fbb564f8b876a6aa16a6a2a8bbde859842db6f93f72"
+    },
+    {
+      "path": "frontend/src/components/InviteModal/InviteModal.tsx",
+      "sha256": "862048ec39d252d37eb7a737dc0d8cb06158907dc6b32c5287e40c06f6241881"
+    },
+    {
+      "path": "frontend/src/components/ProposalDetailModal/ProposalDetailModal.tsx",
+      "sha256": "6076103e044fba75ee54e6b83689c2852da572c39bb5443aede534d9a132491b"
+    },
+    {
+      "path": "frontend/src/components/account/AccountAvatar.tsx",
+      "sha256": "29eb462cef997324ba4292aeab3bba1c200c6662fd70182465e5d2167e792c16"
+    },
+    {
+      "path": "frontend/src/components/account/AccountDialog.tsx",
+      "sha256": "b2ff735fca61c4fe7be5fbecb613816f8c2388ba77653ed3be556279f8002d42"
+    },
+    {
+      "path": "frontend/src/components/account/AccountTripNav.tsx",
+      "sha256": "39286c28b7571135d5bfbf6681b6c16fc41f81ec8525020c2d2d34a09a33fd78"
+    },
+    {
+      "path": "frontend/src/components/account/AuthEditorialLayout.tsx",
+      "sha256": "90a4cd0f911f843f6365bbbd0180c2b8b2d45fdaa5a7c6a8199fafb68859dccb"
+    },
+    {
+      "path": "frontend/src/components/budget/ExpenseDraftForm.tsx",
+      "sha256": "f924dd03fbc058cb6512bc114274cf5cd20862ee438e39bb3ece19e295a51d2d"
+    },
+    {
+      "path": "frontend/src/components/checkout/CheckoutSummaryCard.tsx",
+      "sha256": "b4e019b86d51b3081cfc8eca1725da841ccf9071776660a7ce872e0f45ef7ec3"
+    },
+    {
+      "path": "frontend/src/components/checkout/PaymentCardForm.tsx",
+      "sha256": "0323e134eb516bed5b9bb7214b72216f71669e50d21b63cec6ca7965ed14e238"
+    },
+    {
+      "path": "frontend/src/components/checkout/PurchaseSuccessModal.tsx",
+      "sha256": "feae05f9f1109a088f566d8689aa25f06690b5f7d910c375521ff1e0d573d276"
+    },
+    {
+      "path": "frontend/src/components/collaboration/collaboration.css",
+      "sha256": "7ea3fc529b50709fae891e29400581820d52ac3cce3f77dcb3c0f6befac6bd55"
+    },
+    {
+      "path": "frontend/src/components/collaboration/useProposalWorkspace.ts",
+      "sha256": "c8bcc63af70b258c6878b5468228e9ec41337477d18bb92544f0f48c270d18d9"
+    },
+    {
+      "path": "frontend/src/components/itinerary/DayMap.tsx",
+      "sha256": "8fd686cc236a358ced025d0d62fab01e5fa9b52399f787f3726fb47983565ca8"
+    },
+    {
+      "path": "frontend/src/components/itinerary/ItineraryPlanner.tsx",
+      "sha256": "b781c50afad50291c3395adc26ecdaf804ddf22d743c371b8847eeb9b4aa96bb"
+    },
+    {
+      "path": "frontend/src/components/itinerary/ShareItineraryButton.tsx",
+      "sha256": "dcccd7bfbbf552420dc2e3f6436d9126893c8ab03a371ae4b23d6bf990a8ad1b"
+    },
+    {
+      "path": "frontend/src/components/itinerary/itinerary-data.ts",
+      "sha256": "bc6fe9659f6b7e40dff428e0f82ecfe2bdeab0e74ce790d63731778046888920"
+    },
+    {
+      "path": "frontend/src/components/itinerary/itinerary.css",
+      "sha256": "b482a7723c86130ca5cb82b3e0bd746362d8560821738567dddfb4392aaee7a5"
+    },
+    {
+      "path": "frontend/src/components/layout/AppLayout/AppLayout.tsx",
+      "sha256": "318309b98aa43cb7bb4da8580fbfe85767283577ad08566009ed49947bb2033a"
+    },
+    {
+      "path": "frontend/src/components/trip/ExploreHub.tsx",
+      "sha256": "2fb535f4b38f3ebd3108b6a1c4952fbe2a725030fc71dd63578418adc71c25bb"
+    },
+    {
+      "path": "frontend/src/components/trip/TripNavigation.tsx",
+      "sha256": "f56b3827186d69ce8214f946e89076e207e54fd32c569d07a586a27ebbf16a07"
+    },
+    {
+      "path": "frontend/src/components/trip/TripOverview.tsx",
+      "sha256": "4c92d57ddff8eea75855dfea08719c3c5841c95f6603a4e1c9da48c26e1dc0fa"
+    },
+    {
+      "path": "frontend/src/components/trip/editorial-data.ts",
+      "sha256": "ba320bb56964029f21ab7e15e2a5f36dbb871054052f008acc025add9c0a0812"
+    },
+    {
+      "path": "frontend/src/components/trip/editorial.css",
+      "sha256": "f58dd7237fa98544a7136d5952dc4bae091cd281011e0e27f60e34b82ded174b"
+    },
+    {
+      "path": "frontend/src/components/trips/TripAccessLayout.tsx",
+      "sha256": "820856e116396b5a87d8752004bee920cb716c3a06c5375d83698c59c53f0b07"
+    },
+    {
+      "path": "frontend/src/components/trips/TripCover.tsx",
+      "sha256": "57bd59bde7af24f7f2e543fc117a396a2a0014856549bc6afeb3d69d69fa3768"
+    },
+    {
+      "path": "frontend/src/components/trips/TripDestination.tsx",
+      "sha256": "f758cdfae667ded6f6dd89f2484e907edf2caecde97cd4aa0bcca3836613a0bb"
+    },
+    {
+      "path": "frontend/src/components/trips/trip-access.css",
+      "sha256": "699556872df0f8fce5979228779eaf549fbc466862fa05ab91b76db62ba5fffa"
+    },
+    {
+      "path": "frontend/src/components/ui/DayView/DayView.tsx",
+      "sha256": "015a327917058deaa87f8e46403d7fc040edae26f9f46a8fde9e11c7d9ebb6b6"
+    },
+    {
+      "path": "frontend/src/context/AuthContext.tsx",
+      "sha256": "b07b2f2af0bd85afeb9b2109cef57e09f339233ed3f2ef3dd4b68c7d532173c4"
+    },
+    {
+      "path": "frontend/src/context/useAuth.ts",
+      "sha256": "dd4e8be718c159ede475659b50e59eb594e6330cba6df6d8371319f2f67fa786"
+    },
+    {
+      "path": "frontend/src/hooks/useGroupRealtimeRefresh.ts",
+      "sha256": "716a27b91ebca8ceec27b361c7d5b5fef17870a69b876d6e84805fa38b3c09bd"
+    },
+    {
+      "path": "frontend/src/hooks/useNetworkMonitor.ts",
+      "sha256": "dc2ced16dbf478640eeef412231866323f64888970e53b7fa54035c759169eeb"
+    },
+    {
+      "path": "frontend/src/hooks/useSocket.ts",
+      "sha256": "c152a413cfba7599b4401a58fdcd3b1ad13d7e8bd99146d436d86a3bde916ce3"
+    },
+    {
+      "path": "frontend/src/pages/Checkout/CheckoutPage.tsx",
+      "sha256": "6c0a47f7548295b9a884857646f62230a884fd5952aa986d233b3e510c5e96b0"
+    },
+    {
+      "path": "frontend/src/pages/Comparison/ComparisonPage.tsx",
+      "sha256": "1f957fce9320117f9b8c987c88d583bb622f4c1bfb146060e8f882fcba062012"
+    },
+    {
+      "path": "frontend/src/pages/ForgotPassword/ForgotPasswordPage.tsx",
+      "sha256": "a3e16171c70eadc30d4867ed59fbb7a6f121b1f90dcc02d2adb1a59e3acb16b3"
+    },
+    {
+      "path": "frontend/src/pages/GroupPanel/GroupPanelPage.tsx",
+      "sha256": "e1cedd924058df02abc60cc782b43d3f56e9b5f041bfb5c48f086b75fd2a0281"
+    },
+    {
+      "path": "frontend/src/pages/GroupSettings/GroupSettingsPage.tsx",
+      "sha256": "622dc4fb4bddf9370b17cc62f48509d59f547b898a06e98114fc49c568657643"
+    },
+    {
+      "path": "frontend/src/pages/JoinGroup/JoinGroupPage.tsx",
+      "sha256": "dd2574971c44686807e489ced657e40c25aecdabb5033d458aa3d2d31aebe21c"
+    },
+    {
+      "path": "frontend/src/pages/Login/LoginPage.tsx",
+      "sha256": "e7b338f0becdadf4f3394477e81959541d13cbb9fad95e41af13dc3a13727e06"
+    },
+    {
+      "path": "frontend/src/pages/OTP/OTPPage.tsx",
+      "sha256": "773d07005f61733ded61bfb79e33da663bc27faa80e0187e8d1484cfae6880a3"
+    },
+    {
+      "path": "frontend/src/pages/Profile/ProfilePage.tsx",
+      "sha256": "5511350ea8b358365fd8993fd175b7f7c6dbb2d73e3036e04cf8ab90919ea270"
+    },
+    {
+      "path": "frontend/src/pages/Register/RegisterPage.tsx",
+      "sha256": "3e28c06eab8aca4c25c45dff653dbd277c68cd163020584f96a1cb115d32268b"
+    },
+    {
+      "path": "frontend/src/pages/ResetPassword/ResetPasswordPage.tsx",
+      "sha256": "6833cd5c71bb1fd4d50a171a8226eedf3df39d95fd7b3cf98de7cd604014213b"
+    },
+    {
+      "path": "frontend/src/pages/Search/AirportSearchInput.tsx",
+      "sha256": "4f9b620a06f67025fbc36f3b04ea742fab18df27e1cc7d8f4f8a40c356c04b94"
+    },
+    {
+      "path": "frontend/src/pages/Search/FlightHotelSearchPage.tsx",
+      "sha256": "b0a39954d93b3073cf92b5246f0800c0a4825ab10fe5fdcde5934d1d9109d4e6"
+    },
+    {
+      "path": "frontend/src/pages/Search/MapPlacesPage.tsx",
+      "sha256": "3c7560e24f7083860c82e014229141c2a40a62b5c494f132f939a68f2d3fb7e7"
+    },
+    {
+      "path": "frontend/src/pages/Search/RoutesTransportWeatherPage.tsx",
+      "sha256": "eb1dc487a070671d3cdf093f4d665f169adb21392f4a41b80c160534a3c3f713"
+    },
+    {
+      "path": "frontend/src/pages/Search/SearchFilters.tsx",
+      "sha256": "14cdcebefc657c0329c08d03408406836376eadca3e4aced2518b2081ce7ba7e"
+    },
+    {
+      "path": "frontend/src/pages/Search/SearchForms.tsx",
+      "sha256": "5275e10bcffa0be938ae0be3891e663e5037719d12890071a6ac2d1df44e836b"
+    },
+    {
+      "path": "frontend/src/pages/Search/SearchHistoryPage.tsx",
+      "sha256": "54d3474f588cbe9d40a2452fd8554272eaf415c62d8442ff87a294980427bf7a"
+    },
+    {
+      "path": "frontend/src/pages/Search/SearchIntegratedShell.tsx",
+      "sha256": "61571687e2ef876e2857df02dfb3bfe1e05561bf5d57ff33c846ca9ed0c8c313"
+    },
+    {
+      "path": "frontend/src/pages/Search/SearchResults.tsx",
+      "sha256": "a8ac0ca16d42c261165800716c37c945572534e473d96327524c92708f6e560a"
+    },
+    {
+      "path": "frontend/src/pages/Search/exploration/GeoControls.tsx",
+      "sha256": "20acd30d98b334f618e3567dc3b1400a5392e1c841aae6945c2242d93888e211"
+    },
+    {
+      "path": "frontend/src/pages/Search/exploration/InteractiveMap.tsx",
+      "sha256": "d28ee54598d1881b8217d6c13353518d83611f72e20a6593400d7fb4a4a30ca5"
+    },
+    {
+      "path": "frontend/src/pages/Search/exploration/PlaceProposal.tsx",
+      "sha256": "b0ec35fd41a832537fbb24de742134eca021ee77a19fba984462477833927383"
+    },
+    {
+      "path": "frontend/src/pages/Search/exploration/WeatherPanel.tsx",
+      "sha256": "6aec40fac6f616671484c21c2839fd10e86b658807e45997427a302840521273"
+    },
+    {
+      "path": "frontend/src/pages/Search/exploration/exploration.css",
+      "sha256": "7a758c3e22ab2662fb03b4d7185a0a2a1c9d7fc4c5831b1eafd09c1688330cfc"
+    },
+    {
+      "path": "frontend/src/pages/Search/exploration/geo-data.ts",
+      "sha256": "ad629f8eb0fdb98d67ec7e695460f4f0d5c24ba1f1a66c377a5f90d57bcac9f4"
+    },
+    {
+      "path": "frontend/src/pages/Search/exploration/useGeoContext.ts",
+      "sha256": "1defaccf2c631bd1a8d8c6980411b2233af84d61d7dd4ab5178bae38cfa82337"
+    },
+    {
+      "path": "frontend/src/pages/Search/search-data.ts",
+      "sha256": "6001faccdb05b2eca72177ff48690739d14893febf480bee0e05ff167be95771"
+    },
+    {
+      "path": "frontend/src/pages/Search/search-editorial.css",
+      "sha256": "2f20c871f81d20fef37b3081835bc2187701ca554f275a6bd91528d729eb659f"
+    },
+    {
+      "path": "frontend/src/pages/Search/search-types.ts",
+      "sha256": "06c5d8d915047f8c362c2b1513dfa4bd1ef9e823bb67fac68962089a5e6422d8"
+    },
+    {
+      "path": "frontend/src/pages/Search/useSearchTrip.ts",
+      "sha256": "5d3144c4c8159f38ef6415f0d6f2d62c7dd006888e6097f21d2334596b22245a"
+    },
+    {
+      "path": "frontend/src/services/apiClient.ts",
+      "sha256": "6bf080d0c95c34d2b6c289caa4c90d4244947ff86a13da8bb9ba048bdaf15ce4"
+    },
+    {
+      "path": "frontend/src/services/budget.ts",
+      "sha256": "6013701b119385a3cb431f21e66b456289c24d63f58f4506723b1b3a75180465"
+    },
+    {
+      "path": "frontend/src/services/checkout.ts",
+      "sha256": "94e696dc082294cff8c60c8ea3fa85629d96d87886e22ded2f1ea7afaec6ceca"
+    },
+    {
+      "path": "frontend/src/services/context-links.ts",
+      "sha256": "f9aea45599e4e53fadc53afd0e197bf3fe18123e3ad531d70fc5ca941e615c74"
+    },
+    {
+      "path": "frontend/src/services/documents.ts",
+      "sha256": "4e5cb157c28d1e84087dfcdd4fd06b08a14fee202934c069ca04fa49d03ff895"
+    },
+    {
+      "path": "frontend/src/services/export.ts",
+      "sha256": "29c565e8fafb664162292c0522b5aa83cb6fbd5696bb3a71962cc8c8abb74026"
+    },
+    {
+      "path": "frontend/src/services/flights.ts",
+      "sha256": "c7cbb5d1db8c64ede6907bf2e0e4f957b2cdefd0c4638d590814c37ef786fa99"
+    },
+    {
+      "path": "frontend/src/services/groups.ts",
+      "sha256": "671ed743d366b83afcfe82b6c613383e63c82494f1c274fa0c5a3a18e384838c"
+    },
+    {
+      "path": "frontend/src/services/hotels.ts",
+      "sha256": "10c7f7d94e1396928c49d5e5d7737d80a6ebfef65af40f518e16e9ebfb3a4ba7"
+    },
+    {
+      "path": "frontend/src/services/maps.ts",
+      "sha256": "93b559ef9dac6e9d103f0371154935b76ef43b3870aa971b20cf5aed04514645"
+    },
+    {
+      "path": "frontend/src/services/notifications.ts",
+      "sha256": "f76561e59acb653ebcd72be6062cfe9b5a608bcd4ec72e1807dcb181b76473b3"
+    },
+    {
+      "path": "frontend/src/services/proposals.ts",
+      "sha256": "aecac21f0437e5fc002d6ed20c495b758e7d1ff1b37f6cf9053ff01f4b81e1ad"
+    },
+    {
+      "path": "frontend/src/services/search-history.ts",
+      "sha256": "a2f3ee931edeb1f8c21280163979eddd68500ee80b19cd0cdfb4489e29d8686b"
+    },
+    {
+      "path": "frontend/src/services/subgroups.ts",
+      "sha256": "fd4ca9b5ab6481b93f95a0d878e32db43f674c897629b1806c119583b590b1a0"
+    },
+    {
+      "path": "frontend/src/types/groups.ts",
+      "sha256": "ed101d961f03ccf65004b7951f02846047c12ca6cb06a8d0fca989472ebdf93a"
+    },
+    {
+      "path": "frontend/tests/editorial-accounts.test.mjs",
+      "sha256": "d6cf1676558aaa17c323a51bfcc68da167b21338c0c7c80a8a3313e3b79569c3"
+    },
+    {
+      "path": "frontend/tests/editorial-dashboard.test.mjs",
+      "sha256": "cd8600089c0f1b4f74b8501909355d205ceaedacc47ba549dff4c14c7cda50e0"
+    },
+    {
+      "path": "frontend/tests/editorial-decisions.test.mjs",
+      "sha256": "5d6274221f144c72723f116ae546c53a7ed1252acaca12010960bb439ac5c2fc"
+    },
+    {
+      "path": "frontend/tests/editorial-exploration.test.mjs",
+      "sha256": "3f2c8430cdcfd06fc83bb695bd9da12ff20ebad63861ac69c8098a52941120fb"
+    },
+    {
+      "path": "frontend/tests/editorial-itinerary.test.mjs",
+      "sha256": "47c7affb0c5f8535625c118fd4a9ee9a022932e542d05d3dd4b041e28b722915"
+    },
+    {
+      "path": "frontend/tests/editorial-search.test.mjs",
+      "sha256": "8569311f7f1dd5ce6a09969914245833b74e6babcf875b75df40c04df8566bd7"
+    },
+    {
+      "path": "frontend/tests/editorial-trips.test.mjs",
+      "sha256": "19265e3b93578289503550323d7df9c1ee1702d42adc15b97f7e97f1f82cf491"
+    }
+  ],
+  "files": [
+    {
+      "path": "CONTRIBUTING.md",
+      "base_sha256": "b8706d96b0288a2cda51338e0c49aee86312c27df6e47801e0c1114876304576",
+      "result_sha256": "a3c240921a0461c4ca9efd7808de95beba77bcede8ce0f289bb98a659c97d7b6",
+      "accepted_base_sha256": [
+        "1829a689ea96ce7c28eef00a54cffb8e70a88562bb28b80564ea1c741a695d1f"
+      ]
+    },
+    {
+      "path": "README.md",
+      "base_sha256": "5dead857035bd8fe42dd5165065bf006f9dca039316a1f85e9b74066053b338b",
+      "result_sha256": "77796c99a5a698c7e3e1675cedbfced3e177b15fa123e9fdf94c32f6043a746e",
+      "accepted_base_sha256": [
+        "2b6a443c0dc766e54f37fdea102f620c06b74e02108ffeb27dc1c4d2ca296436"
+      ]
+    },
+    {
+      "path": "docs/DESPLIEGUE_ITHERA.md",
+      "base_sha256": null,
+      "result_sha256": "656f5c13b77615dcac018cf8349387fd5b3ed7fe22eecbf4a4b767504899425a",
+      "accepted_base_sha256": [
+        "656f5c13b77615dcac018cf8349387fd5b3ed7fe22eecbf4a4b767504899425a"
+      ]
+    },
+    {
+      "path": "docs/PROYECTO_ACADEMICO_2027_1.md",
+      "base_sha256": null,
+      "result_sha256": "cefaa12ab0a2b6c98e16a60d4cec88fadbfcb3d4975f8e4ed4f995f15e5a43f7"
+    },
+    {
+      "path": "docs/frontend-ui/ITHERA_ETAPA9_VALIDACION_FINAL.md",
+      "base_sha256": null,
+      "result_sha256": "5982187ab6f975a430a5d0301250eebd19b75ead5434855ccf6825fd811b6241"
+    },
+    {
+      "path": "docs/frontend-ui/ITHERA_Etapa9_Guia_Integracion.md",
+      "base_sha256": null,
+      "result_sha256": "48e1b87686b6622927f1ac2f3985e7ea2a18dc82a910b8863807cedaf2d544c9"
+    },
+    {
+      "path": "docs/frontend-ui/VALIDACION_ETAPA9.json",
+      "base_sha256": null,
+      "result_sha256": "77afee9f99081fb3d4f23c5fe104e843a4fce7540330cf85815be23ea6193fe0"
+    },
+    {
+      "path": "docs/frontend-ui/aplicar_etapa9.py",
+      "base_sha256": null,
+      "result_sha256": "12dcf5fcbdc67419e3ad925f7effaff8d5ffe4130ffbf7e99b40d62fd1147051"
+    },
+    {
+      "path": "docs/frontend-ui/pruebas-etapa9/build-components.mjs",
+      "base_sha256": null,
+      "result_sha256": "e32f4ef02c0efd93417e3e71137c9f2e6312a822650c9acc1085472bf4838991"
+    },
+    {
+      "path": "docs/frontend-ui/pruebas-etapa9/build-dom.mjs",
+      "base_sha256": null,
+      "result_sha256": "58132420c4176e82f39d2a3e32ee24f62b1f7b8bffd191a96372104328d35e30"
+    },
+    {
+      "path": "docs/frontend-ui/pruebas-etapa9/mock-api.cjs",
+      "base_sha256": null,
+      "result_sha256": "88c059e373be865cd403ef89d42a8fcb1537c2f36d8b0287638e2cabcf812115"
+    },
+    {
+      "path": "docs/frontend-ui/pruebas-etapa9/supabase-stub.ts",
+      "base_sha256": null,
+      "result_sha256": "506c0cc928e05bcb31e24a7bb2f08fcd710f6135aa9a2a5583ac829344e6006a"
+    },
+    {
+      "path": "docs/frontend-ui/pruebas-etapa9/test-components.cjs",
+      "base_sha256": null,
+      "result_sha256": "e2adf1f8182e1a14e825e8cac190dec943b08a62fc1591bf2553daa602b9ae41"
+    },
+    {
+      "path": "docs/frontend-ui/pruebas-etapa9/test-dom.cjs",
+      "base_sha256": null,
+      "result_sha256": "ffe4047252b2b115340382a9994537740f8df82ab173dd36d2a5a65f77997c62"
+    },
+    {
+      "path": "frontend/src/components/account/account-data.ts",
+      "base_sha256": "fdd19638d22ccd1efa6b7cdb8f8c5bddb7900cd67e895f6ae6068aa359fbc4f9",
+      "result_sha256": "d219c94e690bf35594055f42a7ff525c12d2f6e9cda49240ccb3c9d9a4b53605"
+    },
+    {
+      "path": "frontend/src/components/account/accounts-editorial.css",
+      "base_sha256": "5e51b220ed3a7c692e17c71d3fce94722881c41281be62f9aa42fe2f40492a92",
+      "result_sha256": "86141a345df19c54fd49f975076515385d41ea3e5f80b943e7bc09c0f7bc0a22"
+    },
+    {
+      "path": "frontend/src/components/auth/ProtectedRoute.tsx",
+      "base_sha256": "52d9ba271f63378bd7f458b7a7f4498ec9e19f2da54b1e0c33c909483e57e66d",
+      "result_sha256": "1fee02044f1d99da68e7e90e9a8be852af6b9b7bc02a36a4f2ebd29aedad5e13"
+    },
+    {
+      "path": "frontend/src/components/auth/PublicRoute.tsx",
+      "base_sha256": "d274f63b53ec95c80d896721836cf9f6d94c511f2d01e9991482328b977e6f94",
+      "result_sha256": "13f913915732d10dc8cb59a7aaada5d6bcdab45e872e7e8dafb542f57e676c99"
+    },
+    {
+      "path": "frontend/src/components/chat/ChatDrawer.tsx",
+      "base_sha256": "d462dbda6f8c358778a279a987773d9a0af99115fd47c318b08d7b13a7f4c88d",
+      "result_sha256": "a9c6a7b271bc7c61858a62540602e15b336ef8dbe1ec49082749cde8d8526f66"
+    },
+    {
+      "path": "frontend/src/components/chat/ChatSurface.tsx",
+      "base_sha256": null,
+      "result_sha256": "d2eaf9cfa2e32f5600df029517c6b954982f732209b7755639828238df7b3842"
+    },
+    {
+      "path": "frontend/src/components/chat/SubgroupChatDrawer.tsx",
+      "base_sha256": "3a37e9185ae60a55451231bc14696252dca8d344fa12a91f8470be541baabb60",
+      "result_sha256": "25fcb5c70eacabc8792e09ee77bd2da09ae7a4c2e533ef15e1a474562f86ec86"
+    },
+    {
+      "path": "frontend/src/components/collaboration/CollaborationView.tsx",
+      "base_sha256": "ab19f27360317d88c00e7f8d1aedffdd9f3745fb5cf634bea661ab78aaf513ac",
+      "result_sha256": "92646b2ff5306ba7d257fd181d945869c701e2119ecad8dc5ae476cf750673d4"
+    },
+    {
+      "path": "frontend/src/components/collaboration/EditorialDialog.tsx",
+      "base_sha256": "b295d2739c70a2d9996d354f8ad48146aac6c100210c9119f8e96efb329b14b5",
+      "result_sha256": "2d7a6df9df2c5c17d8e01e2f691defa0ca9ca33cf539ee70693efbfba383fc52"
+    },
+    {
+      "path": "frontend/src/components/collaboration/proposal-data.ts",
+      "base_sha256": "0bc4a0837381d088937085b45c23d8432e976ec036ba6192ea2cf319d4691653",
+      "result_sha256": "073884c469f974ffcf87302ec7449778ab0510bb474579d35ab6fcef39c22520"
+    },
+    {
+      "path": "frontend/src/components/documents/DocumentVaultPanel.tsx",
+      "base_sha256": "6f2b0166f8426c31bb3a0275b2e77a4fb669913600a6c56fcb8271f4912fa927",
+      "result_sha256": "9c2c8176e71ba8bac37693f3771df9ee334d7a19b09ad8263cf2cd62b483c9d7"
+    },
+    {
+      "path": "frontend/src/components/itinerary/editorial-print.css",
+      "base_sha256": null,
+      "result_sha256": "ea1deb9fe1de548c1cd82ea3d079862956a284044bf079cea5897a52058757b0"
+    },
+    {
+      "path": "frontend/src/components/layout/Navbar/Navbar.tsx",
+      "base_sha256": "692ef0952e578bdd11bc426dfe45cf42cfe89b6e86bed2cb2ff84f6370f120af",
+      "result_sha256": "75712cc5e8d0af3c27851274984365e2c0b9c72ad0f5c58dbad70c9d55809b4f"
+    },
+    {
+      "path": "frontend/src/components/subgroups/SubgroupSchedulePanel.tsx",
+      "base_sha256": "a0d0d4bf64329c35058e864ca52809ec2978d9d3be991305eb77338181af92af",
+      "result_sha256": "dc87192e5abe0eca612fba1f29b008923ac35729dfa8c5bcb9bb7d32b5145f5e"
+    },
+    {
+      "path": "frontend/src/components/trips/trip-data.ts",
+      "base_sha256": "0db5be94caa3d7256bc546a1c8ef8555473512cebc9ca92cc6d1ffd068ac6072",
+      "result_sha256": "e2eccf3c9bfd655d6df9efb32748987be33d36463093823504b0642ed54f5625"
+    },
+    {
+      "path": "frontend/src/components/ui/ConfirmDialog/ConfirmDialog.tsx",
+      "base_sha256": "504763c7620b1f73c065a547a8b3f9d8e7fdb57b4d33ca9c57e4e52c10103141",
+      "result_sha256": "d69c6d2b4151a70643e3b99b3136cec2980b13744d34261c684299c17805b92e"
+    },
+    {
+      "path": "frontend/src/components/ui/EditorialLoading.tsx",
+      "base_sha256": null,
+      "result_sha256": "5f3ede06da0cd616554e1bf7c00d72bc86592edb285c46ea9d82150facfa52a5"
+    },
+    {
+      "path": "frontend/src/components/ui/HelpButton/HelpButton.tsx",
+      "base_sha256": "683a434599c091d03932aa5ef2aaeee80581e09a98d9d709440c83cbd6c0425c",
+      "result_sha256": "ad0cdc07c2ce360134507f909064c4a93783029f9fe0e17631443ff7433593aa"
+    },
+    {
+      "path": "frontend/src/components/ui/Toast/ToastContainer.tsx",
+      "base_sha256": "ba6f469a7d94caf86f98ebe7762762d41852262a242fa56a5f6c3c0dad90602a",
+      "result_sha256": "a5dc764231d68def3292899cdcc7b9e015c6431b747de58edde865a110266d22"
+    },
+    {
+      "path": "frontend/src/components/ui/editorial-position.ts",
+      "base_sha256": null,
+      "result_sha256": "68dc1fd5e4b7011619b447275de550cb0e6157087a784f3caf70b7d5f7bfbb92"
+    },
+    {
+      "path": "frontend/src/components/ui/editorial-system.css",
+      "base_sha256": null,
+      "result_sha256": "52135571bbca4b3f468efcfbb5f0349ff09d6bbc0eca0abaaecfd2809f1125e6"
+    },
+    {
+      "path": "frontend/src/hooks/useNotifications.ts",
+      "base_sha256": "10083f97d740e500bb66836b9b71a526174aecfbfc3a8385180e39eed7e7d388",
+      "result_sha256": "ff17a1756bde921f0bac64cd7d402427ff2094bb5843bbe6dbe5d6ba7b5168e4"
+    },
+    {
+      "path": "frontend/src/main.tsx",
+      "base_sha256": "0e7fa95d5cf0930e786b64addf235af20948a282607c2f8e01b1d17f9c87a536",
+      "result_sha256": "425b39150ca2988c6f726ced35a52b0528e6665feb5148c9629ef3c92a61d9f7"
+    },
+    {
+      "path": "frontend/src/pages/CreateGroup/CreateGroupPage.tsx",
+      "base_sha256": "199581caff9d977a4bc0d015e2721d6b68bc59b656525fbecc781c4d7044a036",
+      "result_sha256": "1b7bd18d5cf0e92cf07766c11f975f025882514ecd4c665cd2a310e1e6f51a88"
+    },
+    {
+      "path": "frontend/src/pages/Itinerary/DashboardPage.tsx",
+      "base_sha256": "e647edff217899ff66761ce2e9cdc90c5f8ebaf0200177e61b6c70603776ee3b",
+      "result_sha256": "8c460d7e0011c340fdacac914e8032ef7e5c4554d12f2211e7671237c33c9c88"
+    },
+    {
+      "path": "frontend/src/pages/Landing/LandingPage.tsx",
+      "base_sha256": "cccdab2920d9b3968c55dbf5eb88aef3591da08bce8b735c088859f1d3716c94",
+      "result_sha256": "b105e82b299df33db9e9716fe2ffd37d34e7d5776f537cef924492479fbe810e"
+    },
+    {
+      "path": "frontend/src/pages/Landing/landing-editorial.css",
+      "base_sha256": null,
+      "result_sha256": "0beb0d4e9f963741344ab00481b216392ee3435a05e1892c1f795620903acd6d"
+    },
+    {
+      "path": "frontend/src/pages/MyTrips/MyTripsPage.tsx",
+      "base_sha256": "741cc973a359f154e0300860bc5269f41dd7be3688c59c6fdc2363d0d6646e4d",
+      "result_sha256": "696dcc6228fba7943a289fb4e06cbf90479d8138548ced9cf4fbebeca4628fb2"
+    },
+    {
+      "path": "frontend/src/pages/Shared/SharedItineraryPage.tsx",
+      "base_sha256": "db7ec245c8c88a714d27ed105e64c5bc37018b29b3550a4f3fefb636e776c805",
+      "result_sha256": "fa754e6beb0a37eeba7b0388103c660a66564b69057ce03fa1d7248b96dfd3be"
+    },
+    {
+      "path": "frontend/src/pages/Shared/shared-editorial.css",
+      "base_sha256": null,
+      "result_sha256": "590367aa98d7adff3cab345a5c93edb26b964a8492acdc242910719dd1e35b73"
+    },
+    {
+      "path": "frontend/tests/editorial-stabilization.test.mjs",
+      "base_sha256": null,
+      "result_sha256": "93faeb347dc651b9c8dff9e528f5519e9ab65bd892caecc02617134273f6d2c1"
+    }
+  ]
+}

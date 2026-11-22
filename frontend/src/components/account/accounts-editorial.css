@@ -1174,3 +1174,133 @@
     gap: 8px;
   }
 }
+
+/* Etapa 9: proporciones, profundidad y ritmo compartidos por toda autenticación. */
+.atlas-auth-screen {
+  grid-template-columns: minmax(320px, 0.95fr) minmax(0, 1.05fr);
+  align-items: start;
+  background: #fff;
+}
+.atlas-auth-story {
+  min-height: 100dvh;
+  position: sticky;
+  top: 0;
+  background:
+    linear-gradient(180deg, #1e0a4ec9, #1e0a4ef5),
+    url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=300&fit=crop")
+      center/cover;
+  padding: 46px clamp(32px, 5vw, 82px);
+}
+.atlas-auth-story-copy {
+  padding: 70px 0;
+  max-width: 520px;
+}
+.atlas-auth-story-copy h2 {
+  font-size: clamp(56px, 5.5vw, 88px);
+  line-height: 1.01;
+}
+.atlas-auth-story-copy > p:last-of-type {
+  font-size: 14px;
+  max-width: 330px;
+  line-height: 1.95;
+}
+.atlas-auth-story-copy svg {
+  width: 115px;
+  max-height: 140px;
+  opacity: 0.75;
+  margin-top: 38px;
+}
+.atlas-auth-form-panel {
+  min-height: 100dvh;
+  padding: 56px clamp(28px, 5vw, 92px);
+  align-items: center;
+}
+.atlas-auth-content {
+  max-width: 450px;
+  margin: auto;
+}
+.atlas-auth-content h1 {
+  font-size: clamp(40px, 3.8vw, 57px);
+  line-height: 1.04;
+  margin-bottom: 22px;
+}
+.atlas-auth-content > .flex {
+  gap: 14px;
+}
+.atlas-auth-content form {
+  margin-top: 28px;
+}
+.atlas-auth-content [class*="grid-cols-2"] {
+  gap: 16px;
+}
+.atlas-auth-content form label {
+  margin-bottom: 9px;
+}
+.atlas-auth-content form input:not([type="checkbox"]) {
+  min-height: 49px;
+  border-radius: 5px;
+}
+.atlas-auth-content form button[type="submit"] {
+  min-height: 49px;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  margin-top: 12px;
+}
+.atlas-auth-content > div:has(> button) {
+  gap: 12px;
+}
+.atlas-auth-content [class*="mb-10"] {
+  margin-bottom: 32px;
+}
+.atlas-auth-content > p.atlas-account-eyebrow {
+  margin-bottom: 20px;
+}
+.atlas-auth-story footer {
+  padding-top: 28px;
+}
+@media (max-width: 1000px) and (min-width: 768px) {
+  .atlas-auth-screen {
+    grid-template-columns: 0.8fr 1.2fr;
+  }
+  .atlas-auth-story {
+    padding: 38px 28px;
+  }
+  .atlas-auth-story-copy h2 {
+    font-size: 57px;
+  }
+  .atlas-auth-form-panel {
+    padding: 44px 30px;
+  }
+}
+@media (max-width: 767px) {
+  .atlas-auth-screen {
+    display: block;
+  }
+  .atlas-auth-story {
+    display: none;
+  }
+  .atlas-auth-form-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 28px 24px 50px;
+    min-height: 100dvh;
+  }
+  .atlas-auth-mobile-logo {
+    margin-bottom: 36px;
+    display: block;
+  }
+  .atlas-auth-content {
+    max-width: 480px;
+    width: 100%;
+  }
+  .atlas-auth-content h1 {
+    font-size: 43px;
+  }
+  .atlas-auth-content form input {
+    font-size: 16px;
+  }
+  .atlas-auth-content form {
+    margin-top: 22px;
+  }
+}
