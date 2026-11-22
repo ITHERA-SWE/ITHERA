@@ -1,0 +1,1369 @@
+/* Etapa 3: estilos propios de búsqueda; no altera los tokens ni las páginas globales. */
+.atlas-search-scroll {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #fff;
+}
+.atlas-explore-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-shrink: 0;
+  min-height: 48px;
+  padding: 0 clamp(16px, 3vw, 48px);
+  border-bottom: 1px solid #e8e5ee;
+  background: #faf9fd;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.atlas-explore-nav button {
+  padding: 14px 0 11px;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #626679;
+}
+.atlas-explore-nav button[aria-current='page'] {
+  color: #4b2fa3;
+  border-bottom-color: #4b2fa3;
+}
+.atlas-explore-nav .atlas-explore-compare {
+  margin-left: auto;
+  color: #4b2fa3;
+}
+.atlas-search-no-group {
+  padding: 14px clamp(16px, 3vw, 48px);
+  background: #faf9fd;
+  font-size: 12px;
+  border-bottom: 1px solid #e8e5ee;
+}
+.atlas-search-no-group button {
+  color: #4b2fa3;
+  text-decoration: underline;
+  margin-left: 8px;
+}
+.atlas-search-page {
+  max-width: 1440px;
+  margin: auto;
+  padding: 36px clamp(20px, 4vw, 60px) 32px;
+  min-width: 0;
+  color: #1e0a4e;
+}
+.atlas-search-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+  padding-bottom: 28px;
+}
+.atlas-search-heading .atlas-eyebrow {
+  color: #4b2fa3;
+  font-size: 10px;
+}
+.atlas-search-heading h1 {
+  font:
+    400 clamp(40px, 4.1vw, 58px)/1.04 'Instrument Serif',
+    Georgia,
+    serif;
+  letter-spacing: -0.02em;
+  margin: 12px 0 16px;
+}
+.atlas-search-heading h1 em {
+  font-weight: 400;
+  color: #4b2fa3;
+}
+.atlas-search-heading > div > p:last-child {
+  color: #626679;
+  font-size: 13px;
+  line-height: 1.7;
+  max-width: 640px;
+}
+.atlas-search-heading-note {
+  padding-left: 36px;
+  border-left: 1px solid #e8e5ee;
+  min-width: 245px;
+}
+.atlas-search-heading-note > span {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: #4b2fa3;
+}
+.atlas-search-heading-note > p {
+  white-space: pre-line;
+  font:
+    400 24px/1.35 'Instrument Serif',
+    Georgia,
+    serif;
+  margin: 15px 0;
+}
+.atlas-search-heading-note small {
+  font-size: 11px;
+  color: #626679;
+}
+.atlas-search-mode {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  border-bottom: 1px solid #e8e5ee;
+}
+.atlas-search-mode > button {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 14px 3px 13px;
+  border-bottom: 3px solid transparent;
+}
+.atlas-search-mode > button[aria-pressed='true'] {
+  border-bottom-color: #4b2fa3;
+  color: #4b2fa3;
+}
+.atlas-search-mode > p {
+  margin-left: auto;
+  font-size: 11px;
+  color: #626679;
+}
+.atlas-search-form {
+  position: relative;
+  background: #faf9fd;
+  padding: 24px;
+  margin-top: 22px;
+  border: 1px solid #e8e5ee;
+  border-radius: 6px;
+}
+.atlas-search-form fieldset {
+  min-width: 0;
+}
+.atlas-search-form label,
+.atlas-search-filter-fields > label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  font-weight: 600;
+  min-width: 0;
+}
+.atlas-search-fields {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 0.85fr)
+    minmax(0, 0.85fr);
+  gap: 16px;
+}
+.atlas-hotel-fields {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+.atlas-search-form input,
+.atlas-search-form select,
+.atlas-search-filter-fields input,
+.atlas-search-filter-fields select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid #d8d3e2;
+  background: #fff;
+  border-radius: 4px;
+  padding: 12px;
+  font:
+    400 13px/1.45 'Plus Jakarta Sans',
+    sans-serif;
+  color: #1e0a4e;
+  min-height: 46px;
+}
+.atlas-search-form input:focus,
+.atlas-search-form select:focus,
+.atlas-search-filter-fields input:focus,
+.atlas-search-filter-fields select:focus {
+  border-color: #4b2fa3;
+}
+.atlas-search-form input:disabled,
+.atlas-search-filter-fields input:disabled {
+  background: #f4f2f7;
+  cursor: not-allowed;
+}
+.atlas-search-form input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+.atlas-search-form input[type='date']::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.45em;
+}
+.atlas-airport-input {
+  position: relative;
+  min-width: 0;
+}
+.atlas-airport-input > small {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #626679;
+  margin-top: 7px;
+  min-height: 15px;
+}
+.atlas-airport-list {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  right: 0;
+  z-index: 45;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid #d8d3e2;
+  background: white;
+  box-shadow: 0 8px 24px #1e0a4e0d;
+  border-radius: 4px;
+}
+.atlas-airport-list > button {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #efedf4;
+  align-items: flex-start;
+}
+.atlas-airport-list button:hover,
+.atlas-airport-list button[aria-selected='true'] {
+  background: #f1edf9;
+}
+.atlas-airport-list strong {
+  color: #4b2fa3;
+  font-size: 13px;
+}
+.atlas-airport-list span {
+  font-size: 12px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.atlas-airport-list small {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: #626679;
+  margin-top: 4px;
+}
+.atlas-traveler-options {
+  margin-top: 18px;
+  border-top: 1px solid #e8e5ee;
+}
+.atlas-traveler-options summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 12px;
+  padding: 15px 0;
+}
+.atlas-traveler-options summary::-webkit-details-marker {
+  display: none;
+}
+.atlas-traveler-options summary span {
+  font-size: 11px;
+  color: #4b2fa3;
+}
+.atlas-traveler-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.atlas-traveler-options > p,
+.atlas-search-date-note {
+  font-size: 10px;
+  line-height: 1.65;
+  color: #626679;
+  margin: 12px 0 0;
+}
+.atlas-child-ages {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid #e8e5ee;
+}
+.atlas-child-ages legend {
+  padding: 4px 0;
+  font-size: 11px;
+}
+.atlas-child-ages label {
+  width: 94px;
+}
+.atlas-search-submit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-top: 1px solid #e8e5ee;
+  margin-top: 20px;
+  padding-top: 18px;
+}
+.atlas-search-submit p {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #626679;
+  max-width: 75%;
+}
+.atlas-search-submit .atlas-button {
+  min-width: 160px;
+  white-space: nowrap;
+}
+.atlas-search-submit .atlas-button:disabled {
+  background: #75658e;
+  color: white;
+  opacity: 1;
+}
+.atlas-search-notice {
+  padding: 14px 18px;
+  border-left: 3px solid #7a4fd6;
+  font-size: 12px;
+  line-height: 1.7;
+  background: #faf9fd;
+  margin: 18px 0;
+}
+.atlas-search-operation-error {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid #f0bdbd;
+  background: #fff8f8;
+  color: #9c2435;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.atlas-saved-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 22px;
+  border-bottom: 1px solid #e8e5ee;
+  padding: 16px 0;
+}
+.atlas-saved-strip strong {
+  font-size: 12px;
+  color: #4b2fa3;
+}
+.atlas-saved-strip p {
+  font-size: 11px;
+  color: #626679;
+  margin-top: 5px;
+}
+.atlas-search-output {
+  margin-top: 38px;
+}
+.atlas-search-intro {
+  position: relative;
+  padding: 28px 0 40px;
+  border-bottom: 1px solid #e8e5ee;
+  overflow: hidden;
+}
+.atlas-search-intro .atlas-eyebrow {
+  color: #626679;
+}
+.atlas-search-intro h2 {
+  font:
+    400 34px/1.15 'Instrument Serif',
+    Georgia,
+    serif;
+  margin: 12px 0;
+}
+.atlas-search-intro > p:last-of-type {
+  color: #626679;
+  font-size: 12px;
+  max-width: 540px;
+  line-height: 1.7;
+}
+.atlas-search-intro-mark {
+  position: absolute;
+  right: 12%;
+  top: -22px;
+  font:
+    400 140px/1 'Instrument Serif',
+    Georgia,
+    serif;
+  color: #4b2fa309;
+  pointer-events: none;
+}
+.atlas-results-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.atlas-results-heading h2,
+.atlas-search-state h2 {
+  font:
+    400 34px/1.15 'Instrument Serif',
+    Georgia,
+    serif;
+  margin: 8px 0;
+}
+.atlas-results-heading .atlas-eyebrow {
+  color: #4b2fa3;
+}
+.atlas-results-heading p:last-child {
+  font-size: 11px;
+  line-height: 1.7;
+  color: #626679;
+}
+.atlas-search-results-layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.atlas-search-filters {
+  position: sticky;
+  top: 20px;
+  border-top: 2px solid #4b2fa3;
+}
+.atlas-search-filters > summary {
+  padding: 16px 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+}
+.atlas-search-filters > summary::-webkit-details-marker {
+  display: none;
+}
+.atlas-search-filter-fields {
+  padding: 8px 0;
+  display: grid;
+  gap: 22px;
+}
+.atlas-search-filter-fields small {
+  font-size: 10px;
+  line-height: 1.55;
+  font-weight: 400;
+  color: #626679;
+}
+.atlas-search-filter-fields input,
+.atlas-search-filter-fields select {
+  font-size: 11px;
+  padding: 10px;
+  min-height: 42px;
+}
+.atlas-search-filter-fields > p {
+  font-size: 10px;
+  line-height: 1.7;
+  color: #626679;
+}
+.atlas-results-list {
+  min-width: 0;
+}
+.atlas-results-caption {
+  font-size: 10px;
+  line-height: 1.6;
+  color: #626679;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e8e5ee;
+}
+.atlas-flight-result {
+  padding: 22px 0 12px;
+  border-bottom: 1px solid #ded9e7;
+}
+.atlas-flight-result:first-of-type {
+  padding-top: 6px;
+}
+.atlas-flight-row {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.65fr) minmax(0, 2fr) minmax(
+      155px,
+      0.95fr
+    );
+  gap: 22px;
+  align-items: start;
+}
+.atlas-flight-airline h3 {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  margin: 10px 0 4px;
+}
+.atlas-flight-airline p {
+  font-size: 10px;
+  color: #626679;
+}
+.atlas-airline-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: #f2eef9;
+  color: #4b2fa3;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 4px;
+}
+.atlas-search-tag {
+  display: inline-block;
+  font-size: 9px;
+  color: #626679;
+  border: 1px solid #e8e5ee;
+  border-radius: 3px;
+  padding: 4px 6px;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+.atlas-search-tag-test {
+  background: #f5f0fc;
+  color: #4b2fa3;
+  border-color: #e1d5f0;
+}
+.atlas-flight-route {
+  display: grid;
+  grid-template-columns: 24px minmax(50px, 1fr) minmax(70px, 1.4fr) minmax(
+      50px,
+      1fr
+    );
+  gap: 9px;
+  align-items: start;
+}
+.atlas-flight-route + .atlas-flight-route {
+  border-top: 1px solid #efedf4;
+  margin-top: 14px;
+  padding-top: 16px;
+}
+.atlas-route-label {
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  color: #626679;
+  padding-top: 5px;
+  writing-mode: vertical-rl;
+}
+.atlas-route-label small {
+  display: none;
+}
+.atlas-flight-end {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.atlas-flight-end time {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
+}
+.atlas-flight-end > span {
+  font-size: 11px;
+  color: #626679;
+  overflow-wrap: anywhere;
+}
+.atlas-flight-end small {
+  font-size: 9px;
+  color: #626679;
+  line-height: 1.5;
+}
+.atlas-flight-line {
+  text-align: center;
+  padding-top: 2px;
+  font-size: 10px;
+  color: #626679;
+}
+.atlas-flight-line strong {
+  font-weight: 500;
+  color: #4b2fa3;
+  font-size: 10px;
+}
+.atlas-route-rule {
+  display: block;
+  position: relative;
+  height: 1px;
+  background: #cfc5e0;
+  margin: 10px 0;
+}
+.atlas-route-rule::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -2px;
+  width: 5px;
+  height: 5px;
+  background: #7a4fd6;
+  border-radius: 50%;
+}
+.atlas-offer-price {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  text-align: right;
+  min-width: 0;
+}
+.atlas-offer-price > span {
+  font-size: 9px;
+  color: #626679;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.atlas-offer-price > strong {
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+.atlas-offer-price small {
+  font-size: 10px;
+  line-height: 1.6;
+  color: #626679;
+}
+.atlas-offer-price .atlas-button {
+  min-height: 40px;
+  font-size: 11px;
+  padding: 9px 12px;
+}
+.atlas-flight-details {
+  margin-top: 12px;
+  font-size: 11px;
+  color: #626679;
+}
+.atlas-flight-details summary {
+  width: fit-content;
+  cursor: pointer;
+  padding: 10px 0;
+  color: #4b2fa3;
+  font-size: 11px;
+}
+.atlas-flight-details > div {
+  padding: 14px 18px;
+  background: #faf9fd;
+  line-height: 1.8;
+}
+.atlas-flight-details dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.atlas-flight-details dt {
+  font-size: 10px;
+  color: #626679;
+}
+.atlas-flight-details dd {
+  color: #1e0a4e;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.atlas-segment-list {
+  border-top: 1px solid #e8e5ee;
+  padding: 12px 0;
+}
+.atlas-segment-list h4 {
+  color: #1e0a4e;
+  font-weight: 600;
+}
+.atlas-segment-list p {
+  overflow-wrap: anywhere;
+}
+.atlas-hotel-result {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(0, 1.2fr) minmax(
+      145px,
+      0.85fr
+    );
+  gap: 22px;
+  padding: 24px 0;
+  border-bottom: 1px solid #ded9e7;
+  align-items: start;
+}
+.atlas-hotel-result:first-of-type {
+  padding-top: 6px;
+}
+.atlas-hotel-photo {
+  position: relative;
+  background: #f2eff7;
+  min-height: 220px;
+  overflow: hidden;
+  border-radius: 4px;
+  align-self: stretch;
+}
+.atlas-hotel-photo img {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.atlas-photo-loading {
+  position: absolute;
+  inset: 0;
+  background: #eae6f0;
+  animation: atlas-search-breathe 1.2s ease-in-out infinite alternate;
+}
+.atlas-photo-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6b5689;
+}
+.atlas-photo-fallback span {
+  font:
+    400 64px/1 'Instrument Serif',
+    Georgia,
+    serif;
+  color: #9f89be;
+}
+.atlas-photo-fallback p {
+  font-size: 10px;
+  margin-top: 12px;
+}
+.atlas-hotel-copy .atlas-eyebrow {
+  font-size: 8px;
+  letter-spacing: 0.09em;
+  color: #626679;
+}
+.atlas-hotel-copy h3 {
+  font:
+    400 27px/1.12 'Instrument Serif',
+    Georgia,
+    serif;
+  margin: 10px 0;
+}
+.atlas-hotel-copy > p {
+  font-size: 11px;
+  line-height: 1.7;
+  color: #626679;
+}
+.atlas-hotel-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 15px 0;
+}
+.atlas-hotel-facts span {
+  font-size: 10px;
+  color: #626679;
+}
+.atlas-hotel-facts strong {
+  font-weight: 600;
+  font-size: 12px;
+  color: #4b2fa3;
+}
+.atlas-hotel-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.atlas-hotel-features span {
+  font-size: 10px;
+  line-height: 1.5;
+  padding: 4px 7px;
+  background: #faf9fd;
+  border: 1px solid #ebe7f2;
+  border-radius: 3px;
+}
+.atlas-search-state {
+  padding: 30px 0;
+  line-height: 1.7;
+}
+.atlas-search-state h3 {
+  font:
+    400 29px/1.2 'Instrument Serif',
+    Georgia,
+    serif;
+}
+.atlas-search-state p {
+  color: #626679;
+  font-size: 13px;
+  max-width: 650px;
+  margin: 12px 0 20px;
+}
+.atlas-search-state .atlas-eyebrow {
+  color: #4b2fa3;
+  font-size: 10px;
+}
+.atlas-search-error {
+  background: #faf9fd;
+  border-left: 3px solid #7a4fd6;
+  padding: 28px;
+}
+.atlas-search-footer {
+  border-top: 1px solid #e8e5ee;
+  margin-top: 34px;
+  padding-top: 22px;
+}
+.atlas-search-footer p {
+  max-width: 850px;
+  font-size: 10px;
+  color: #626679;
+  line-height: 1.8;
+  margin-bottom: 8px;
+}
+.atlas-search-skeleton > p {
+  color: #626679;
+  font-size: 12px;
+  padding: 12px 0;
+}
+.atlas-search-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 24px 0;
+  border-bottom: 1px solid #e8e5ee;
+}
+.atlas-search-skeleton-row > span {
+  display: block;
+  flex: 1;
+  min-height: 70px;
+  background: #eae6f0;
+  border-radius: 4px;
+  animation: atlas-search-breathe 1.2s ease-in-out infinite alternate;
+}
+.atlas-search-skeleton-row > .atlas-search-skeleton-photo {
+  flex: 0.9;
+  min-height: 160px;
+}
+.atlas-hotel-dialog {
+  margin: auto;
+  padding: 0;
+  border: 1px solid #e8e5ee;
+  border-radius: 8px;
+  width: min(860px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: 88dvh;
+  overflow-y: auto;
+  background: #fff;
+  color: #1e0a4e;
+}
+.atlas-hotel-dialog::backdrop {
+  background: #1e0a4e70;
+  backdrop-filter: blur(3px);
+}
+.atlas-hotel-detail-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 28px;
+}
+.atlas-hotel-detail-heading h2 {
+  font:
+    400 36px/1.1 'Instrument Serif',
+    Georgia,
+    serif;
+  margin: 10px 0;
+}
+.atlas-hotel-detail-heading p:last-child {
+  font-size: 12px;
+  color: #626679;
+}
+.atlas-hotel-detail-heading .atlas-eyebrow {
+  font-size: 9px;
+}
+.atlas-hotel-photo-large {
+  border-radius: 0;
+  height: 240px;
+}
+.atlas-hotel-detail-body {
+  padding: 24px 28px;
+}
+.atlas-hotel-detail-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e8e5ee;
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+  font-size: 12px;
+}
+.atlas-hotel-detail-summary strong {
+  font-size: 20px;
+}
+.atlas-hotel-detail-body > h3 {
+  font:
+    400 28px/1.2 'Instrument Serif',
+    Georgia,
+    serif;
+}
+.atlas-search-muted {
+  color: #626679;
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 12px 0;
+}
+.atlas-room-rate {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 20px;
+  border-top: 1px solid #e8e5ee;
+  padding: 20px 0;
+  font-size: 12px;
+}
+.atlas-room-rate h4 {
+  font-weight: 600;
+}
+.atlas-room-rate p,
+.atlas-room-rate small {
+  color: #626679;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.atlas-room-rate > strong {
+  flex-shrink: 0;
+  max-width: 35%;
+  overflow-wrap: anywhere;
+}
+.atlas-hotel-detail-action {
+  background: #faf9fd;
+  padding: 20px;
+  border-top: 1px solid #e8e5ee;
+}
+.atlas-hotel-detail-action > p {
+  font-size: 12px;
+  color: #626679;
+  line-height: 1.8;
+  margin-bottom: 14px;
+}
+.atlas-explore-hub {
+  max-width: 1160px;
+  margin: auto;
+  padding: 42px clamp(24px, 4vw, 64px);
+}
+.atlas-explore-hub > .atlas-eyebrow {
+  color: #4b2fa3;
+}
+.atlas-explore-hub > h1 {
+  font:
+    400 clamp(40px, 5vw, 62px)/1.05 'Instrument Serif',
+    Georgia,
+    serif;
+  margin: 20px 0;
+}
+.atlas-explore-hub > p {
+  font-size: 13px;
+  color: #626679;
+  line-height: 1.8;
+}
+.atlas-explore-primary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid #e8e5ee;
+  border-bottom: 1px solid #e8e5ee;
+  margin: 32px 0 22px;
+}
+.atlas-explore-primary > button {
+  text-align: left;
+  padding: 32px 24px 32px 0;
+}
+.atlas-explore-primary > button + button {
+  border-left: 1px solid #e8e5ee;
+  padding-left: 32px;
+}
+.atlas-explore-primary > button:hover {
+  background: #faf9fd;
+}
+.atlas-explore-number {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: #626679;
+}
+.atlas-explore-primary h2 {
+  font:
+    400 34px/1.2 'Instrument Serif',
+    Georgia,
+    serif;
+  margin: 14px 0;
+}
+.atlas-explore-primary p {
+  font-size: 12px;
+  color: #626679;
+  margin-bottom: 15px;
+}
+.atlas-explore-tools {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.atlas-explore-tools > button {
+  text-align: left;
+  font-size: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #ddd4ec;
+  color: #4b2fa3;
+}
+.atlas-explore-tools span {
+  margin-left: 15px;
+}
+.atlas-explore-hub > .atlas-explore-footnote {
+  margin-top: 36px;
+  font-size: 11px;
+}
+@keyframes atlas-search-breathe {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (min-width: 1500px) {
+  .atlas-search-results-layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 36px;
+  }
+}
+@media (max-width: 1100px) {
+  .atlas-search-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .atlas-hotel-fields > label:first-child {
+    grid-column: 1 / -1;
+  }
+  .atlas-search-heading-note {
+    min-width: 195px;
+    padding-left: 24px;
+  }
+  .atlas-search-results-layout {
+    grid-template-columns: 175px minmax(0, 1fr);
+    gap: 22px;
+  }
+  .atlas-flight-row {
+    grid-template-columns: minmax(85px, 0.7fr) minmax(0, 2fr);
+    gap: 18px;
+  }
+  .atlas-flight-row > .atlas-offer-price {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(145px, 1fr);
+    text-align: left;
+    align-items: center;
+    border-top: 1px solid #efedf4;
+    padding-top: 14px;
+  }
+  .atlas-flight-row > .atlas-offer-price > span {
+    grid-column: 1;
+  }
+  .atlas-flight-row > .atlas-offer-price > strong {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .atlas-flight-row > .atlas-offer-price > .atlas-button {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+  .atlas-hotel-result {
+    grid-template-columns: minmax(140px, 1fr) minmax(0, 1.2fr);
+  }
+  .atlas-hotel-result > .atlas-offer-price {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    text-align: left;
+  }
+  .atlas-hotel-result > .atlas-offer-price > .atlas-button {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+  .atlas-hotel-result > .atlas-offer-price > strong {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .atlas-hotel-result > .atlas-offer-price > small:last-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 899px) {
+  .atlas-search-heading-note {
+    display: none;
+  }
+  .atlas-search-results-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .atlas-search-filters {
+    position: static;
+    border: 1px solid #e8e5ee;
+    border-radius: 4px;
+  }
+  .atlas-search-filters > summary {
+    padding: 14px 18px;
+  }
+  .atlas-search-filter-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0 18px 18px;
+    gap: 16px;
+  }
+  .atlas-search-filter-fields > p {
+    grid-column: 1 / -1;
+  }
+  .atlas-flight-row {
+    grid-template-columns: minmax(85px, 0.65fr) minmax(0, 2fr) minmax(
+        145px,
+        1fr
+      );
+  }
+  .atlas-flight-row > .atlas-offer-price {
+    display: flex;
+    grid-column: auto;
+    border: 0;
+    padding: 0;
+    text-align: right;
+  }
+  .atlas-hotel-result {
+    grid-template-columns: minmax(130px, 0.9fr) minmax(0, 1.3fr) minmax(
+        135px,
+        0.9fr
+      );
+  }
+  .atlas-hotel-result > .atlas-offer-price {
+    display: flex;
+    grid-column: auto;
+    text-align: right;
+  }
+  .atlas-explore-nav {
+    gap: 24px;
+  }
+}
+@media (max-width: 639px) {
+  .atlas-search-page {
+    padding: 26px 20px;
+  }
+  .atlas-search-heading {
+    padding-bottom: 18px;
+  }
+  .atlas-search-heading h1 {
+    font-size: 43px;
+  }
+  .atlas-search-heading > div > p:last-child {
+    font-size: 12px;
+  }
+  .atlas-search-mode {
+    gap: 24px;
+  }
+  .atlas-search-mode > p {
+    display: none;
+  }
+  .atlas-search-form {
+    padding: 18px 16px;
+    margin-top: 18px;
+  }
+  .atlas-search-fields {
+    gap: 18px 12px;
+  }
+  .atlas-search-fields > label:first-child,
+  .atlas-search-fields > label:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+  .atlas-hotel-fields > label:nth-child(2) {
+    grid-column: auto;
+  }
+  .atlas-search-form input,
+  .atlas-search-form select {
+    font-size: 16px;
+    padding: 11px;
+  }
+  .atlas-traveler-options summary {
+    font-size: 12px;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .atlas-traveler-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .atlas-search-date-note {
+    font-size: 10px;
+  }
+  .atlas-search-submit {
+    flex-direction: column;
+    gap: 14px;
+    align-items: stretch;
+  }
+  .atlas-search-submit p {
+    max-width: none;
+    font-size: 11px;
+  }
+  .atlas-search-submit .atlas-button {
+    width: 100%;
+    min-height: 46px;
+  }
+  .atlas-search-output {
+    margin-top: 28px;
+  }
+  .atlas-search-intro h2,
+  .atlas-results-heading h2 {
+    font-size: 31px;
+  }
+  .atlas-results-heading {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .atlas-results-heading .atlas-text-link {
+    flex-shrink: 0;
+    font-size: 10px;
+  }
+  .atlas-results-heading .atlas-eyebrow {
+    font-size: 8px;
+  }
+  .atlas-flight-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .atlas-flight-airline {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    gap: 4px 10px;
+    align-items: center;
+  }
+  .atlas-flight-airline > .atlas-airline-code {
+    grid-row: 1 / 3;
+  }
+  .atlas-flight-airline h3 {
+    margin: 0;
+    font-size: 13px;
+  }
+  .atlas-flight-airline > p {
+    grid-column: 2;
+  }
+  .atlas-flight-airline .atlas-search-tag {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    margin: 0;
+    max-width: 90px;
+  }
+  .atlas-flight-route {
+    grid-template-columns: 23px 1fr 1.3fr 1fr;
+    gap: 10px;
+  }
+  .atlas-flight-end time {
+    font-size: 24px;
+  }
+  .atlas-flight-row > .atlas-offer-price {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(135px, 1fr);
+    text-align: left;
+    border-top: 1px solid #efedf4;
+    padding-top: 16px;
+  }
+  .atlas-flight-row > .atlas-offer-price > small:last-child {
+    grid-column: 1 / -1;
+  }
+  .atlas-flight-row > .atlas-offer-price > .atlas-button {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+  .atlas-hotel-result {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .atlas-hotel-photo {
+    min-height: 210px;
+    aspect-ratio: 1.65;
+  }
+  .atlas-hotel-copy h3 {
+    font-size: 31px;
+  }
+  .atlas-hotel-result > .atlas-offer-price {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    text-align: left;
+    padding-top: 12px;
+    border-top: 1px solid #efedf4;
+  }
+  .atlas-hotel-result > .atlas-offer-price > .atlas-button {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+  .atlas-hotel-result > .atlas-offer-price > strong {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .atlas-hotel-result > .atlas-offer-price > small {
+    grid-column: 1 / -1;
+  }
+  .atlas-saved-strip {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .atlas-saved-strip .atlas-button {
+    width: 100%;
+  }
+  .atlas-search-filter-fields input,
+  .atlas-search-filter-fields select {
+    font-size: 16px;
+  }
+  .atlas-search-skeleton-row {
+    gap: 12px;
+  }
+  .atlas-search-skeleton-hotels .atlas-search-skeleton-row {
+    flex-wrap: wrap;
+  }
+  .atlas-search-skeleton-hotels .atlas-search-skeleton-photo {
+    flex-basis: 100%;
+  }
+  .atlas-hotel-detail-heading {
+    padding: 22px 18px;
+  }
+  .atlas-hotel-detail-heading h2 {
+    font-size: 29px;
+  }
+  .atlas-hotel-detail-heading .atlas-button {
+    padding: 5px;
+    font-size: 11px;
+  }
+  .atlas-hotel-detail-body {
+    padding: 20px 18px;
+  }
+  .atlas-hotel-photo-large {
+    height: 190px;
+    aspect-ratio: auto;
+  }
+  .atlas-room-rate {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .atlas-room-rate > strong {
+    max-width: none;
+  }
+  .atlas-explore-hub {
+    padding: 30px 24px;
+  }
+  .atlas-explore-primary {
+    grid-template-columns: 1fr;
+  }
+  .atlas-explore-primary > button + button {
+    border-left: 0;
+    border-top: 1px solid #e8e5ee;
+    padding-left: 0;
+  }
+  .atlas-explore-tools {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .atlas-search-page *,
+  .atlas-search-page *::before,
+  .atlas-search-page *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+
+.atlas-flight-end time,
+.atlas-hotel-copy > p,
+.atlas-hotel-copy h3 {
+  overflow-wrap: anywhere;
+}

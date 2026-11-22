@@ -1,3 +1,4 @@
+import { ExploreHub } from "../../components/trip/ExploreHub";
 import { EditorialError, EditorialLoading, TripDecisions, TripOverview } from "../../components/trip/TripOverview";
 import { TripNavigation } from "../../components/trip/TripNavigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -41,7 +42,6 @@ import {
 } from "../../services/context-links";
 import { DocumentVaultPanel } from "../../components/documents/DocumentVaultPanel";
 import { SubgroupSchedulePanel } from "../../components/subgroups/SubgroupSchedulePanel";
-import { HelpButton } from "../../components/ui/HelpButton";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import {
   subgroupScheduleService,
@@ -1534,6 +1534,7 @@ export function DashboardPage() {
     groupId?: string | number;
     switchingGroup?: SwitchingGroupState;
     activeTab?: string;
+    dashboardView?: "general" | "subgrupos";
   } | null;
   const groupIdFromState =
     routeState?.groupId !== undefined && routeState?.groupId !== null
@@ -1568,7 +1569,7 @@ export function DashboardPage() {
     });
   }, [location.search, location.state, groupIdFromState, groupId, currentGroup?.id, navigate]);
   const [dashboardView, setDashboardView] = useState<"general" | "subgrupos">(
-    "general",
+    routeState?.dashboardView ?? "general",
   );
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -1851,7 +1852,7 @@ export function DashboardPage() {
           loadedGroupId.current = resolvedGroupId;
           setActiveDay(null);
           setExpandedDay(null);
-          setDashboardView("general");
+          setDashboardView(routeState?.dashboardView ?? "general");
         }
 
         const verifiedGroup = await withTimeout(
@@ -1993,6 +1994,7 @@ export function DashboardPage() {
     accessToken,
     navigate,
     retryVersion,
+    routeState?.dashboardView,
   ]);
 
   const reloadDashboard = useCallback(async () => {
@@ -3389,341 +3391,7 @@ export function DashboardPage() {
           />
         </div>
       ) : activeTab === "buscar" ? (
-        <div className="flex flex-col flex-1 overflow-y-auto bg-[#F0EEF8] p-4 gap-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="font-heading text-xl font-extrabold text-[#1E0A4E] leading-tight">
-                Buscar
-              </h2>
-              {group?.destino ? (
-                <p
-                  className="mt-0.5 flex items-center gap-1.5 font-body text-sm font-semibold"
-                  style={{
-                    background: "linear-gradient(90deg, #7A4FD6, #1E6FD9)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    style={{
-                      flexShrink: 0,
-                      color: "#7A4FD6",
-                      WebkitTextFillColor: "initial",
-                    }}
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M12 22s7-5.2 7-12a7 7 0 10-14 0c0 6.8 7 12 7 12z"
-                      stroke="#7A4FD6"
-                      strokeWidth="2"
-                      strokeLinejoin="round"
-                    />
-                    <circle
-                      cx="12"
-                      cy="10"
-                      r="2.5"
-                      stroke="#7A4FD6"
-                      strokeWidth="2"
-                    />
-                  </svg>
-                  {group.destino}
-                </p>
-              ) : (
-                <p className="font-body text-sm text-[#6B7280] mt-0.5">
-                  Encuentra opciones para tu viaje
-                </p>
-              )}
-            </div>
-            <HelpButton
-              title="Búsqueda y propuestas"
-              description="Busca vuelos, hospedajes o actividades para proponerlas al grupo. En días pasados o elementos vencidos, el sistema bloquea nuevas propuestas para conservar la lógica del itinerario."
-              placement="right"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 flex-1">
-            <button
-              type="button"
-              onClick={() =>
-                navigate("/search/flights-hotels", {
-                  state: { destino: group?.destino, group },
-                })
-              }
-              className="relative flex flex-col items-start justify-between rounded-3xl p-4 text-left overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98] shadow-[0_8px_24px_rgba(30,111,217,0.18)]"
-              style={{
-                background:
-                  "linear-gradient(145deg, #1251A3 0%, #1E6FD9 45%, #3B9AFF 100%)",
-              }}
-            >
-              <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-              <div className="absolute -bottom-8 -left-4 h-28 w-28 rounded-full bg-white/[0.07] blur-xl" />
-              <div className="relative w-full">
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 shadow-lg backdrop-blur-sm">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M3 11l18-8-8 18-2-8-8-2z"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-                <p className="font-heading text-xl font-extrabold leading-tight text-white">
-                  Vuelos y<br />
-                  Hoteles
-                </p>
-                <p className="mt-1.5 font-body text-sm font-medium leading-snug text-white/85">
-                  Busca y propone opciones al grupo
-                </p>
-              </div>
-              <div className="relative mt-2 flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1">
-                <span className="font-body text-xs font-bold text-white">
-                  Explorar
-                </span>
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M9 18l6-6-6-6"
-                    stroke="white"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                navigate("/search/map-places", { state: { group } })
-              }
-              className="relative flex flex-col items-start justify-between rounded-3xl p-4 text-left overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98] shadow-[0_8px_24px_rgba(122,79,214,0.18)]"
-              style={{
-                background:
-                  "linear-gradient(145deg, #4A1E9E 0%, #7A4FD6 45%, #A67CF7 100%)",
-              }}
-            >
-              <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-              <div className="absolute -bottom-8 -left-4 h-28 w-28 rounded-full bg-white/[0.07] blur-xl" />
-              <div className="relative w-full">
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 shadow-lg backdrop-blur-sm">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M12 22s7-5.2 7-12a7 7 0 10-14 0c0 6.8 7 12 7 12z"
-                      fill="white"
-                    />
-                    <circle cx="12" cy="10" r="2.5" fill="#7A4FD6" />
-                  </svg>
-                </div>
-                <p className="font-heading text-xl font-extrabold leading-tight text-white">
-                  Lugares de
-                  <br />
-                  interés
-                </p>
-                <p className="mt-1.5 font-body text-sm font-medium leading-snug text-white/85">
-                  Explora atracciones y actividades
-                </p>
-              </div>
-              <div className="relative mt-2 flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1">
-                <span className="font-body text-xs font-bold text-white">
-                  Explorar
-                </span>
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M9 18l6-6-6-6"
-                    stroke="white"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                navigate("/search/routes-weather", {
-                  state: { destino: group?.destino, group },
-                })
-              }
-              className="relative flex flex-col items-start justify-between rounded-3xl p-4 text-left overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98] shadow-[0_8px_24px_rgba(53,197,106,0.18)]"
-              style={{
-                background:
-                  "linear-gradient(145deg, #0E7A3A 0%, #22A85A 45%, #35C56A 100%)",
-              }}
-            >
-              <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-              <div className="absolute -bottom-8 -left-4 h-28 w-28 rounded-full bg-white/[0.07] blur-xl" />
-              <div className="relative w-full">
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 shadow-lg backdrop-blur-sm">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <polygon
-                      points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <line
-                      x1="8"
-                      y1="2"
-                      x2="8"
-                      y2="18"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="16"
-                      y1="6"
-                      x2="16"
-                      y2="22"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
-                <p className="font-heading text-xl font-extrabold leading-tight text-white">
-                  Rutas y<br />
-                  Clima
-                </p>
-                <p className="mt-1.5 font-body text-sm font-medium leading-snug text-white/85">
-                  Cómo llegar y pronóstico del tiempo
-                </p>
-              </div>
-              <div className="relative mt-2 flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1">
-                <span className="font-body text-xs font-bold text-white">
-                  Explorar
-                </span>
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M9 18l6-6-6-6"
-                    stroke="white"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate("/search/history", { state: { group } })}
-              className="relative flex flex-col items-start justify-between rounded-3xl p-4 text-left overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98] shadow-[0_8px_24px_rgba(245,158,11,0.18)]"
-              style={{
-                background:
-                  "linear-gradient(145deg, #92400E 0%, #D97706 45%, #F59E0B 100%)",
-              }}
-            >
-              <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-              <div className="absolute -bottom-8 -left-4 h-28 w-28 rounded-full bg-white/[0.07] blur-xl" />
-              <div className="relative w-full">
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 shadow-lg backdrop-blur-sm">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.9 2.9L3 8"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M3 3v5h5"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M12 7v6l4 2"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-                <p className="font-heading text-xl font-extrabold leading-tight text-white">
-                  Propuestas
-                  <br />
-                  guardadas
-                </p>
-                <p className="mt-1.5 font-body text-sm font-medium leading-snug text-white/85">
-                  Historial de vuelos y hospedajes guardados
-                </p>
-              </div>
-              <div className="relative mt-2 flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1">
-                <span className="font-body text-xs font-bold text-white">
-                  Ver todo
-                </span>
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M9 18l6-6-6-6"
-                    stroke="white"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            </button>
-          </div>
-        </div>
+        <ExploreHub group={group} />
       ) : (
         <div className="flex-1 overflow-y-auto bg-surface px-6 py-6">
           <div className="mb-4 inline-flex rounded-lg border border-[#D7DEEA] bg-white p-1">
