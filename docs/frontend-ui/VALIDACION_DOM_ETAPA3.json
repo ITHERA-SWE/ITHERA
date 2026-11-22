@@ -1,0 +1,125 @@
+{
+  "environment": "Aplicación React compilada + jsdom. API HTTP y Socket.IO locales con fixtures. Sin proveedores ni credenciales reales. No valida layout, CORS ni modalidad nativa.",
+  "results": [
+    {
+      "case": "Vuelos utiliza GET /flights/search con fechas, cabina y pasajeros; mantiene el grupo de URL",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Filtros de escalas, aerolínea, moneda y precio cambian filas sin repetir la búsqueda",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Proponer vuelo guarda la oferta y el historial en el grupo correcto; enlaza al comparador",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Error al guardar mantiene los resultados y permite reintentar la propuesta",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Error de historial distingue la propuesta guardada de la búsqueda no registrada",
+      "result": "PASS",
+      "consoleErrors": 1
+    },
+    {
+      "case": "Hotel envía huéspedes, habitaciones y edades reales al endpoint LiteAPI existente",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Cambiar destino de hotel descarta las coordenadas del destino anterior",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Hoteles no fabrican estrellas; filtros, detalles, foto fallida y cierre reutilizan los datos recibidos",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Proponer hotel conserva prebook, payload de simulación, propuesta e historial",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Fallo de prebook no se presenta como reserva confirmada",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "API 503 muestra servicio no disponible y reintento recupera la búsqueda",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "API de hoteles y estado vacío se distinguen",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Google no disponible permite capturar IATA manualmente y buscar con Duffel",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Autocomplete de aeropuertos permite seleccionar con teclado",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Cambiar de modo durante una búsqueda no inserta resultados atrasados en hoteles",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Atrás restaura el modo y conserva groupId",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Viaje finalizado deshabilita búsquedas y propuestas",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Itinerario bloqueado conserva búsqueda pero no permite proponer",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Datos incompletos no guardan propuestas con precio cero inventado",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Cambiar de herramienta durante la verificación del viaje conserva el groupId de URL",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "La URL histórica sin groupId se normaliza sin perder el viaje del router",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Contexto revocado impide montar formularios y permite reintento",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "La desconexión mantiene formulario y deshabilita consultas",
+      "result": "PASS",
+      "consoleErrors": 0
+    },
+    {
+      "case": "Regresión del Resumen de Etapa 2 y accesos separados de Explorar",
+      "result": "PASS",
+      "consoleErrors": 0
+    }
+  ]
+}
