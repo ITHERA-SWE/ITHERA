@@ -1,9 +1,34 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { mapsService, type PlaceAutocompleteResult, type PlaceResult } from '../../services/maps'
+import { EditorialDialog } from '../collaboration/EditorialDialog'
+import {
+  activityTimestamp,
+  clock,
+  dateInItineraryZone,
+} from '../itinerary/itinerary-data'
+import '../itinerary/itinerary.css'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
+import {
+  mapsService,
+  type PlaceAutocompleteResult,
+  type PlaceResult,
+} from '../../services/maps'
 import { groupsService } from '../../services/groups'
 import { proposalsService } from '../../services/proposals'
-import { budgetService, type BudgetCategory, type BudgetSplitType } from '../../services/budget'
-import { documentsService, type TripDocumentCategory } from '../../services/documents'
+import {
+  budgetService,
+  type BudgetCategory,
+  type BudgetSplitType,
+} from '../../services/budget'
+import {
+  documentsService,
+  type TripDocumentCategory,
+} from '../../services/documents'
 import { ApiError } from '../../services/apiClient'
 import {
   contextLinksService,
@@ -26,15 +51,14 @@ type EnrichedPlaceResult = PlaceResult & RoutePreview
 
 type EnrichedPlaceAutocompleteResult = PlaceAutocompleteResult & RoutePreview
 
-type ActivityContextModalMode =
-  | 'expense'
-  | 'document'
-  | null
+type ActivityContextModalMode = 'expense' | 'document' | null
 
 type ContextModalTab = 'associate' | 'create'
 
 type ActivityProposalModalProps = {
   open: boolean
+  isOnline?: boolean
+  isReadOnly?: boolean
   group: Group | null
   token?: string | null
   selectedDayNumber?: number | null
@@ -93,19 +117,6 @@ const toDateKey = (date: Date): string => {
   return `${yyyy}-${mm}-${dd}`
 }
 
-const toLocalDateTimeWithOffset = (dateKey: string, timeKey: string): string => {
-  const localDate = new Date(`${dateKey}T${timeKey}:00`)
-  if (!Number.isFinite(localDate.getTime())) return `${dateKey}T${timeKey}:00`
-
-  const offsetMinutes = -localDate.getTimezoneOffset()
-  const sign = offsetMinutes >= 0 ? '+' : '-'
-  const absoluteOffset = Math.abs(offsetMinutes)
-  const hours = String(Math.floor(absoluteOffset / 60)).padStart(2, '0')
-  const minutes = String(absoluteOffset % 60).padStart(2, '0')
-
-  return `${dateKey}T${timeKey}:00${sign}${hours}:${minutes}`
-}
-
 const formatDayOptionDate = (dateKey: string): string => {
   const date = dateKeyToLocalDate(dateKey)
   if (!date) return dateKey
@@ -118,16 +129,26 @@ const formatDayOptionDate = (dateKey: string): string => {
 
 const getTodayLocalDateKey = (): string => {
   const now = new Date()
-  return toDateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0))
+  return toDateKey(
+    new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0),
+  )
 }
 
-const getTripDayOptions = (group: Group | null): Array<{ dayNumber: number; dateKey: string; isPast: boolean }> => {
+const getTripDayOptions = (
+  group: Group | null,
+): Array<{ dayNumber: number; dateKey: string; isPast: boolean }> => {
   const start = dateKeyToLocalDate(group?.fecha_inicio)
-  const end = dateKeyToLocalDate(group?.fecha_fin ?? group?.fecha_inicio ?? null)
+  const end = dateKeyToLocalDate(
+    group?.fecha_fin ?? group?.fecha_inicio ?? null,
+  )
   if (!start || !end || end < start) return []
 
   const today = getTodayLocalDateKey()
-  const options: Array<{ dayNumber: number; dateKey: string; isPast: boolean }> = []
+  const options: Array<{
+    dayNumber: number
+    dateKey: string
+    isPast: boolean
+  }> = []
   const cursor = new Date(start)
   let dayNumber = 1
 
@@ -145,7 +166,10 @@ const getTripDayOptions = (group: Group | null): Array<{ dayNumber: number; date
   return options
 }
 
-const activityContextKey = (entity: { type: 'expense' | 'document'; id: string }) => `${entity.type}:${entity.id}`
+const activityContextKey = (entity: {
+  type: 'expense' | 'document'
+  id: string
+}) => `${entity.type}:${entity.id}`
 
 const pickCreatedExpenseId = (
   expenses: Array<{
@@ -158,29 +182,39 @@ const pickCreatedExpenseId = (
   expectedDescription: string,
   expectedAmount: number,
 ): string | null => {
-  const newlyCreated = expenses.filter((expense) => !previousExpenseIds.has(String(expense.id)))
-  const pool = newlyCreated.length > 0 ? newlyCreated : expenses
-  const candidates = pool.filter((expense) =>
-    expense.description === expectedDescription &&
-    Number(expense.amount) === expectedAmount
+  const newlyCreated = expenses.filter(
+    (expense) => !previousExpenseIds.has(String(expense.id)),
   )
-  const sorted = [...(candidates.length > 0 ? candidates : pool)].sort((a, b) =>
-    new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+  const pool = newlyCreated.length > 0 ? newlyCreated : expenses
+  const candidates = pool.filter(
+    (expense) =>
+      expense.description === expectedDescription &&
+      Number(expense.amount) === expectedAmount,
+  )
+  const sorted = [...(candidates.length > 0 ? candidates : pool)].sort(
+    (a, b) =>
+      new Date(b.createdAt ?? 0).getTime() -
+      new Date(a.createdAt ?? 0).getTime(),
   )
   return sorted[0]?.id ?? null
 }
 const PLACE_SEARCH_RADIUS_METERS = 50000
 const LONG_ROUTE_THRESHOLD_SECONDS = 60 * 60
 
-const otherEntityForActivity = (link: ContextLink, activityId: string): ContextEntitySummary | null => {
-  if (link.entityA.type === 'activity' && link.entityA.id === activityId) return link.entityB
-  if (link.entityB.type === 'activity' && link.entityB.id === activityId) return link.entityA
+const otherEntityForActivity = (
+  link: ContextLink,
+  activityId: string,
+): ContextEntitySummary | null => {
+  if (link.entityA.type === 'activity' && link.entityA.id === activityId)
+    return link.entityB
+  if (link.entityB.type === 'activity' && link.entityB.id === activityId)
+    return link.entityA
   return null
 }
 
 function parseActivityTime(raw: string | undefined): string {
   const match = (raw ?? '').match(/\b([01]\d|2[0-3]):([0-5]\d)\b/)
-  return match ? match[0] : '12:00'
+  return match ? match[0] : ''
 }
 
 function parseGoogleDurationSeconds(raw?: string | null): number | null {
@@ -191,9 +225,28 @@ function parseGoogleDurationSeconds(raw?: string | null): number | null {
 
 function InlineSpinner({ size = 16 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true" className="animate-spin">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
-      <path d="M12 2a10 10 0 0110 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      className="animate-spin"
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeOpacity="0.3"
+      />
+      <path
+        d="M12 2a10 10 0 0110 10"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -204,6 +257,7 @@ function ActionModal({
   subtitle,
   confirmLabel,
   confirmDisabled = false,
+  error,
   onClose,
   onConfirm,
   children,
@@ -213,6 +267,7 @@ function ActionModal({
   subtitle: string
   confirmLabel: string
   confirmDisabled?: boolean
+  error?: string
   onClose: () => void
   onConfirm: () => void
   children: ReactNode
@@ -220,40 +275,40 @@ function ActionModal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0D0820]/70 px-4" onClick={onClose}>
-      <div
-        className="max-h-[84vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="border-b border-[#E2E8F0] px-5 py-4">
-          <h3 className="font-heading text-lg font-bold text-[#1E0A4E]">{title}</h3>
-          <p className="mt-1 font-body text-sm text-[#64748B]">{subtitle}</p>
-        </div>
-        <div className="px-5 py-4">{children}</div>
-        <div className="flex justify-end gap-3 border-t border-[#E2E8F0] px-5 py-4">
+    <EditorialDialog title={title} onClose={onClose} busy={confirmDisabled}>
+      <div className="atlas-activity-action">
+        <p>{subtitle}</p>
+        {children}
+        {error && (
+          <p role="alert" className="atlas-collab-error">
+            {error}
+          </p>
+        )}
+        <footer>
           <button
-            type="button"
+            className="atlas-button atlas-button-secondary"
+            disabled={confirmDisabled}
             onClick={onClose}
-            className="rounded-xl border border-[#D7DEEA] px-4 py-2.5 font-body text-sm font-semibold text-[#3D4A5C]"
           >
             Cancelar
           </button>
           <button
-            type="button"
-            onClick={onConfirm}
+            className="atlas-button atlas-button-primary"
             disabled={confirmDisabled}
-            className="rounded-xl bg-[#1E6FD9] px-4 py-2.5 font-body text-sm font-semibold text-white disabled:opacity-50"
+            onClick={onConfirm}
           >
             {confirmLabel}
           </button>
-        </div>
+        </footer>
       </div>
-    </div>
+    </EditorialDialog>
   )
 }
 
 export function ActivityProposalModal({
   open,
+  isOnline = true,
+  isReadOnly = false,
   group,
   token,
   selectedDayNumber,
@@ -267,39 +322,76 @@ export function ActivityProposalModal({
 }: ActivityProposalModalProps) {
   const [query, setQuery] = useState('')
   const [description, setDescription] = useState('')
-  const [assignedDayNumber, setAssignedDayNumber] = useState<number | null>(selectedDayNumber ?? null)
-  const [timeValue, setTimeValue] = useState('12:00')
+  const [assignedDayNumber, setAssignedDayNumber] = useState<number | null>(
+    selectedDayNumber ?? null,
+  )
+  const [timeValue, setTimeValue] = useState('')
+  const [endTime, setEndTime] = useState('')
+  const placeRequest = useRef(0)
+  const contextLock = useRef(false)
+  const [searchRan, setSearchRan] = useState(false)
+  const saveLock = useRef(false)
+  const alive = useRef(true)
+  const savedPrimary = useRef(false)
+  const [partialSave, setPartialSave] = useState(false)
+  const [hydrating, setHydrating] = useState(true)
+  const [contextError, setContextError] = useState('')
+  const [hydrateRetry, setHydrateRetry] = useState(0)
+  useEffect(() => {
+    alive.current = true
+    return () => {
+      alive.current = false
+    }
+  }, [])
   const [results, setResults] = useState<EnrichedPlaceResult[]>([])
-  const [suggestions, setSuggestions] = useState<EnrichedPlaceAutocompleteResult[]>([])
+  const [suggestions, setSuggestions] = useState<
+    EnrichedPlaceAutocompleteResult[]
+  >([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [suggestionsLoading, setSuggestionsLoading] = useState(false)
-  const [selectedPlace, setSelectedPlace] = useState<EnrichedPlaceResult | null>(null)
+  const [selectedPlace, setSelectedPlace] =
+    useState<EnrichedPlaceResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savingMode, setSavingMode] = useState<'admin' | 'normal' | null>(null)
   const [error, setError] = useState('')
-  const [linkOptions, setLinkOptions] = useState<ContextLinkOptions>(EMPTY_LINK_OPTIONS)
+  const [linkOptions, setLinkOptions] =
+    useState<ContextLinkOptions>(EMPTY_LINK_OPTIONS)
   const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([])
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([])
   const [expenseFilter, setExpenseFilter] = useState('')
   const [documentFilter, setDocumentFilter] = useState('')
   const [quickExpenseAmount, setQuickExpenseAmount] = useState('')
   const [quickExpenseDescription, setQuickExpenseDescription] = useState('')
-  const [quickExpenseCategory, setQuickExpenseCategory] = useState<BudgetCategory>('actividad')
+  const [quickExpenseCategory, setQuickExpenseCategory] =
+    useState<BudgetCategory>('actividad')
   const [quickExpenseDate, setQuickExpenseDate] = useState(todayValue())
   const [quickExpensePaidBy, setQuickExpensePaidBy] = useState('')
-  const [quickExpenseSplitType, setQuickExpenseSplitType] = useState<BudgetSplitType>('equitativa')
-  const [quickExpenseSplitAmounts, setQuickExpenseSplitAmounts] = useState<Record<string, string>>({})
-  const [quickExpenseMemberIds, setQuickExpenseMemberIds] = useState<string[]>([])
+  const [quickExpenseSplitType, setQuickExpenseSplitType] =
+    useState<BudgetSplitType>('equitativa')
+  const [quickExpenseSplitAmounts, setQuickExpenseSplitAmounts] = useState<
+    Record<string, string>
+  >({})
+  const [quickExpenseMemberIds, setQuickExpenseMemberIds] = useState<string[]>(
+    [],
+  )
   const [quickDocumentFile, setQuickDocumentFile] = useState<File | null>(null)
-  const [quickDocumentCategory, setQuickDocumentCategory] = useState<TripDocumentCategory>('actividad')
+  const [quickDocumentCategory, setQuickDocumentCategory] =
+    useState<TripDocumentCategory>('actividad')
   const [quickDocumentNotes, setQuickDocumentNotes] = useState('')
-  const [activeContextModal, setActiveContextModal] = useState<ActivityContextModalMode>(null)
-  const [expenseModalTab, setExpenseModalTab] = useState<ContextModalTab>('associate')
-  const [documentModalTab, setDocumentModalTab] = useState<ContextModalTab>('associate')
+  const [activeContextModal, setActiveContextModal] =
+    useState<ActivityContextModalMode>(null)
+  const [expenseModalTab, setExpenseModalTab] =
+    useState<ContextModalTab>('associate')
+  const [documentModalTab, setDocumentModalTab] =
+    useState<ContextModalTab>('associate')
   const [contextSaving, setContextSaving] = useState(false)
-  const [longRouteConfirmation, setLongRouteConfirmation] = useState<{ asAdminDirect: boolean } | null>(null)
-  const [scheduleConflictMessage, setScheduleConflictMessage] = useState<string | null>(null)
+  const [longRouteConfirmation, setLongRouteConfirmation] = useState<{
+    asAdminDirect: boolean
+  } | null>(null)
+  const [scheduleConflictMessage, setScheduleConflictMessage] = useState<
+    string | null
+  >(null)
   const autocompleteBoxRef = useRef<HTMLDivElement | null>(null)
 
   const memberOptions = useMemo(
@@ -313,7 +405,7 @@ export function ActivityProposalModal({
           }
         })
         .filter((member) => member.id.length > 0),
-    [members]
+    [members],
   )
 
   const safeMemberOptions = useMemo(() => {
@@ -323,16 +415,28 @@ export function ActivityProposalModal({
   }, [currentUserId, memberOptions])
 
   const defaultExpensePayer = useMemo(() => {
-    if (currentUserId && safeMemberOptions.some((member) => member.id === String(currentUserId))) {
+    if (
+      currentUserId &&
+      safeMemberOptions.some((member) => member.id === String(currentUserId))
+    ) {
       return String(currentUserId)
     }
     return safeMemberOptions[0]?.id ?? ''
   }, [currentUserId, safeMemberOptions])
 
+  const initialHydration = useRef({
+    group,
+    editingActivity,
+    defaultExpensePayer,
+    safeMemberOptions,
+  })
+
   const dayOptions = useMemo(() => getTripDayOptions(group), [group])
 
   const selectedActivityDate = useMemo(() => {
-    const selectedOption = dayOptions.find((option) => option.dayNumber === assignedDayNumber)
+    const selectedOption = dayOptions.find(
+      (option) => option.dayNumber === assignedDayNumber,
+    )
     if (selectedOption) return selectedOption.dateKey
 
     const startDate = dateKeyToLocalDate(group?.fecha_inicio)
@@ -352,13 +456,16 @@ export function ActivityProposalModal({
     if (!open) return
 
     const requestedDay = selectedDayNumber ?? null
-    const requestedOption = requestedDay != null
-      ? dayOptions.find((option) => option.dayNumber === requestedDay)
-      : undefined
-    const fallbackOption = dayOptions.find((option) => !option.isPast) ?? dayOptions[0]
-    const nextDay = requestedOption && !requestedOption.isPast
-      ? requestedOption.dayNumber
-      : fallbackOption?.dayNumber ?? requestedDay
+    const requestedOption =
+      requestedDay != null
+        ? dayOptions.find((option) => option.dayNumber === requestedDay)
+        : undefined
+    const fallbackOption =
+      dayOptions.find((option) => !option.isPast) ?? dayOptions[0]
+    const nextDay =
+      requestedOption && !requestedOption.isPast
+        ? requestedOption.dayNumber
+        : (fallbackOption?.dayNumber ?? requestedDay)
 
     setAssignedDayNumber(nextDay ?? null)
     if (nextDay && nextDay !== requestedDay) {
@@ -367,7 +474,10 @@ export function ActivityProposalModal({
   }, [dayOptions, onSelectedDayChange, open, selectedDayNumber])
 
   const routeOrigin = useMemo(() => {
-    if (group?.punto_partida_latitud != null && group.punto_partida_longitud != null) {
+    if (
+      group?.punto_partida_latitud != null &&
+      group.punto_partida_longitud != null
+    ) {
       return {
         lat: Number(group.punto_partida_latitud),
         lng: Number(group.punto_partida_longitud),
@@ -389,17 +499,22 @@ export function ActivityProposalModal({
     group?.punto_partida_longitud,
   ])
 
-  const routeOriginLabel = group?.punto_partida_tipo === 'hotel_reservado'
-    ? 'tu hospedaje'
-    : 'el destino del viaje'
+  const routeOriginLabel =
+    group?.punto_partida_tipo === 'hotel_reservado'
+      ? 'tu hospedaje'
+      : 'el destino del viaje'
   const selectedPlaceIsLongRoute =
     selectedPlace?.routeDurationSeconds != null &&
     selectedPlace.routeDurationSeconds > LONG_ROUTE_THRESHOLD_SECONDS
 
   const getActivityDate = useCallback(() => {
     if (!selectedActivityDate) return null
-    return toLocalDateTimeWithOffset(selectedActivityDate, timeValue)
-  }, [selectedActivityDate, timeValue])
+    return activityTimestamp(
+      selectedActivityDate,
+      timeValue,
+      editingActivity?.startsAt,
+    )
+  }, [selectedActivityDate, timeValue, editingActivity?.startsAt])
 
   const resetContextDraft = () => {
     setSelectedExpenseIds([])
@@ -430,13 +545,21 @@ export function ActivityProposalModal({
 
     let cancelled = false
 
+    const { group, editingActivity, defaultExpensePayer, safeMemberOptions } =
+      initialHydration.current
+
     const hydrate = async () => {
+      setHydrating(true)
+      setContextError('')
       if (group?.id && token) {
         try {
           const [optionsResponse, linksResponse] = await Promise.all([
             contextLinksService.options(String(group.id), token),
             editingActivity
-              ? contextLinksService.list(String(group.id), token, { type: 'activity', id: editingActivity.id })
+              ? contextLinksService.list(String(group.id), token, {
+                  type: 'activity',
+                  id: editingActivity.id,
+                })
               : Promise.resolve({ ok: true, links: [] }),
           ])
           if (cancelled) return
@@ -444,16 +567,29 @@ export function ActivityProposalModal({
 
           const linkedEntities = editingActivity
             ? linksResponse.links
-              .map((link) => otherEntityForActivity(link, editingActivity.id))
-              .filter((entity): entity is ContextEntitySummary =>
-                entity !== null && (entity.type === 'expense' || entity.type === 'document')
-              )
+                .map((link) => otherEntityForActivity(link, editingActivity.id))
+                .filter(
+                  (entity): entity is ContextEntitySummary =>
+                    entity !== null &&
+                    (entity.type === 'expense' || entity.type === 'document'),
+                )
             : []
 
-          setSelectedExpenseIds(linkedEntities.filter((entity) => entity.type === 'expense').map((entity) => entity.id))
-          setSelectedDocumentIds(linkedEntities.filter((entity) => entity.type === 'document').map((entity) => entity.id))
+          setSelectedExpenseIds(
+            linkedEntities
+              .filter((entity) => entity.type === 'expense')
+              .map((entity) => entity.id),
+          )
+          setSelectedDocumentIds(
+            linkedEntities
+              .filter((entity) => entity.type === 'document')
+              .map((entity) => entity.id),
+          )
         } catch {
           if (cancelled) return
+          setContextError(
+            'No se pudieron verificar los gastos y documentos vinculados. Reintenta la carga antes de guardar.',
+          )
           setLinkOptions(EMPTY_LINK_OPTIONS)
           setSelectedExpenseIds([])
           setSelectedDocumentIds([])
@@ -483,6 +619,15 @@ export function ActivityProposalModal({
         setQuery(editingActivity.title ?? '')
         setDescription(editingActivity.description ?? '')
         setTimeValue(parseActivityTime(editingActivity.time))
+        setEndTime(
+          editingActivity.endsAt &&
+            dateInItineraryZone(editingActivity.endsAt) ===
+              dateInItineraryZone(editingActivity.startsAt || '') &&
+            editingActivity.endsAt !== editingActivity.startsAt
+            ? clock(editingActivity.endsAt) || ''
+            : '',
+        )
+        setHydrating(false)
         setSelectedPlace({
           id: editingActivity.externalReference ?? editingActivity.id,
           name: editingActivity.title ?? '',
@@ -499,7 +644,9 @@ export function ActivityProposalModal({
 
       setQuery('')
       setDescription('')
-      setTimeValue('12:00')
+      setTimeValue('')
+      setEndTime('')
+      setHydrating(false)
       setResults([])
       setSuggestions([])
       setShowSuggestions(false)
@@ -509,40 +656,55 @@ export function ActivityProposalModal({
 
     void hydrate()
 
-    return () => { cancelled = true }
-  }, [defaultExpensePayer, editingActivity, group?.id, open, safeMemberOptions, token])
+    return () => {
+      cancelled = true
+    }
+  }, [open, token, hydrateRetry])
 
-  const enrichPlaceWithRoute = useCallback(async (place: EnrichedPlaceResult): Promise<EnrichedPlaceResult> => {
-    const enrichedPlace = { ...place }
+  const enrichPlaceWithRoute = useCallback(
+    async (place: EnrichedPlaceResult): Promise<EnrichedPlaceResult> => {
+      const enrichedPlace = { ...place }
 
-    if (!token || !routeOrigin || place.latitude == null || place.longitude == null) {
+      if (
+        !token ||
+        !routeOrigin ||
+        place.latitude == null ||
+        place.longitude == null
+      ) {
+        return enrichedPlace
+      }
+
+      try {
+        const routeResponse = await mapsService.computeRoute(
+          {
+            originLat: routeOrigin.lat,
+            originLng: routeOrigin.lng,
+            destinationLat: place.latitude,
+            destinationLng: place.longitude,
+            travelMode: 'DRIVE',
+          },
+          token,
+        )
+
+        enrichedPlace.routeDistanceText =
+          routeResponse.data?.distanceText ?? null
+        enrichedPlace.routeDurationText =
+          routeResponse.data?.durationText ??
+          routeResponse.data?.staticDurationText ??
+          null
+        enrichedPlace.routeDistanceMeters =
+          routeResponse.data?.distanceMeters ?? null
+        enrichedPlace.routeDurationSeconds = parseGoogleDurationSeconds(
+          routeResponse.data?.duration ?? routeResponse.data?.staticDuration,
+        )
+      } catch {
+        // La propuesta puede continuar aunque la ruta no este disponible.
+      }
+
       return enrichedPlace
-    }
-
-    try {
-      const routeResponse = await mapsService.computeRoute(
-        {
-          originLat: routeOrigin.lat,
-          originLng: routeOrigin.lng,
-          destinationLat: place.latitude,
-          destinationLng: place.longitude,
-          travelMode: 'DRIVE',
-        },
-        token
-      )
-
-      enrichedPlace.routeDistanceText = routeResponse.data?.distanceText ?? null
-      enrichedPlace.routeDurationText = routeResponse.data?.durationText ?? routeResponse.data?.staticDurationText ?? null
-      enrichedPlace.routeDistanceMeters = routeResponse.data?.distanceMeters ?? null
-      enrichedPlace.routeDurationSeconds = parseGoogleDurationSeconds(
-        routeResponse.data?.duration ?? routeResponse.data?.staticDuration
-      )
-    } catch {
-      // La propuesta puede continuar aunque la ruta no este disponible.
-    }
-
-    return enrichedPlace
-  }, [routeOrigin, token])
+    },
+    [routeOrigin, token],
+  )
 
   useEffect(() => {
     if (!open) return
@@ -550,7 +712,10 @@ export function ActivityProposalModal({
     const trimmedQuery = query.trim()
     const selectedName = selectedPlace?.name?.trim()
 
-    if (trimmedQuery.length < 3 || (selectedName && trimmedQuery === selectedName)) {
+    if (
+      trimmedQuery.length < 3 ||
+      (selectedName && trimmedQuery === selectedName)
+    ) {
       setSuggestions([])
       setShowSuggestions(false)
       setSuggestionsLoading(false)
@@ -567,33 +732,42 @@ export function ActivityProposalModal({
     const timeoutId = window.setTimeout(async () => {
       try {
         setSuggestionsLoading(true)
-        const response = await mapsService.autocompletePlaces(trimmedQuery, token, {
-          latitude: routeOrigin?.lat,
-          longitude: routeOrigin?.lng,
-          radius: PLACE_SEARCH_RADIUS_METERS,
-        })
+        const response = await mapsService.autocompletePlaces(
+          trimmedQuery,
+          token,
+          {
+            latitude: routeOrigin?.lat,
+            longitude: routeOrigin?.lng,
+            radius: PLACE_SEARCH_RADIUS_METERS,
+          },
+        )
 
         const rawSuggestions = response.data ?? []
         const nextSuggestions: EnrichedPlaceAutocompleteResult[] = routeOrigin
           ? await Promise.all(
-            rawSuggestions.slice(0, 6).map(async (suggestion) => {
-              try {
-                const detailResponse = await mapsService.getPlaceDetails(suggestion.placeId, token)
-                const place = detailResponse.data
-                if (!place) return suggestion
-                const enrichedPlace = await enrichPlaceWithRoute(place)
-                return {
-                  ...suggestion,
-                  routeDistanceText: enrichedPlace.routeDistanceText ?? null,
-                  routeDurationText: enrichedPlace.routeDurationText ?? null,
-                  routeDistanceMeters: enrichedPlace.routeDistanceMeters ?? null,
-                  routeDurationSeconds: enrichedPlace.routeDurationSeconds ?? null,
+              rawSuggestions.slice(0, 6).map(async (suggestion) => {
+                try {
+                  const detailResponse = await mapsService.getPlaceDetails(
+                    suggestion.placeId,
+                    token,
+                  )
+                  const place = detailResponse.data
+                  if (!place) return suggestion
+                  const enrichedPlace = await enrichPlaceWithRoute(place)
+                  return {
+                    ...suggestion,
+                    routeDistanceText: enrichedPlace.routeDistanceText ?? null,
+                    routeDurationText: enrichedPlace.routeDurationText ?? null,
+                    routeDistanceMeters:
+                      enrichedPlace.routeDistanceMeters ?? null,
+                    routeDurationSeconds:
+                      enrichedPlace.routeDurationSeconds ?? null,
+                  }
+                } catch {
+                  return suggestion
                 }
-              } catch {
-                return suggestion
-              }
-            })
-          )
+              }),
+            )
           : rawSuggestions
         if (cancelled) return
         setSuggestions(nextSuggestions)
@@ -611,14 +785,24 @@ export function ActivityProposalModal({
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [enrichPlaceWithRoute, open, query, routeOrigin, selectedPlace?.name, token])
+  }, [
+    enrichPlaceWithRoute,
+    open,
+    query,
+    routeOrigin,
+    selectedPlace?.name,
+    token,
+  ])
 
   const refreshContextOptions = useCallback(async () => {
     if (!group?.id || !token) return
     const [optionsResponse, linksResponse] = await Promise.all([
       contextLinksService.options(String(group.id), token),
       editingActivity
-        ? contextLinksService.list(String(group.id), token, { type: 'activity', id: editingActivity.id })
+        ? contextLinksService.list(String(group.id), token, {
+            type: 'activity',
+            id: editingActivity.id,
+          })
         : Promise.resolve({ ok: true, links: [] }),
     ])
 
@@ -628,12 +812,22 @@ export function ActivityProposalModal({
 
     const linkedEntities = linksResponse.links
       .map((link) => otherEntityForActivity(link, editingActivity.id))
-      .filter((entity): entity is ContextEntitySummary =>
-        entity !== null && (entity.type === 'expense' || entity.type === 'document')
+      .filter(
+        (entity): entity is ContextEntitySummary =>
+          entity !== null &&
+          (entity.type === 'expense' || entity.type === 'document'),
       )
 
-    setSelectedExpenseIds(linkedEntities.filter((entity) => entity.type === 'expense').map((entity) => entity.id))
-    setSelectedDocumentIds(linkedEntities.filter((entity) => entity.type === 'document').map((entity) => entity.id))
+    setSelectedExpenseIds(
+      linkedEntities
+        .filter((entity) => entity.type === 'expense')
+        .map((entity) => entity.id),
+    )
+    setSelectedDocumentIds(
+      linkedEntities
+        .filter((entity) => entity.type === 'document')
+        .map((entity) => entity.id),
+    )
   }, [editingActivity, group?.id, token])
 
   if (!open) return null
@@ -649,6 +843,7 @@ export function ActivityProposalModal({
       return
     }
 
+    const request = ++placeRequest.current
     try {
       setLoading(true)
       setError('')
@@ -662,14 +857,19 @@ export function ActivityProposalModal({
           radius: PLACE_SEARCH_RADIUS_METERS,
           maxResultCount: 10,
         },
-        token
+        token,
       )
 
+      if (!alive.current || request !== placeRequest.current) return
+      setSearchRan(true)
       const fetchedResults: EnrichedPlaceResult[] = response.data ?? []
 
       if (routeOrigin && fetchedResults.length > 0) {
-        const topResults: EnrichedPlaceResult[] = await Promise.all(fetchedResults.slice(0, 10).map(enrichPlaceWithRoute))
+        const topResults: EnrichedPlaceResult[] = await Promise.all(
+          fetchedResults.slice(0, 10).map(enrichPlaceWithRoute),
+        )
 
+        if (!alive.current || request !== placeRequest.current) return
         topResults.sort((a, b) => {
           const distA = a.routeDistanceMeters ?? Infinity
           const distB = b.routeDistanceMeters ?? Infinity
@@ -681,18 +881,23 @@ export function ActivityProposalModal({
         setResults(fetchedResults)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudieron buscar lugares.')
+      setError(
+        err instanceof Error ? err.message : 'No se pudieron buscar lugares.',
+      )
     } finally {
-      setLoading(false)
+      if (alive.current && request === placeRequest.current) setLoading(false)
     }
   }
 
-  const handleSelectSuggestion = async (suggestion: PlaceAutocompleteResult) => {
+  const handleSelectSuggestion = async (
+    suggestion: PlaceAutocompleteResult,
+  ) => {
     if (!token) {
       setError('Tu sesion expiro. Vuelve a iniciar sesion.')
       return
     }
 
+    const request = ++placeRequest.current
     try {
       setLoading(true)
       setError('')
@@ -700,7 +905,10 @@ export function ActivityProposalModal({
       setSuggestions([])
       setResults([])
 
-      const response = await mapsService.getPlaceDetails(suggestion.placeId, token)
+      const response = await mapsService.getPlaceDetails(
+        suggestion.placeId,
+        token,
+      )
       const place = response.data
 
       if (!place) {
@@ -709,12 +917,17 @@ export function ActivityProposalModal({
       }
 
       const enrichedPlace = await enrichPlaceWithRoute(place)
+      if (!alive.current || request !== placeRequest.current) return
       setSelectedPlace(enrichedPlace)
-      setQuery(enrichedPlace.name || suggestion.mainText || suggestion.description)
+      setQuery(
+        enrichedPlace.name || suggestion.mainText || suggestion.description,
+      )
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo seleccionar el lugar.')
+      setError(
+        err instanceof Error ? err.message : 'No se pudo seleccionar el lugar.',
+      )
     } finally {
-      setLoading(false)
+      if (alive.current && request === placeRequest.current) setLoading(false)
     }
   }
 
@@ -729,7 +942,16 @@ export function ActivityProposalModal({
       latitud: selectedPlace.latitude,
       longitud: selectedPlace.longitude,
       fecha_inicio: activityDate,
-      fecha_fin: activityDate,
+      fecha_fin:
+        endTime && selectedActivityDate
+          ? activityTimestamp(
+              selectedActivityDate,
+              endTime,
+              editingActivity?.endsAt,
+            )
+          : editingActivity?.endsAt && activityDate === editingActivity.startsAt
+            ? editingActivity.endsAt
+            : activityDate,
       referencia_externa: selectedPlace.id,
       fuente: 'google_maps',
       payload: {
@@ -756,7 +978,8 @@ export function ActivityProposalModal({
         ? prev.filter((id) => id !== memberId)
         : [...prev, memberId]
       if (next.length === 0) return prev
-      if (!next.includes(quickExpensePaidBy)) setQuickExpensePaidBy(next[0] ?? '')
+      if (!next.includes(quickExpensePaidBy))
+        setQuickExpensePaidBy(next[0] ?? '')
       return next
     })
   }
@@ -772,8 +995,13 @@ export function ActivityProposalModal({
   const quickExpenseSplitSum =
     quickExpenseSplitType === 'personalizada'
       ? safeMemberOptions
-        .filter((member) => quickExpenseMemberIds.includes(member.id))
-        .reduce((sum, member) => sum + (parseFloat(quickExpenseSplitAmounts[member.id] ?? '0') || 0), 0)
+          .filter((member) => quickExpenseMemberIds.includes(member.id))
+          .reduce(
+            (sum, member) =>
+              sum +
+              (parseFloat(quickExpenseSplitAmounts[member.id] ?? '0') || 0),
+            0,
+          )
       : quickExpenseTotal
   const quickExpenseSplitError =
     quickExpenseSplitType === 'personalizada' &&
@@ -782,7 +1010,19 @@ export function ActivityProposalModal({
       ? 'La division personalizada debe sumar el monto total.'
       : null
 
-  const handleSave = async (asAdminDirect = false, skipLongRouteConfirmation = false) => {
+  const handleSave = async (
+    asAdminDirect = false,
+    skipLongRouteConfirmation = false,
+  ) => {
+    if (
+      saveLock.current ||
+      hydrating ||
+      contextError ||
+      partialSave ||
+      !isOnline ||
+      isReadOnly
+    )
+      return
     if (!group?.id) {
       setError('No se encontro el grupo actual.')
       return
@@ -796,7 +1036,9 @@ export function ActivityProposalModal({
       return
     }
     if (!assignedDayNumber || !selectedActivityDate) {
-      setError('Selecciona el dia del itinerario donde se agregara la actividad.')
+      setError(
+        'Selecciona el dia del itinerario donde se agregara la actividad.',
+      )
       return
     }
     if (selectedDayIsPast) {
@@ -804,7 +1046,18 @@ export function ActivityProposalModal({
       return
     }
     if (!/^([01]\d|2[0-3]):(00|30)$/.test(timeValue)) {
-      setError('La hora debe estar en intervalos de 30 minutos, por ejemplo 09:00 o 09:30.')
+      setError(
+        'La hora debe estar en intervalos de 30 minutos, por ejemplo 09:00 o 09:30.',
+      )
+      return
+    }
+    if (
+      endTime &&
+      (!/^([01]\d|2[0-3]):(00|30)$/.test(endTime) || endTime <= timeValue)
+    ) {
+      setError(
+        'El fin debe ser posterior al inicio, en intervalos de 30 minutos.',
+      )
       return
     }
     if (selectedPlaceIsLongRoute && !skipLongRouteConfirmation) {
@@ -812,7 +1065,9 @@ export function ActivityProposalModal({
       return
     }
 
-    const shouldCreateExpense = quickExpenseAmount.trim().length > 0 || quickExpenseDescription.trim().length > 0
+    const shouldCreateExpense =
+      quickExpenseAmount.trim().length > 0 ||
+      quickExpenseDescription.trim().length > 0
     const quickExpenseValue = Number(quickExpenseAmount)
     const shouldUploadDocument = quickDocumentFile !== null
     if (shouldCreateExpense) {
@@ -848,6 +1103,7 @@ export function ActivityProposalModal({
       return
     }
 
+    saveLock.current = true
     try {
       setSaving(true)
       setSavingMode(asAdminDirect ? 'admin' : 'normal')
@@ -857,16 +1113,25 @@ export function ActivityProposalModal({
       let proposalId = ''
 
       if (editingActivity) {
-        await groupsService.updateActivity(String(group.id), editingActivity.id, payload, token)
+        await groupsService.updateActivity(
+          String(group.id),
+          editingActivity.id,
+          payload,
+          token,
+        )
+        savedPrimary.current = true
         activityId = String(editingActivity.id)
         proposalId = String(editingActivity.proposalId ?? '')
       } else {
-        const created = await groupsService.createActivity(String(group.id), payload, token)
+        const created = await groupsService.createActivity(
+          String(group.id),
+          payload,
+          token,
+        )
+        savedPrimary.current = true
         activityId = String(created.activity?.id_actividad ?? '')
         proposalId = String(
-          created.activity?.propuesta_id ??
-          created.activity?.proposalId ??
-          ''
+          created.activity?.propuesta_id ?? created.activity?.proposalId ?? '',
         )
 
         if (asAdminDirect && proposalId) {
@@ -875,68 +1140,130 @@ export function ActivityProposalModal({
             proposalId,
             {
               decision: 'aprobar',
-              reason: 'Actividad agregada directamente por organizador (Tipo A)',
+              reason:
+                'Actividad agregada directamente por organizador (Tipo A)',
             },
-            token
+            token,
           )
         }
       }
 
       if (activityId) {
-        const previousExpenseIds = new Set(linkOptions.expenses.map((item) => item.id))
+        const previousExpenseIds = new Set(
+          linkOptions.expenses.map((item) => item.id),
+        )
         const createdExpenseId = shouldCreateExpense
-          ? await budgetService.createExpense(String(group.id), {
-            ...createQuickExpensePayload(quickExpenseValue),
-          }, token).then((response) => {
-            return pickCreatedExpenseId(
-              response.expenses,
-              previousExpenseIds,
-              quickExpenseDescription.trim(),
-              quickExpenseValue,
-            )
-          })
+          ? await budgetService
+              .createExpense(
+                String(group.id),
+                {
+                  ...createQuickExpensePayload(quickExpenseValue),
+                },
+                token,
+              )
+              .then((response) => {
+                return pickCreatedExpenseId(
+                  response.expenses,
+                  previousExpenseIds,
+                  quickExpenseDescription.trim(),
+                  quickExpenseValue,
+                )
+              })
           : null
 
         const createdDocumentId = quickDocumentFile
-          ? await documentsService.upload(String(group.id), quickDocumentFile, quickDocumentCategory, {
-            notes: quickDocumentNotes.trim() || null,
-          }, token).then((document) => document.id)
+          ? await documentsService
+              .upload(
+                String(group.id),
+                quickDocumentFile,
+                quickDocumentCategory,
+                {
+                  notes: quickDocumentNotes.trim() || null,
+                },
+                token,
+              )
+              .then((document) => document.id)
           : null
 
         const desiredEntities = [
           ...selectedExpenseIds.map((id) => ({ type: 'expense' as const, id })),
-          ...selectedDocumentIds.map((id) => ({ type: 'document' as const, id })),
-          ...(createdExpenseId ? [{ type: 'expense' as const, id: createdExpenseId }] : []),
-          ...(createdDocumentId ? [{ type: 'document' as const, id: createdDocumentId }] : []),
+          ...selectedDocumentIds.map((id) => ({
+            type: 'document' as const,
+            id,
+          })),
+          ...(createdExpenseId
+            ? [{ type: 'expense' as const, id: createdExpenseId }]
+            : []),
+          ...(createdDocumentId
+            ? [{ type: 'document' as const, id: createdDocumentId }]
+            : []),
         ]
         const desiredKeys = new Set(desiredEntities.map(activityContextKey))
 
-        const currentResponse = await contextLinksService.list(String(group.id), token, {
-          type: 'activity',
-          id: activityId,
-        })
+        const currentResponse = await contextLinksService.list(
+          String(group.id),
+          token,
+          {
+            type: 'activity',
+            id: activityId,
+          },
+        )
         const currentRelevant = currentResponse.links
-          .map((link) => ({ link, entity: otherEntityForActivity(link, activityId) }))
-          .filter((item): item is { link: ContextLink; entity: ContextEntitySummary } =>
-            item.entity !== null && (item.entity.type === 'expense' || item.entity.type === 'document')
+          .map((link) => ({
+            link,
+            entity: otherEntityForActivity(link, activityId),
+          }))
+          .filter(
+            (
+              item,
+            ): item is { link: ContextLink; entity: ContextEntitySummary } =>
+              item.entity !== null &&
+              (item.entity.type === 'expense' ||
+                item.entity.type === 'document'),
           )
 
         await Promise.all([
           ...currentRelevant
-            .filter(({ entity }) => !desiredKeys.has(activityContextKey({ type: entity.type as 'expense' | 'document', id: entity.id })))
-            .map(({ link }) => contextLinksService.remove(String(group.id), link.id, token)),
+            .filter(
+              ({ entity }) =>
+                !desiredKeys.has(
+                  activityContextKey({
+                    type: entity.type as 'expense' | 'document',
+                    id: entity.id,
+                  }),
+                ),
+            )
+            .map(({ link }) =>
+              contextLinksService.remove(String(group.id), link.id, token),
+            ),
           ...desiredEntities
-            .filter((entity) => !currentRelevant.some((item) => activityContextKey({ type: item.entity.type as 'expense' | 'document', id: item.entity.id }) === activityContextKey(entity)))
-            .map((entity) => contextLinksService.create(String(group.id), {
-              source: { type: 'activity', id: activityId },
-              target: entity,
-            }, token)),
+            .filter(
+              (entity) =>
+                !currentRelevant.some(
+                  (item) =>
+                    activityContextKey({
+                      type: item.entity.type as 'expense' | 'document',
+                      id: item.entity.id,
+                    }) === activityContextKey(entity),
+                ),
+            )
+            .map((entity) =>
+              contextLinksService.create(
+                String(group.id),
+                {
+                  source: { type: 'activity', id: activityId },
+                  target: entity,
+                },
+                token,
+              ),
+            ),
         ])
       }
 
+      if (!alive.current) return
       setQuery('')
       setDescription('')
-      setTimeValue('12:00')
+      setTimeValue('')
       setResults([])
       setSelectedPlace(null)
       setLongRouteConfirmation(null)
@@ -944,9 +1271,17 @@ export function ActivityProposalModal({
       await onCreated()
       onClose()
     } catch (err) {
+      if (!alive.current) return
+      if (savedPrimary.current) {
+        setPartialSave(true)
+        setError(
+          'La actividad ya se guardó, pero no se completó una operación posterior. Conserva este borrador y revisa la actividad, los vínculos y su estado antes de repetir la operación. No volveremos a crearla automáticamente.',
+        )
+        return
+      }
       if (err instanceof ApiError && err.status === 409) {
         setScheduleConflictMessage(
-          'Ya hay una actividad en ese horario. Necesitas cambiar el horario de la otra actividad o el de esta para poder continuar.'
+          'Ya hay una actividad en ese horario. Necesitas cambiar el horario de la otra actividad o el de esta para poder continuar.',
         )
         setError('')
         return
@@ -956,11 +1291,14 @@ export function ActivityProposalModal({
           ? err.message
           : editingActivity
             ? 'No se pudo actualizar la actividad.'
-            : 'No se pudo crear la actividad.'
+            : 'No se pudo crear la actividad.',
       )
     } finally {
-      setSaving(false)
-      setSavingMode(null)
+      saveLock.current = false
+      if (alive.current) {
+        setSaving(false)
+        setSavingMode(null)
+      }
     }
   }
 
@@ -968,7 +1306,7 @@ export function ActivityProposalModal({
     if (saving) return
     setQuery('')
     setDescription('')
-    setTimeValue('12:00')
+    setTimeValue('')
     setResults([])
     setSelectedPlace(null)
     setLongRouteConfirmation(null)
@@ -985,14 +1323,15 @@ export function ActivityProposalModal({
     category: quickExpenseCategory,
     split_type: quickExpenseSplitType,
     member_ids: quickExpenseMemberIds,
-    split_amounts: quickExpenseSplitType === 'personalizada'
-      ? Object.fromEntries(
-        quickExpenseMemberIds.map((memberId) => [
-          memberId,
-          parseFloat(quickExpenseSplitAmounts[memberId] ?? '0') || 0,
-        ])
-      )
-      : undefined,
+    split_amounts:
+      quickExpenseSplitType === 'personalizada'
+        ? Object.fromEntries(
+            quickExpenseMemberIds.map((memberId) => [
+              memberId,
+              parseFloat(quickExpenseSplitAmounts[memberId] ?? '0') || 0,
+            ]),
+          )
+        : undefined,
     expense_date: quickExpenseDate || (getActivityDate()?.slice(0, 10) ?? null),
   })
 
@@ -1001,33 +1340,58 @@ export function ActivityProposalModal({
       if (editingActivity?.id && group?.id && token) {
         try {
           setContextSaving(true)
-          const currentResponse = await contextLinksService.list(String(group.id), token, {
-            type: 'activity',
-            id: editingActivity.id,
-          })
+          const currentResponse = await contextLinksService.list(
+            String(group.id),
+            token,
+            {
+              type: 'activity',
+              id: editingActivity.id,
+            },
+          )
           const currentExpenseLinks = currentResponse.links
-            .map((link) => ({ link, entity: otherEntityForActivity(link, editingActivity.id) }))
-            .filter((item): item is { link: ContextLink; entity: ContextEntitySummary } =>
-              item.entity !== null && item.entity.type === 'expense'
+            .map((link) => ({
+              link,
+              entity: otherEntityForActivity(link, editingActivity.id),
+            }))
+            .filter(
+              (
+                item,
+              ): item is { link: ContextLink; entity: ContextEntitySummary } =>
+                item.entity !== null && item.entity.type === 'expense',
             )
           const desiredExpenseIds = new Set(selectedExpenseIds)
 
           await Promise.all([
             ...currentExpenseLinks
               .filter(({ entity }) => !desiredExpenseIds.has(entity.id))
-              .map(({ link }) => contextLinksService.remove(String(group.id), link.id, token)),
+              .map(({ link }) =>
+                contextLinksService.remove(String(group.id), link.id, token),
+              ),
             ...selectedExpenseIds
-              .filter((expenseId) => !currentExpenseLinks.some(({ entity }) => entity.id === expenseId))
-              .map((expenseId) => contextLinksService.create(String(group.id), {
-                source: { type: 'activity', id: editingActivity.id },
-                target: { type: 'expense', id: expenseId },
-              }, token)),
+              .filter(
+                (expenseId) =>
+                  !currentExpenseLinks.some(
+                    ({ entity }) => entity.id === expenseId,
+                  ),
+              )
+              .map((expenseId) =>
+                contextLinksService.create(
+                  String(group.id),
+                  {
+                    source: { type: 'activity', id: editingActivity.id },
+                    target: { type: 'expense', id: expenseId },
+                  },
+                  token,
+                ),
+              ),
           ])
 
           await refreshContextOptions()
           await onCreated()
         } catch (err) {
-          setError(err instanceof Error ? err.message : 'No se pudo asociar el gasto.')
+          setError(
+            err instanceof Error ? err.message : 'No se pudo asociar el gasto.',
+          )
           return
         } finally {
           setContextSaving(false)
@@ -1036,7 +1400,9 @@ export function ActivityProposalModal({
       setActiveContextModal(null)
       return
     }
-    const shouldCreateExpense = quickExpenseAmount.trim().length > 0 || quickExpenseDescription.trim().length > 0
+    const shouldCreateExpense =
+      quickExpenseAmount.trim().length > 0 ||
+      quickExpenseDescription.trim().length > 0
     const amount = Number(quickExpenseAmount)
     if (!shouldCreateExpense) {
       setError('Completa el gasto para guardarlo.')
@@ -1066,11 +1432,13 @@ export function ActivityProposalModal({
     if (editingActivity?.id && group?.id && token) {
       try {
         setContextSaving(true)
-        const previousExpenseIds = new Set(linkOptions.expenses.map((item) => item.id))
+        const previousExpenseIds = new Set(
+          linkOptions.expenses.map((item) => item.id),
+        )
         const response = await budgetService.createExpense(
           String(group.id),
           createQuickExpensePayload(amount),
-          token
+          token,
         )
         const createdExpenseId = pickCreatedExpenseId(
           response.expenses,
@@ -1078,12 +1446,17 @@ export function ActivityProposalModal({
           quickExpenseDescription.trim(),
           amount,
         )
-        if (!createdExpenseId) throw new Error('No se pudo ubicar el gasto creado.')
+        if (!createdExpenseId)
+          throw new Error('No se pudo ubicar el gasto creado.')
 
-        await contextLinksService.create(String(group.id), {
-          source: { type: 'activity', id: editingActivity.id },
-          target: { type: 'expense', id: createdExpenseId },
-        }, token)
+        await contextLinksService.create(
+          String(group.id),
+          {
+            source: { type: 'activity', id: editingActivity.id },
+            target: { type: 'expense', id: createdExpenseId },
+          },
+          token,
+        )
 
         setQuickExpenseAmount('')
         setQuickExpenseDescription('')
@@ -1093,7 +1466,11 @@ export function ActivityProposalModal({
         await refreshContextOptions()
         await onCreated()
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'No se pudo crear y asociar el gasto.')
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'No se pudo crear y asociar el gasto.',
+        )
         return
       } finally {
         setContextSaving(false)
@@ -1123,408 +1500,690 @@ export function ActivityProposalModal({
 
   const toggleExpense = (expenseId: string) => {
     setSelectedExpenseIds((prev) =>
-      prev.includes(expenseId) ? prev.filter((id) => id !== expenseId) : [...prev, expenseId]
+      prev.includes(expenseId)
+        ? prev.filter((id) => id !== expenseId)
+        : [...prev, expenseId],
     )
   }
 
   const toggleDocument = (documentId: string) => {
     setSelectedDocumentIds((prev) =>
-      prev.includes(documentId) ? prev.filter((id) => id !== documentId) : [...prev, documentId]
+      prev.includes(documentId)
+        ? prev.filter((id) => id !== documentId)
+        : [...prev, documentId],
     )
   }
 
-  const canSubmitActivity = Boolean(selectedPlace && assignedDayNumber && selectedActivityDate && !selectedDayIsPast)
+  const canSubmitActivity = Boolean(
+    selectedPlace?.name?.trim() &&
+    assignedDayNumber &&
+    selectedActivityDate &&
+    !selectedDayIsPast &&
+    !hydrating &&
+    !contextError &&
+    !partialSave &&
+    isOnline &&
+    !isReadOnly,
+  )
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0D0820]/60 px-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-[0_32px_80px_rgba(15,23,42,0.28)]">
-        {/* Header */}
-        <div className="relative overflow-hidden rounded-t-3xl bg-gradient-to-br from-[#1E0A4E] via-[#2B1163] to-[#1E6FD9] px-7 py-6">
-          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/[0.06] blur-2xl" />
-          <div className="absolute -bottom-8 left-8 h-28 w-28 rounded-full bg-[#7A4FD6]/25 blur-xl" />
-          <div className="relative">
-            <span className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-1.5 font-body text-xs font-bold uppercase tracking-widest text-white/80 backdrop-blur-sm">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
-                <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-              Google Places
-            </span>
-            <h2 className="mt-3 font-heading text-3xl font-extrabold leading-tight text-white">
-              {editingActivity ? 'Editar propuesta' : 'Proponer actividad'}
-            </h2>
-            <p className="mt-1.5 font-body text-base text-white/70">
-              Escribe y elige una sugerencia de Google Places para agregarla como propuesta al itinerario.
-            </p>
-          </div>
-          {/* Close button */}
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={saving}
-            aria-label="Cerrar"
-            className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="space-y-5 px-7 py-6">
-          <div>
-            <label className="mb-2 block font-body text-sm font-bold text-[#1E0A4E]">
-              Buscar lugar o actividad
-            </label>
-            <div
-              ref={autocompleteBoxRef}
-              className="relative"
-              onBlur={(event) => {
-                if (!autocompleteBoxRef.current?.contains(event.relatedTarget as Node | null)) {
-                  setShowSuggestions(false)
-                }
-              }}
-            >
-              <input
-                value={query}
-                onChange={(e) => {
-                  const value = e.target.value
-                  setQuery(value)
-                  setError('')
-                  if (selectedPlace) setSelectedPlace(null)
-                  setResults([])
-                  setShowSuggestions(value.trim().length >= 3)
-                }}
-                onFocus={() => {
-                  setShowSuggestions(query.trim().length >= 3 && suggestions.length > 0)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    if (suggestions[0]) {
-                      void handleSelectSuggestion(suggestions[0])
-                    } else {
-                      void handleSearch()
-                    }
-                  }
-                }}
-                placeholder="Ej: restaurante, playa, museo..."
-                className="w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3.5 pr-10 font-body text-base text-[#1E0A4E] outline-none transition focus:border-[#1E6FD9] focus:bg-white focus:ring-4 focus:ring-[#1E6FD9]/10"
-              />
-              {(suggestionsLoading || loading) && (
-                <span className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-[#D7DEEA] border-t-bluePrimary" />
-              )}
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 max-h-72 overflow-y-auto rounded-xl border border-[#E2E8F0] bg-white p-1 shadow-xl">
-                  {suggestions.map((suggestion) => (
-                    <button
-                      key={suggestion.placeId || suggestion.description}
-                      type="button"
-                      onMouseDown={(event) => {
-                        event.preventDefault()
-                        void handleSelectSuggestion(suggestion)
-                      }}
-                      className="block w-full rounded-lg px-4 py-3 text-left transition hover:bg-[#F8FAFC]"
-                    >
-                      <p className="font-body text-sm font-semibold text-purpleNavbar">
-                        {suggestion.mainText || suggestion.description}
-                      </p>
-                      <p className="mt-0.5 font-body text-xs text-gray500">
-                        {suggestion.secondaryText || suggestion.description}
-                      </p>
-                      {(suggestion.routeDistanceText || suggestion.routeDurationText) && (
-                        <p className="mt-2 inline-flex rounded-full bg-[#EEF4FF] px-2.5 py-1 font-body text-[11px] font-semibold text-bluePrimary">
-                          {suggestion.routeDistanceText ?? 'Distancia no disponible'}
-                          {suggestion.routeDurationText ? ` · ${suggestion.routeDurationText}` : ''} desde {routeOriginLabel}
-                        </p>
-                      )}
-                      {suggestion.routeDurationSeconds != null && suggestion.routeDurationSeconds > LONG_ROUTE_THRESHOLD_SECONDS && (
-                        <p className="mt-1 font-body text-[11px] font-semibold text-red-700">
-                          Traslado largo: mas de 1 hora
-                        </p>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-2 block font-body text-sm font-bold text-[#1E0A4E]">
-              Descripción opcional
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ej: visitar por la tarde, revisar horarios, llevar efectivo..."
-              rows={3}
-              className="w-full resize-none rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3.5 font-body text-base text-[#1E0A4E] outline-none transition focus:border-[#1E6FD9] focus:bg-white focus:ring-4 focus:ring-[#1E6FD9]/10"
-            />
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div>
-              <label className="mb-2 block font-body text-sm font-bold text-[#1E0A4E]">
-                Día de asignación
-              </label>
-              <select
-                value={assignedDayNumber ?? ''}
-                onChange={(event) => {
-                  const nextDay = Number(event.target.value)
-                  setAssignedDayNumber(Number.isFinite(nextDay) ? nextDay : null)
-                  if (Number.isFinite(nextDay)) onSelectedDayChange?.(nextDay)
-                  setError('')
-                }}
-                className="w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3.5 font-body text-base text-[#1E0A4E] outline-none transition focus:border-[#1E6FD9] focus:bg-white focus:ring-4 focus:ring-[#1E6FD9]/10"
+    <>
+      <EditorialDialog
+        title={editingActivity ? 'Editar actividad' : 'Proponer actividad'}
+        onClose={handleClose}
+        busy={saving || contextSaving}
+      >
+        <div className="atlas-activity-editor">
+          <p className="atlas-eyebrow">PLANIFICAR / ACTIVIDAD DEL VIAJE</p>
+          <p>
+            Elige una ubicación y define cuándo tendrá lugar. Los cambios siguen
+            las reglas de propuestas del grupo.
+          </p>
+          {hydrating && (
+            <p role="status">Verificando la actividad y sus vínculos…</p>
+          )}
+          {contextError && (
+            <p className="atlas-collab-error" role="alert">
+              {contextError}{' '}
+              <button
+                className="atlas-text-link"
+                onClick={() => setHydrateRetry((n) => n + 1)}
               >
-                {dayOptions.length === 0 && <option value="">Fechas del viaje no disponibles</option>}
-                {dayOptions.map((option) => (
-                  <option key={option.dayNumber} value={option.dayNumber} disabled={option.isPast}>
-                    Día {option.dayNumber} — {formatDayOptionDate(option.dateKey)}{option.isPast ? ' (pasado)' : ''}
-                  </option>
-                ))}
-              </select>
-              {selectedActivityDate && (
-                <p className={`mt-2 font-body text-sm ${selectedDayIsPast ? 'font-semibold text-red-600' : 'text-[#64748B]'}`}>
-                  {selectedDayIsPast ? '⚠ Día pasado' : `Se guardará el ${formatDayOptionDate(selectedActivityDate)}.`}
-                </p>
+                Reintentar vínculos
+              </button>
+            </p>
+          )}
+          {(!isOnline || isReadOnly) && (
+            <p className="atlas-planner-notice">
+              {isReadOnly
+                ? 'La planificación está en solo lectura.'
+                : 'Reconecta para guardar. El borrador sigue disponible.'}
+            </p>
+          )}
+          {partialSave && (
+            <p role="status" className="atlas-planner-notice">
+              No repitas la creación. Cierra cuando hayas revisado los datos;
+              conserva la información que necesites del borrador.
+            </p>
+          )}
+          <fieldset
+            disabled={
+              saving ||
+              hydrating ||
+              Boolean(contextError) ||
+              !isOnline ||
+              isReadOnly
+            }
+          >
+            <div className="atlas-activity-fields">
+              <div>
+                <label
+                  htmlFor="atlas-activity-search"
+                  className="mb-2 block font-body text-sm font-bold text-[#1E0A4E]"
+                >
+                  01 · Ubicación de la actividad
+                </label>
+                <div
+                  ref={autocompleteBoxRef}
+                  className="relative"
+                  onBlur={(event) => {
+                    if (
+                      !autocompleteBoxRef.current?.contains(
+                        event.relatedTarget as Node | null,
+                      )
+                    ) {
+                      setShowSuggestions(false)
+                    }
+                  }}
+                >
+                  <input
+                    value={query}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      setQuery(value)
+                      setError('')
+                      if (selectedPlace) setSelectedPlace(null)
+                      setResults([])
+                      setShowSuggestions(value.trim().length >= 3)
+                    }}
+                    onFocus={() => {
+                      setShowSuggestions(
+                        query.trim().length >= 3 && suggestions.length > 0,
+                      )
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        if (suggestions[0]) {
+                          void handleSelectSuggestion(suggestions[0])
+                        } else {
+                          void handleSearch()
+                        }
+                      }
+                    }}
+                    id="atlas-activity-search"
+                    placeholder="Ej: restaurante, playa, museo..."
+                    className="w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3.5 pr-10 font-body text-base text-[#1E0A4E] outline-none transition focus:border-[#1E6FD9] focus:bg-white focus:ring-4 focus:ring-[#1E6FD9]/10"
+                  />
+                  {(suggestionsLoading || loading) && (
+                    <span className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-[#D7DEEA] border-t-bluePrimary" />
+                  )}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 max-h-72 overflow-y-auto rounded-xl border border-[#E2E8F0] bg-white p-1 shadow-xl">
+                      {suggestions.map((suggestion) => (
+                        <button
+                          onClick={() =>
+                            void handleSelectSuggestion(suggestion)
+                          }
+                          key={suggestion.placeId || suggestion.description}
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          className="block w-full rounded-lg px-4 py-3 text-left transition hover:bg-[#F8FAFC]"
+                        >
+                          <p className="font-body text-sm font-semibold text-purpleNavbar">
+                            {suggestion.mainText || suggestion.description}
+                          </p>
+                          <p className="mt-0.5 font-body text-xs text-gray500">
+                            {suggestion.secondaryText || suggestion.description}
+                          </p>
+                          {(suggestion.routeDistanceText ||
+                            suggestion.routeDurationText) && (
+                            <p className="mt-2 inline-flex rounded-full bg-[#EEF4FF] px-2.5 py-1 font-body text-[11px] font-semibold text-bluePrimary">
+                              {suggestion.routeDistanceText ??
+                                'Distancia no disponible'}
+                              {suggestion.routeDurationText
+                                ? ` · ${suggestion.routeDurationText}`
+                                : ''}{' '}
+                              desde {routeOriginLabel}
+                            </p>
+                          )}
+                          {suggestion.routeDurationSeconds != null &&
+                            suggestion.routeDurationSeconds >
+                              LONG_ROUTE_THRESHOLD_SECONDS && (
+                              <p className="mt-1 font-body text-[11px] font-semibold text-red-700">
+                                Traslado largo: mas de 1 hora
+                              </p>
+                            )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {selectedPlace && (
+                <label
+                  className="atlas-activity-name"
+                  htmlFor="atlas-activity-name"
+                >
+                  Nombre de la actividad
+                  <input
+                    id="atlas-activity-name"
+                    value={selectedPlace.name ?? ''}
+                    onChange={(e) =>
+                      setSelectedPlace((p) =>
+                        p ? { ...p, name: e.target.value } : p,
+                      )
+                    }
+                  />
+                </label>
               )}
-            </div>
+              <div className="atlas-place-search-tools">
+                <button
+                  type="button"
+                  className="atlas-button atlas-button-secondary"
+                  disabled={loading || !query.trim()}
+                  onClick={() => void handleSearch()}
+                >
+                  {loading ? 'Buscando…' : 'Buscar lugares'}
+                </button>
+                {searchRan &&
+                  !loading &&
+                  results.length === 0 &&
+                  !selectedPlace &&
+                  !error && (
+                    <p role="status">
+                      No se encontraron lugares. Ajusta la búsqueda.
+                    </p>
+                  )}
+                <p>
+                  Google puede no estar disponible temporalmente; la agenda y
+                  las direcciones guardadas siguen accesibles.
+                </p>
+              </div>
+              <div>
+                <label
+                  htmlFor="atlas-activity-description"
+                  className="mb-2 block font-body text-sm font-bold text-[#1E0A4E]"
+                >
+                  02 · Descripción opcional
+                </label>
+                <textarea
+                  id="atlas-activity-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Ej: visitar por la tarde, revisar horarios, llevar efectivo..."
+                  rows={3}
+                  className="w-full resize-none rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3.5 font-body text-base text-[#1E0A4E] outline-none transition focus:border-[#1E6FD9] focus:bg-white focus:ring-4 focus:ring-[#1E6FD9]/10"
+                />
+              </div>
 
-            <div>
-              <label className="mb-2 block font-body text-sm font-bold text-[#1E0A4E]">
-                Hora estimada
-              </label>
-              <input
-                type="time"
-                step={1800}
-                value={timeValue}
-                onChange={(e) => {
-                  setTimeValue(e.target.value)
-                  setError('')
-                }}
-                className="w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3.5 font-body text-base text-[#1E0A4E] outline-none transition focus:border-[#1E6FD9] focus:bg-white focus:ring-4 focus:ring-[#1E6FD9]/10"
-              />
-              <p className="mt-2 font-body text-sm text-[#64748B]">
-                Intervalos de 30 min para evitar conflictos.
-              </p>
-            </div>
-          </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="atlas-activity-day"
+                    className="mb-2 block font-body text-sm font-bold text-[#1E0A4E]"
+                  >
+                    03 · Día de asignación
+                  </label>
+                  <select
+                    id="atlas-activity-day"
+                    value={assignedDayNumber ?? ''}
+                    onChange={(event) => {
+                      const nextDay = Number(event.target.value)
+                      setAssignedDayNumber(
+                        Number.isFinite(nextDay) ? nextDay : null,
+                      )
+                      if (Number.isFinite(nextDay))
+                        onSelectedDayChange?.(nextDay)
+                      setError('')
+                    }}
+                    className="w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3.5 font-body text-base text-[#1E0A4E] outline-none transition focus:border-[#1E6FD9] focus:bg-white focus:ring-4 focus:ring-[#1E6FD9]/10"
+                  >
+                    {dayOptions.length === 0 && (
+                      <option value="">Fechas del viaje no disponibles</option>
+                    )}
+                    {dayOptions.map((option) => (
+                      <option
+                        key={option.dayNumber}
+                        value={option.dayNumber}
+                        disabled={option.isPast}
+                      >
+                        Día {option.dayNumber} —{' '}
+                        {formatDayOptionDate(option.dateKey)}
+                        {option.isPast ? ' (pasado)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedActivityDate && (
+                    <p
+                      className={`mt-2 font-body text-sm ${selectedDayIsPast ? 'font-semibold text-red-600' : 'text-[#64748B]'}`}
+                    >
+                      {selectedDayIsPast
+                        ? '⚠ Día pasado'
+                        : `Se guardará el ${formatDayOptionDate(selectedActivityDate)}.`}
+                    </p>
+                  )}
+                </div>
 
-          {selectedPlace && (
-            <div className="rounded-2xl border border-[#1E6FD9]/30 bg-gradient-to-br from-[#EFF6FF] to-[#F5F3FF] px-5 py-4">
-              <div className="flex items-start gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1E6FD9]/15">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M12 22s7-5.2 7-12a7 7 0 10-14 0c0 6.8 7 12 7 12z" stroke="#1E6FD9" strokeWidth="2" strokeLinejoin="round" />
-                    <circle cx="12" cy="10" r="2.5" stroke="#1E6FD9" strokeWidth="2" />
-                  </svg>
-                </span>
-                <div className="min-w-0">
-                  <p className="font-body text-base font-bold text-[#1E0A4E]">
-                    {selectedPlace.name || 'Lugar sin nombre'}
-                  </p>
-                  <p className="mt-0.5 font-body text-sm text-[#64748B]">
-                    {selectedPlace.formattedAddress || 'Dirección no disponible'}
+                <div>
+                  <label
+                    htmlFor="atlas-activity-time"
+                    className="mb-2 block font-body text-sm font-bold text-[#1E0A4E]"
+                  >
+                    Hora de inicio
+                  </label>
+                  <input
+                    id="atlas-activity-time"
+                    type="time"
+                    step={1800}
+                    value={timeValue}
+                    onChange={(e) => {
+                      setTimeValue(e.target.value)
+                      setError('')
+                    }}
+                    className="w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3.5 font-body text-base text-[#1E0A4E] outline-none transition focus:border-[#1E6FD9] focus:bg-white focus:ring-4 focus:ring-[#1E6FD9]/10"
+                  />
+                  <p className="mt-2 font-body text-sm text-[#64748B]">
+                    Intervalos de 30 min · Zona America/Mexico_City. El servidor
+                    comprueba los conflictos.
                   </p>
                 </div>
               </div>
-              {(selectedPlace.routeDistanceText || selectedPlace.routeDurationText) && (
-                <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 font-body text-sm font-semibold text-[#1E6FD9] shadow-sm">
-                  A {selectedPlace.routeDistanceText ?? 'distancia no disponible'}
-                  {selectedPlace.routeDurationText ? ` · ${selectedPlace.routeDurationText}` : ''} desde {routeOriginLabel}
-                </p>
-              )}
-              {selectedPlaceIsLongRoute && (
-                <div className="mt-3 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-red-800">
-                  <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-red-100 text-red-700">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M12 8v5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-                      <path d="M12 17h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                      <path d="M10.3 4.1 2.6 17.4A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.6L13.7 4.1a2 2 0 0 0-3.4 0Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                  <div>
-                    <p className="font-body text-xs font-bold">Traslado largo</p>
-                    <p className="mt-0.5 font-body text-xs">
-                      Este lugar queda a mas de 1 hora desde {routeOriginLabel}
-                      {selectedPlace.routeDurationText ? ` (${selectedPlace.routeDurationText})` : ''}. Te pediremos confirmar antes de agregarlo.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
-          {results.length > 0 && (
-            <div className="max-h-64 overflow-y-auto rounded-xl border border-[#E2E8F0]">
-              {results.map((place) => {
-                const isSelected = selectedPlace?.id === place.id
-                return (
-                  <button
-                    key={place.id || `${place.name}-${place.formattedAddress}`}
-                    type="button"
-                    onClick={() => setSelectedPlace(place)}
-                    className={`block w-full border-b border-[#F1F5F9] px-4 py-3 text-left last:border-b-0 ${
-                      isSelected ? 'bg-bluePrimary/10' : 'bg-white hover:bg-[#F8FAFC]'
-                    }`}
-                  >
-                    <div className="flex gap-3">
-                      <img
-                        src={place.photoUrl || 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=200&h=200&fit=crop'}
-                        alt={place.name || 'Lugar'}
-                        className="h-14 w-14 flex-none rounded-xl object-cover"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-body text-sm font-bold text-purpleNavbar">
-                          {place.name || 'Lugar sin nombre'}
+              <label
+                className="atlas-activity-name"
+                htmlFor="atlas-activity-end"
+              >
+                Hora de fin opcional (mismo día)
+                <input
+                  id="atlas-activity-end"
+                  type="time"
+                  step={1800}
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                />
+                <small>
+                  Si el registro tiene un fin en otra fecha, se conserva al
+                  editar sin cambiar su horario.
+                </small>
+              </label>
+              {selectedPlace && (
+                <div className="rounded-2xl border border-[#1E6FD9]/30 bg-gradient-to-br from-[#EFF6FF] to-[#F5F3FF] px-5 py-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1E6FD9]/15">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M12 22s7-5.2 7-12a7 7 0 10-14 0c0 6.8 7 12 7 12z"
+                          stroke="#1E6FD9"
+                          strokeWidth="2"
+                          strokeLinejoin="round"
+                        />
+                        <circle
+                          cx="12"
+                          cy="10"
+                          r="2.5"
+                          stroke="#1E6FD9"
+                          strokeWidth="2"
+                        />
+                      </svg>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-body text-base font-bold text-[#1E0A4E]">
+                        {selectedPlace.name || 'Lugar sin nombre'}
+                      </p>
+                      <p className="mt-0.5 font-body text-sm text-[#64748B]">
+                        {selectedPlace.formattedAddress ||
+                          'Dirección no disponible'}
+                      </p>
+                    </div>
+                  </div>
+                  {(selectedPlace.routeDistanceText ||
+                    selectedPlace.routeDurationText) && (
+                    <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 font-body text-sm font-semibold text-[#1E6FD9] shadow-sm">
+                      A{' '}
+                      {selectedPlace.routeDistanceText ??
+                        'distancia no disponible'}
+                      {selectedPlace.routeDurationText
+                        ? ` · ${selectedPlace.routeDurationText}`
+                        : ''}{' '}
+                      desde {routeOriginLabel}
+                    </p>
+                  )}
+                  {selectedPlaceIsLongRoute && (
+                    <div className="mt-3 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-3 py-3 text-red-800">
+                      <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-red-100 text-red-700">
+                        <svg
+                          width="13"
+                          height="13"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M12 8v5"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d="M12 17h.01"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d="M10.3 4.1 2.6 17.4A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.6L13.7 4.1a2 2 0 0 0-3.4 0Z"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                      <div>
+                        <p className="font-body text-xs font-bold">
+                          Traslado largo
                         </p>
-                        <p className="mt-0.5 line-clamp-2 font-body text-xs text-gray500">
-                          {place.formattedAddress || 'Direccion no disponible'}
+                        <p className="mt-0.5 font-body text-xs">
+                          Este lugar queda a mas de 1 hora desde{' '}
+                          {routeOriginLabel}
+                          {selectedPlace.routeDurationText
+                            ? ` (${selectedPlace.routeDurationText})`
+                            : ''}
+                          . Te pediremos confirmar antes de agregarlo.
                         </p>
-                        {(place.routeDistanceText || place.routeDurationText) && (
-                          <p className="mt-1 font-body text-[11px] font-semibold text-bluePrimary">
-                            {place.routeDistanceText ?? 'Distancia no disponible'}
-                            {place.routeDurationText ? ` · ${place.routeDurationText}` : ''} desde {routeOriginLabel}
-                          </p>
-                        )}
-                        {place.routeDurationSeconds != null && place.routeDurationSeconds > LONG_ROUTE_THRESHOLD_SECONDS && (
-                          <p className="mt-1 flex items-center gap-1.5 font-body text-[11px] font-semibold text-red-700">
-                            <span className="text-red-600">
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M12 8v5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-                                <path d="M12 17h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                                <path d="M10.3 4.1 2.6 17.4A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.6L13.7 4.1a2 2 0 0 0-3.4 0Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-                              </svg>
-                            </span>
-                            A mas de 1 hora{place.routeDurationText ? ` (${place.routeDurationText})` : ''}
-                          </p>
-                        )}
-                        {place.primaryCategory && (
-                          <p className="mt-1 font-body text-[11px] text-bluePrimary">{place.primaryCategory}</p>
-                        )}
                       </div>
                     </div>
-                  </button>
-                )
-              })}
-            </div>
-          )}
+                  )}
+                </div>
+              )}
 
-          <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-5 py-4">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#7A4FD6]/12">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M12 2v20M2 12h20" stroke="#7A4FD6" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                </span>
-                <p className="font-body text-base font-bold text-[#1E0A4E]">Agregar gasto o comprobante</p>
-              </div>
-              <p className="mt-1.5 font-body text-sm text-[#64748B]">
-                Relaciona gastos (taxi, entradas, comida) y comprobantes (tickets, reservaciones, recibos) para esta actividad.
-              </p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setExpenseModalTab('associate')
-                    setActiveContextModal('expense')
-                  }}
-                  className="rounded-xl border border-[#BFDBFE] bg-white px-4 py-3 text-left font-body text-sm font-bold text-[#1E6FD9] transition hover:bg-[#EFF6FF]"
-                >
-                  Agregar o elegir gasto
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDocumentModalTab('associate')
-                    setActiveContextModal('document')
-                  }}
-                  className="rounded-xl border border-[#DDD6FE] bg-white px-4 py-3 text-left font-body text-sm font-bold text-[#7A4FD6] transition hover:bg-[#F5F3FF]"
-                >
-                  Agregar o elegir comprobante
-                </button>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {selectedExpenseIds.map((expenseId) => {
-                  const expense = linkOptions.expenses.find((item) => item.id === expenseId)
-                  if (!expense) return null
-                  return (
-                    <span key={expenseId} className="rounded-full border border-[#CFE0FF] bg-[#EEF4FF] px-3 py-1.5 font-body text-xs font-semibold text-[#1E6FD9]">
-                      Gasto asociado: {expense.label}
-                    </span>
-                  )
-                })}
-                {(quickExpenseAmount.trim() || quickExpenseDescription.trim()) && (
-                  <span className="rounded-full border border-[#CFE0FF] bg-[#EEF4FF] px-3 py-1.5 font-body text-xs font-semibold text-[#1E6FD9]">
-                    Gasto por crear: {quickExpenseDescription.trim() || 'Sin descripcion'} {quickExpenseAmount.trim() ? `· $${quickExpenseAmount}` : ''}
+              {results.length > 0 && (
+                <div className="max-h-64 overflow-y-auto rounded-xl border border-[#E2E8F0]">
+                  {results.map((place) => {
+                    const isSelected = selectedPlace?.id === place.id
+                    return (
+                      <button
+                        key={
+                          place.id || `${place.name}-${place.formattedAddress}`
+                        }
+                        type="button"
+                        onClick={() => setSelectedPlace(place)}
+                        className={`block w-full border-b border-[#F1F5F9] px-4 py-3 text-left last:border-b-0 ${
+                          isSelected
+                            ? 'bg-bluePrimary/10'
+                            : 'bg-white hover:bg-[#F8FAFC]'
+                        }`}
+                      >
+                        <div className="flex gap-3">
+                          <img
+                            src={
+                              place.photoUrl ||
+                              'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=200&h=200&fit=crop'
+                            }
+                            alt={place.name || 'Lugar'}
+                            className="h-14 w-14 flex-none rounded-xl object-cover"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="font-body text-sm font-bold text-purpleNavbar">
+                              {place.name || 'Lugar sin nombre'}
+                            </p>
+                            <p className="mt-0.5 line-clamp-2 font-body text-xs text-gray500">
+                              {place.formattedAddress ||
+                                'Direccion no disponible'}
+                            </p>
+                            {(place.routeDistanceText ||
+                              place.routeDurationText) && (
+                              <p className="mt-1 font-body text-[11px] font-semibold text-bluePrimary">
+                                {place.routeDistanceText ??
+                                  'Distancia no disponible'}
+                                {place.routeDurationText
+                                  ? ` · ${place.routeDurationText}`
+                                  : ''}{' '}
+                                desde {routeOriginLabel}
+                              </p>
+                            )}
+                            {place.routeDurationSeconds != null &&
+                              place.routeDurationSeconds >
+                                LONG_ROUTE_THRESHOLD_SECONDS && (
+                                <p className="mt-1 flex items-center gap-1.5 font-body text-[11px] font-semibold text-red-700">
+                                  <span className="text-red-600">
+                                    <svg
+                                      width="11"
+                                      height="11"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      aria-hidden="true"
+                                    >
+                                      <path
+                                        d="M12 8v5"
+                                        stroke="currentColor"
+                                        strokeWidth="2.4"
+                                        strokeLinecap="round"
+                                      />
+                                      <path
+                                        d="M12 17h.01"
+                                        stroke="currentColor"
+                                        strokeWidth="3"
+                                        strokeLinecap="round"
+                                      />
+                                      <path
+                                        d="M10.3 4.1 2.6 17.4A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.6L13.7 4.1a2 2 0 0 0-3.4 0Z"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                  </span>
+                                  A mas de 1 hora
+                                  {place.routeDurationText
+                                    ? ` (${place.routeDurationText})`
+                                    : ''}
+                                </p>
+                              )}
+                            {place.primaryCategory && (
+                              <p className="mt-1 font-body text-[11px] text-bluePrimary">
+                                {place.primaryCategory}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+
+              <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-5 py-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#7A4FD6]/12">
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M12 2v20M2 12h20"
+                        stroke="#7A4FD6"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
                   </span>
-                )}
-                {selectedDocumentIds.map((documentId) => {
-                  const document = linkOptions.documents.find((item) => item.id === documentId)
-                  if (!document) return null
-                  return (
-                    <span key={documentId} className="rounded-full border border-[#D8C8FF] bg-[#F3EEFF] px-3 py-1.5 font-body text-xs font-semibold text-[#5B35B1]">
-                      Documento asociado: {document.label}
-                    </span>
-                  )
-                })}
-                {quickDocumentFile && (
-                  <span className="rounded-full border border-[#D8C8FF] bg-[#F3EEFF] px-3 py-1.5 font-body text-xs font-semibold text-[#5B35B1]">
-                    Documento por subir: {quickDocumentFile.name}
-                  </span>
-                )}
-                {selectedExpenseIds.length === 0 &&
-                  selectedDocumentIds.length === 0 &&
-                  !quickExpenseAmount.trim() &&
-                  !quickExpenseDescription.trim() &&
-                  !quickDocumentFile && (
-                    <span className="rounded-lg bg-white px-3 py-2 font-body text-xs text-[#7A8799]">
-                      Todavia no agregas gasto ni documento a esta actividad.
+                  <p className="font-body text-base font-bold text-[#1E0A4E]">
+                    Agregar gasto o comprobante
+                  </p>
+                </div>
+                <p className="mt-1.5 font-body text-sm text-[#64748B]">
+                  Relaciona gastos (taxi, entradas, comida) y comprobantes
+                  (tickets, reservaciones, recibos) para esta actividad.
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExpenseModalTab('associate')
+                      setActiveContextModal('expense')
+                    }}
+                    className="rounded-xl border border-[#BFDBFE] bg-white px-4 py-3 text-left font-body text-sm font-bold text-[#1E6FD9] transition hover:bg-[#EFF6FF]"
+                  >
+                    Agregar o elegir gasto
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDocumentModalTab('associate')
+                      setActiveContextModal('document')
+                    }}
+                    className="rounded-xl border border-[#DDD6FE] bg-white px-4 py-3 text-left font-body text-sm font-bold text-[#7A4FD6] transition hover:bg-[#F5F3FF]"
+                  >
+                    Agregar o elegir comprobante
+                  </button>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {selectedExpenseIds.map((expenseId) => {
+                    const expense = linkOptions.expenses.find(
+                      (item) => item.id === expenseId,
+                    )
+                    if (!expense) return null
+                    return (
+                      <span
+                        key={expenseId}
+                        className="rounded-full border border-[#CFE0FF] bg-[#EEF4FF] px-3 py-1.5 font-body text-xs font-semibold text-[#1E6FD9]"
+                      >
+                        Gasto asociado: {expense.label}
+                      </span>
+                    )
+                  })}
+                  {(quickExpenseAmount.trim() ||
+                    quickExpenseDescription.trim()) && (
+                    <span className="rounded-full border border-[#CFE0FF] bg-[#EEF4FF] px-3 py-1.5 font-body text-xs font-semibold text-[#1E6FD9]">
+                      Gasto por crear:{' '}
+                      {quickExpenseDescription.trim() || 'Sin descripcion'}{' '}
+                      {quickExpenseAmount.trim()
+                        ? `· $${quickExpenseAmount}`
+                        : ''}
                     </span>
                   )}
+                  {selectedDocumentIds.map((documentId) => {
+                    const document = linkOptions.documents.find(
+                      (item) => item.id === documentId,
+                    )
+                    if (!document) return null
+                    return (
+                      <span
+                        key={documentId}
+                        className="rounded-full border border-[#D8C8FF] bg-[#F3EEFF] px-3 py-1.5 font-body text-xs font-semibold text-[#5B35B1]"
+                      >
+                        Documento asociado: {document.label}
+                      </span>
+                    )
+                  })}
+                  {quickDocumentFile && (
+                    <span className="rounded-full border border-[#D8C8FF] bg-[#F3EEFF] px-3 py-1.5 font-body text-xs font-semibold text-[#5B35B1]">
+                      Documento por subir: {quickDocumentFile.name}
+                    </span>
+                  )}
+                  {selectedExpenseIds.length === 0 &&
+                    selectedDocumentIds.length === 0 &&
+                    !quickExpenseAmount.trim() &&
+                    !quickExpenseDescription.trim() &&
+                    !quickDocumentFile && (
+                      <span className="rounded-lg bg-white px-3 py-2 font-body text-xs text-[#7A8799]">
+                        Todavia no agregas gasto ni documento a esta actividad.
+                      </span>
+                    )}
+                </div>
               </div>
+
+              {error && (
+                <div
+                  role="alert"
+                  className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="mt-0.5 shrink-0 text-red-500"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M12 8v5M12 16h.01"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <p className="font-body text-sm font-semibold text-red-700">
+                    {error}
+                  </p>
+                </div>
+              )}
             </div>
 
-          {error && (
-            <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="mt-0.5 shrink-0 text-red-500" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                <path d="M12 8v5M12 16h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-              <p className="font-body text-sm font-semibold text-red-700">{error}</p>
+            <div className="flex flex-wrap justify-end gap-3 border-t border-[#E2E8F0] px-7 py-5">
+              {!editingActivity && isCurrentUserAdmin && (
+                <button
+                  type="button"
+                  onClick={() => void handleSave(true)}
+                  disabled={saving || !canSubmitActivity}
+                  aria-busy={saving}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#1E6FD9] bg-[#EFF6FF] px-5 py-3.5 font-body text-base font-semibold text-[#1E6FD9] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {savingMode === 'admin' && <InlineSpinner size={15} />}
+                  {savingMode === 'admin'
+                    ? 'Guardando...'
+                    : 'Agregar directo (admin)'}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => void handleSave(false)}
+                disabled={saving || !canSubmitActivity}
+                aria-busy={saving}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#1E6FD9] to-[#7A4FD6] px-6 py-3.5 font-body text-base font-bold text-white shadow-lg shadow-[#1E6FD9]/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {savingMode === 'normal' && <InlineSpinner size={15} />}
+                {savingMode === 'normal'
+                  ? 'Guardando...'
+                  : editingActivity
+                    ? 'Guardar cambios'
+                    : 'Agregar actividad'}
+              </button>
             </div>
-          )}
+          </fieldset>
         </div>
-
-        <div className="flex flex-wrap justify-end gap-3 border-t border-[#E2E8F0] px-7 py-5">
-          {!editingActivity && isCurrentUserAdmin && (
-            <button
-              type="button"
-              onClick={() => void handleSave(true)}
-              disabled={saving || !canSubmitActivity}
-              aria-busy={saving}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#1E6FD9] bg-[#EFF6FF] px-5 py-3.5 font-body text-base font-semibold text-[#1E6FD9] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {savingMode === 'admin' && <InlineSpinner size={15} />}
-              {savingMode === 'admin' ? 'Guardando...' : 'Agregar directo (admin)'}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => void handleSave(false)}
-            disabled={saving || !canSubmitActivity}
-            aria-busy={saving}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#1E6FD9] to-[#7A4FD6] px-6 py-3.5 font-body text-base font-bold text-white shadow-lg shadow-[#1E6FD9]/20 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {savingMode === 'normal' && <InlineSpinner size={15} />}
-            {savingMode === 'normal' ? 'Guardando...' : editingActivity ? 'Guardar cambios' : 'Agregar actividad'}
-          </button>
-        </div>
-      </div>
+      </EditorialDialog>
 
       <ActionModal
+        error={error}
         open={scheduleConflictMessage !== null}
         title="Conflicto de horario"
         subtitle="No se puede guardar la actividad con esa hora."
@@ -1538,12 +2197,13 @@ export function ActivityProposalModal({
       </ActionModal>
 
       <ActionModal
+        error={error}
         open={activeContextModal === 'expense'}
         title="Agregar gasto o comprobante"
         subtitle={
           editingActivity
-            ? "Relaciona un gasto existente o crea uno nuevo para esta propuesta."
-            : "Prepara un gasto para asociarlo cuando guardes la propuesta."
+            ? 'Relaciona un gasto existente o crea uno nuevo para esta propuesta.'
+            : 'Prepara un gasto para asociarlo cuando guardes la propuesta.'
         }
         confirmLabel={
           contextSaving
@@ -1558,7 +2218,13 @@ export function ActivityProposalModal({
         onClose={() => {
           if (!contextSaving) setActiveContextModal(null)
         }}
-        onConfirm={() => void confirmExpenseModal()}
+        onConfirm={() => {
+          if (contextLock.current || !isOnline || isReadOnly) return
+          contextLock.current = true
+          void confirmExpenseModal().finally(() => {
+            contextLock.current = false
+          })
+        }}
       >
         <div className="mb-4 inline-flex rounded-lg border border-[#D7DEEA] bg-[#F8FAFC] p-1">
           <button
@@ -1578,7 +2244,9 @@ export function ActivityProposalModal({
         </div>
         {expenseModalTab === 'associate' ? (
           linkOptions.expenses.length === 0 ? (
-            <p className="font-body text-sm text-[#64748B]">No hay gastos registrados para asociar.</p>
+            <p className="font-body text-sm text-[#64748B]">
+              No hay gastos registrados para asociar.
+            </p>
           ) : (
             <div className="space-y-3">
               <input
@@ -1592,7 +2260,9 @@ export function ActivityProposalModal({
                   .filter((expense) => {
                     const filter = expenseFilter.trim().toLowerCase()
                     if (!filter) return true
-                    return `${expense.label} ${expense.subtitle ?? ''}`.toLowerCase().includes(filter)
+                    return `${expense.label} ${expense.subtitle ?? ''}`
+                      .toLowerCase()
+                      .includes(filter)
                   })
                   .map((expense) => {
                     const selected = selectedExpenseIds.includes(expense.id)
@@ -1604,7 +2274,9 @@ export function ActivityProposalModal({
                         className={`max-w-full rounded-full border px-3 py-1.5 font-body text-xs font-semibold ${selected ? 'border-[#1E6FD9] bg-[#1E6FD9] text-white' : 'border-[#D7DEEA] bg-white text-[#3D4A5C]'}`}
                         title={expense.subtitle ?? expense.label}
                       >
-                        <span className="inline-block max-w-[240px] truncate align-bottom">{expense.label}</span>
+                        <span className="inline-block max-w-[240px] truncate align-bottom">
+                          {expense.label}
+                        </span>
                       </button>
                     )
                   })}
@@ -1635,10 +2307,15 @@ export function ActivityProposalModal({
       </ActionModal>
 
       <ActionModal
+        error={error}
         open={activeContextModal === 'document'}
         title="Agregar gasto o comprobante"
         subtitle="Relaciona un comprobante existente o sube uno nuevo, por ejemplo ticket, reservacion o recibo."
-        confirmLabel={documentModalTab === 'associate' ? 'Guardar seleccion' : 'Guardar documento'}
+        confirmLabel={
+          documentModalTab === 'associate'
+            ? 'Guardar seleccion'
+            : 'Guardar documento'
+        }
         onClose={() => setActiveContextModal(null)}
         onConfirm={confirmDocumentModal}
       >
@@ -1660,7 +2337,9 @@ export function ActivityProposalModal({
         </div>
         {documentModalTab === 'associate' ? (
           linkOptions.documents.length === 0 ? (
-            <p className="font-body text-sm text-[#64748B]">No hay documentos en la boveda para asociar.</p>
+            <p className="font-body text-sm text-[#64748B]">
+              No hay documentos en la boveda para asociar.
+            </p>
           ) : (
             <div className="space-y-3">
               <input
@@ -1674,7 +2353,9 @@ export function ActivityProposalModal({
                   .filter((document) => {
                     const filter = documentFilter.trim().toLowerCase()
                     if (!filter) return true
-                    return `${document.label} ${document.subtitle ?? ''}`.toLowerCase().includes(filter)
+                    return `${document.label} ${document.subtitle ?? ''}`
+                      .toLowerCase()
+                      .includes(filter)
                   })
                   .map((document) => {
                     const selected = selectedDocumentIds.includes(document.id)
@@ -1686,7 +2367,9 @@ export function ActivityProposalModal({
                         className={`max-w-full rounded-full border px-3 py-1.5 font-body text-xs font-semibold ${selected ? 'border-[#7A4FD6] bg-[#7A4FD6] text-white' : 'border-[#D7DEEA] bg-white text-[#3D4A5C]'}`}
                         title={document.subtitle ?? document.label}
                       >
-                        <span className="inline-block max-w-[240px] truncate align-bottom">{document.label}</span>
+                        <span className="inline-block max-w-[240px] truncate align-bottom">
+                          {document.label}
+                        </span>
                       </button>
                     )
                   })}
@@ -1697,16 +2380,26 @@ export function ActivityProposalModal({
           <div className="grid gap-3">
             <input
               type="file"
-              onChange={(event) => setQuickDocumentFile(event.target.files?.[0] ?? null)}
+              onChange={(event) =>
+                setQuickDocumentFile(event.target.files?.[0] ?? null)
+              }
               className="rounded-xl border border-[#D7DEEA] bg-white px-3 py-2.5 font-body text-sm text-[#3D4A5C] outline-none focus:border-[#7A4FD6]"
             />
             <select
               value={quickDocumentCategory}
-              onChange={(event) => setQuickDocumentCategory(event.target.value as TripDocumentCategory)}
+              onChange={(event) =>
+                setQuickDocumentCategory(
+                  event.target.value as TripDocumentCategory,
+                )
+              }
               className="rounded-xl border border-[#D7DEEA] bg-white px-3 py-2.5 font-body text-sm outline-none focus:border-[#7A4FD6]"
             >
-              {(Object.keys(documentCategoryLabels) as TripDocumentCategory[]).map((category) => (
-                <option key={category} value={category}>{documentCategoryLabels[category]}</option>
+              {(
+                Object.keys(documentCategoryLabels) as TripDocumentCategory[]
+              ).map((category) => (
+                <option key={category} value={category}>
+                  {documentCategoryLabels[category]}
+                </option>
               ))}
             </select>
             <textarea
@@ -1721,6 +2414,7 @@ export function ActivityProposalModal({
       </ActionModal>
 
       <ActionModal
+        error={error}
         open={longRouteConfirmation !== null}
         title="Confirmar traslado largo"
         subtitle="La actividad seleccionada puede quedar demasiado lejos para el grupo."
@@ -1735,25 +2429,47 @@ export function ActivityProposalModal({
       >
         <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800">
           <span className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full bg-red-100 text-red-700">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 8v5" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-              <path d="M12 17h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-              <path d="M10.3 4.1 2.6 17.4A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.6L13.7 4.1a2 2 0 0 0-3.4 0Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 8v5"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+              />
+              <path
+                d="M12 17h.01"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+              <path
+                d="M10.3 4.1 2.6 17.4A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.6L13.7 4.1a2 2 0 0 0-3.4 0Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
             </svg>
           </span>
           <div>
             <p className="font-body text-sm font-bold">
-              {selectedPlace?.name || 'Este lugar'} esta a mas de 1 hora desde {routeOriginLabel}.
+              {selectedPlace?.name || 'Este lugar'} esta a mas de 1 hora desde{' '}
+              {routeOriginLabel}.
             </p>
             <p className="mt-1 font-body text-sm">
               {selectedPlace?.routeDurationText
                 ? `Google estima aproximadamente ${selectedPlace.routeDurationText} de traslado.`
-                : 'El traslado estimado supera el limite recomendado.'}
-              {' '}Confirma solo si esta distancia tiene sentido para el itinerario.
+                : 'El traslado estimado supera el limite recomendado.'}{' '}
+              Confirma solo si esta distancia tiene sentido para el itinerario.
             </p>
           </div>
         </div>
       </ActionModal>
-    </div>
+    </>
   )
 }

@@ -1,3 +1,6 @@
+import {EditorialDialog} from '../../components/collaboration/EditorialDialog';
+import { ItineraryPlanner, ItineraryLoading, ItineraryError } from '../../components/itinerary/ItineraryPlanner';
+import '../../components/itinerary/itinerary.css';
 import { ExploreHub } from "../../components/trip/ExploreHub";
 import { EditorialError, EditorialLoading, TripOverview } from "../../components/trip/TripOverview";
 import { TripNavigation } from "../../components/trip/TripNavigation";
@@ -23,10 +26,8 @@ import {
   SidebarDashboard,
 } from "../../components/layout/AppLayout";
 import { ChatDrawer } from "../../components/chat/ChatDrawer";
-import { DayView } from "../../components/ui/DayView";
 import type {
   Activity as DayActivity,
-  DayViewHandle,
 } from "../../components/ui/DayView";
 import { ComparisonPage } from "../Comparison/ComparisonPage";
 import { ProposalDetailModal } from "../../components/ProposalDetailModal/ProposalDetailModal";
@@ -50,40 +51,6 @@ import {
 import { useSocket } from "../../hooks/useSocket";
 import { useNetworkMonitor } from "../../hooks/useNetworkMonitor";
 import type { Group, TravelStartLocation } from "../../types/groups";
-
-function IconDownload({ size = 14 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <polyline
-        points="7 10 12 15 17 10"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <line
-        x1="12"
-        y1="15"
-        x2="12"
-        y2="3"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
 
 function IconSpinner({ size = 14 }: { size?: number }) {
   return (
@@ -136,86 +103,6 @@ function IconPlus({ size = 14 }: { size?: number }) {
         y1="12"
         x2="19"
         y2="12"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function IconInfo({ size = 16 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-      <line
-        x1="12"
-        y1="8"
-        x2="12"
-        y2="12"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <line
-        x1="12"
-        y1="16"
-        x2="12.01"
-        y2="16"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function IconMapPinSmall({ size = 13 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M12 22s7-5.2 7-12a7 7 0 10-14 0c0 6.8 7 12 7 12z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <circle cx="12" cy="10" r="2.5" fill="currentColor" />
-    </svg>
-  );
-}
-
-function IconCalendarSmall({ size = 13 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <rect
-        x="3"
-        y="4"
-        width="18"
-        height="18"
-        rx="3"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <path
-        d="M8 2v4M16 2v4M3 10h18"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
@@ -473,303 +360,6 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
   );
 }
 
-function HeroCard({
-  activeDay,
-  totalDays,
-  selectedDay,
-  group,
-  onAdd,
-  onExportPdf,
-  canManageSubgroups,
-  onOpenSubgroups,
-}: {
-  activeDay: number | null;
-  totalDays: number;
-  selectedDay?: ItineraryDay;
-  group: ReturnType<typeof getCurrentGroup> | null;
-  onAdd: () => void;
-  onExportPdf: () => void;
-  canManageSubgroups?: boolean;
-  onOpenSubgroups?: () => void;
-}) {
-  const activities = selectedDay?.activities ?? [];
-  const pending = activities.filter(
-    (activity) => activity.status === "pendiente",
-  ).length;
-  const destination =
-    group?.destino || group?.destino_formatted_address || "Destino pendiente";
-  const heroTitle = group?.nombre || destination;
-  const dateLabel = formatTripDateRange(group?.fecha_inicio, group?.fecha_fin);
-  const heroImage =
-    group?.destino_photo_url ||
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&h=400&fit=crop";
-
-  return (
-    <div className="relative mb-4 min-h-[280px] shrink-0 overflow-hidden rounded-2xl">
-      <img
-        src={heroImage}
-        alt={destination}
-        className="absolute inset-0 h-full w-full object-cover"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-      <div className="relative flex min-h-[280px] flex-col justify-between p-5">
-        <div className="flex max-w-full flex-col items-start gap-2 sm:flex-row sm:flex-wrap">
-          <span className="inline-flex max-w-full items-center gap-2 rounded-xl border border-[#BFD7FF]/50 bg-[#1E6FD9]/45 px-3 py-2 font-body text-[13px] font-bold uppercase tracking-wide text-white shadow-sm backdrop-blur-md">
-            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/20 text-[#D9E8FF]">
-              <IconMapPinSmall />
-            </span>
-            <span className="min-w-0 break-words [overflow-wrap:anywhere]">
-              {activeDay !== null
-                ? `DÍA ${activeDay} / ${totalDays}`
-                : `${destination.toUpperCase()}`}
-            </span>
-          </span>
-          <span className="inline-flex items-center gap-2 rounded-xl border border-[#FFD166]/60 bg-[#F59E0B]/80 px-3 py-2 font-body text-[13px] font-bold text-white shadow-md backdrop-blur-md">
-            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/20 text-[#FFF4D6]">
-              <IconCalendarSmall />
-            </span>
-            {dateLabel}
-          </span>
-        </div>
-        <div>
-          <h1
-            className="mb-3 max-w-4xl break-words font-heading text-3xl font-bold leading-tight text-white [overflow-wrap:anywhere] md:text-[36px]"
-            style={{
-              textShadow:
-                "0 2px 16px rgba(0,0,0,0.85), 0 1px 4px rgba(0,0,0,0.6)",
-            }}
-          >
-            {heroTitle}
-          </h1>
-          <div className="mb-4 flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/20 px-3 py-2 font-body text-sm font-bold text-white shadow-sm backdrop-blur-md">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#35C56A]" />
-              {activities.length} actividad{activities.length !== 1 ? "es" : ""}{" "}
-              planeada
-              {activities.length !== 1 ? "s" : ""}
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-xl border border-[#E9D5FF]/40 bg-[#7A4FD6]/35 px-3 py-2 font-body text-sm font-bold text-white shadow-sm backdrop-blur-md">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
-              {pending} pendiente{pending !== 1 ? "s" : ""} de confirmacion
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={onAdd}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-greenAccent px-4 py-2.5 font-body text-base font-semibold text-white transition-opacity hover:opacity-90"
-            >
-              <IconPlus size={14} />
-              Proponer actividad
-            </button>
-            <button
-              onClick={onExportPdf}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-white/45 bg-black/10 px-4 py-2.5 font-body text-base font-semibold text-white transition-colors hover:bg-white/10"
-            >
-              <IconDownload size={13} />
-              Exportar PDF
-            </button>
-            {canManageSubgroups && onOpenSubgroups && (
-              <button
-                onClick={onOpenSubgroups}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-white/45 bg-white/10 px-4 py-2.5 font-body text-base font-semibold text-white transition-colors hover:bg-white/20"
-              >
-                Horario subgrupos
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TimelineStrip({
-  activeDay,
-  date,
-  activities = [],
-  onAdd,
-}: {
-  activeDay: number | null;
-  date?: string;
-  activities?: DayActivity[];
-  onAdd?: () => void;
-}) {
-  if (activeDay === null) {
-    return (
-      <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-[#BCD4FF] bg-[#EEF4FF] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-bluePrimary/10">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="text-bluePrimary"
-              aria-hidden="true"
-            >
-              <rect
-                x="3"
-                y="4"
-                width="18"
-                height="18"
-                rx="2"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-              <line
-                x1="16"
-                y1="2"
-                x2="16"
-                y2="6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-              <line
-                x1="8"
-                y1="2"
-                x2="8"
-                y2="6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-              <line
-                x1="3"
-                y1="10"
-                x2="21"
-                y2="10"
-                stroke="currentColor"
-                strokeWidth="2"
-              />
-            </svg>
-          </div>
-          <div>
-            <p className="font-heading text-base font-bold text-purpleNavbar">
-              Selecciona un día para revisar el avance
-            </p>
-            <p className="font-body text-sm text-gray500">
-              También puedes empezar creando una propuesta para un día del
-              viaje.
-            </p>
-          </div>
-        </div>
-        {onAdd && (
-          <button
-            type="button"
-            onClick={onAdd}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-bluePrimary px-4 py-2 font-body text-sm font-semibold text-white hover:bg-[#1E5EEA]"
-          >
-            <IconPlus size={13} />
-            Proponer actividad
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  const confirmed = activities.filter(
-    (activity) => activity.status === "confirmada",
-  ).length;
-  const pending = activities.filter(
-    (activity) => activity.status === "pendiente",
-  ).length;
-  const total = activities.length;
-  const pct = total > 0 ? Math.round((confirmed / total) * 100) : 0;
-  const transport = activities.filter(
-    (activity) => activity.category === "transporte",
-  ).length;
-  const lodging = activities.filter(
-    (activity) => activity.category === "hospedaje",
-  ).length;
-  const acts = activities.filter(
-    (activity) => activity.category === "actividad",
-  ).length;
-  const sortedActivities = [...activities].sort((left, right) => {
-    const leftTime = left.startsAt
-      ? new Date(left.startsAt).getTime()
-      : Number.MAX_SAFE_INTEGER;
-    const rightTime = right.startsAt
-      ? new Date(right.startsAt).getTime()
-      : Number.MAX_SAFE_INTEGER;
-    if (leftTime !== rightTime) return leftTime - rightTime;
-    return left.title.localeCompare(right.title, "es");
-  });
-  const firstActivity = sortedActivities[0];
-  const lastActivity = sortedActivities[sortedActivities.length - 1];
-
-  return (
-    <div className="mb-4 rounded-2xl border border-[#E2E8F0] bg-white px-5 py-4">
-      <div className="flex items-start gap-5">
-        <div className="shrink-0">
-          <span className="inline-flex rounded-full bg-bluePrimary/10 px-3 py-1 font-body text-[13px] font-bold leading-none text-bluePrimary">
-            DÍA {activeDay}
-            {date ? ` · ${date.toUpperCase()}` : ""}
-          </span>
-          <p className="mt-2 font-heading text-base font-bold leading-none text-purpleNavbar">
-            Progreso del día
-          </p>
-          <p className="mt-1 font-body text-sm leading-none text-gray500">
-            {confirmed} de {total} actividades confirmadas
-          </p>
-        </div>
-
-        <div className="flex-1 pt-0.5">
-          <div className="h-3 overflow-hidden rounded-full bg-surface">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${pct}%`,
-                background: "linear-gradient(90deg, #1E6FD9, #35C56A)",
-              }}
-            />
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
-            <span className="flex items-center gap-1.5 font-body text-[13px] text-gray500">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-greenAccent" />
-              Confirmadas · {confirmed}
-            </span>
-            <span className="flex items-center gap-1.5 font-body text-[13px] text-gray500">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-purpleMedium" />
-              Por confirmar · {pending}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {(transport > 0 || lodging > 0 || acts > 0) && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {transport > 0 && (
-            <span className="rounded-full bg-[#EEF4FF] px-3 py-1 font-body text-[13px] leading-none text-bluePrimary">
-              {transport} traslado{transport !== 1 ? "s" : ""}
-            </span>
-          )}
-          {lodging > 0 && (
-            <span className="rounded-full bg-[#EEF4FF] px-3 py-1 font-body text-[13px] leading-none text-bluePrimary">
-              {lodging} hospedaje{lodging !== 1 ? "s" : ""}
-            </span>
-          )}
-          {acts > 0 && (
-            <span className="rounded-full bg-surface px-3 py-1 font-body text-[13px] leading-none text-purpleMedium">
-              {acts} actividad{acts !== 1 ? "es" : ""}
-            </span>
-          )}
-          {firstActivity && (
-            <span className="rounded-full bg-[#EEF4FF] px-3 py-1 font-body text-[13px] leading-none text-bluePrimary">
-              Primera: {firstActivity.time}
-            </span>
-          )}
-          {lastActivity && lastActivity.id !== firstActivity?.id && (
-            <span className="rounded-full bg-[#F3EEFF] px-3 py-1 font-body text-[13px] leading-none text-purpleMedium">
-              Ultima: {lastActivity.time}
-            </span>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 function toDateKey(value?: string | null): string | null {
   if (!value) return null;
   const raw = String(value);
@@ -872,30 +462,6 @@ function mergeSubgroupSlotsIntoDays(
   }));
 }
 
-function addDaysToDateKey(dateKey: string, daysToAdd: number): string {
-  const date = new Date(`${dateKey}T00:00:00.000Z`);
-  date.setUTCDate(date.getUTCDate() + daysToAdd);
-  return date.toISOString().slice(0, 10);
-}
-
-function getTodayDateKey(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function isPastItineraryDay(
-  tripStartDate: string | null | undefined,
-  dayNumber: number,
-): boolean {
-  const startKey = toDateKey(tripStartDate);
-  if (!startKey) return false;
-  const dayKey = addDaysToDateKey(startKey, Math.max(0, dayNumber - 1));
-  return dayKey < getTodayDateKey();
-}
-
 function formatTripDateRange(
   start?: string | null,
   end?: string | null,
@@ -922,30 +488,6 @@ function formatTripDateRange(
     return `${dayFormatter.format(startDate)} al ${fullFormatter.format(endDate)}`;
   }
   return `${fullFormatter.format(startDate)} al ${fullFormatter.format(endDate)}`;
-}
-
-function InfoBanner({ memberCount }: { memberCount: number }) {
-  const isSoloTrip = memberCount <= 1;
-
-  return (
-    <div className="mb-4 flex items-start gap-3 rounded-xl border border-bluePrimary/20 bg-[#EEF4FF] px-4 py-3">
-      <span className="mt-0.5 shrink-0 text-bluePrimary">
-        <IconInfo size={16} />
-      </span>
-      <div>
-        <p className="font-body text-base font-semibold leading-tight text-gray700">
-          {isSoloTrip
-            ? "Tus propuestas se confirman automaticamente"
-            : "Acepta propuestas para confirmarlas"}
-        </p>
-        <p className="mt-0.5 font-body text-sm leading-relaxed text-gray500">
-          {isSoloTrip
-            ? "Como eres el unico integrante, cada propuesta nueva se aprueba en cuanto la creas."
-            : "Las actividades con votos necesitan tu aprobacion para ser incluidas en el itinerario final del grupo."}
-        </p>
-      </div>
-    </div>
-  );
 }
 
 function parseCoordinate(value: unknown, axis: "lat" | "lng"): number | null {
@@ -1536,10 +1078,10 @@ export function DashboardPage() {
     activeTab?: string;
     dashboardView?: "general" | "subgrupos";
   } | null;
-  const groupIdFromState =
+  const groupIdFromState = searchParams.get("groupId") || (
     routeState?.groupId !== undefined && routeState?.groupId !== null
       ? String(routeState.groupId)
-      : null;
+      : null);
   const switchingGroupFromState = routeState?.switchingGroup;
 
   const groupId = searchParams.get("groupId");
@@ -1554,7 +1096,7 @@ export function DashboardPage() {
     .toUpperCase();
 
   const [activeDay, setActiveDay] = useState<number | null>(null);
-  const [expandedDay, setExpandedDay] = useState<number | null>(null);
+  const [, setExpandedDay] = useState<number | null>(null);
   // La URL conserva la sección al recargar, usar Atrás o abrir una notificación.
   const validTabs = ["resumen", "inicio", "buscar", "comparar", "mapas", "pagar", "boveda", "decisiones"];
   const requestedTab = searchParams.get("tab") ?? routeState?.activeTab ?? "resumen";
@@ -1585,6 +1127,8 @@ export function DashboardPage() {
     id: string;
     title: string;
   } | null>(null);
+  const deleteActivityLock = useRef(false);
+  const [activityDeleteError,setActivityDeleteError] = useState("");
   const [deletingActivityId, setDeletingActivityId] = useState<string | null>(
     null,
   );
@@ -1617,7 +1161,6 @@ export function DashboardPage() {
   const [budgetSummary, setBudgetSummary] = useState<BudgetSummary | null>(
     null,
   );
-  const dayRefs = useRef<Record<number, DayViewHandle | null>>({});
   const collaborativeRefreshTimerRef = useRef<number | null>(null);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [selectedActivityDay, setSelectedActivityDay] = useState<number | null>(
@@ -1626,7 +1169,6 @@ export function DashboardPage() {
   const [editingActivity, setEditingActivity] = useState<DayActivity | null>(
     null,
   );
-  const [, setAcceptErrorActivityIds] = useState<Record<string, boolean>>({});
   const [, setLockedProposalIds] = useState<Record<string, boolean>>({});
   const [, setLockErrorActivityIds] = useState<Record<string, boolean>>({});
   const [voteResultByProposal, setVoteResultByProposal] = useState<
@@ -1852,6 +1394,11 @@ export function DashboardPage() {
           loadedGroupId.current = resolvedGroupId;
           setActiveDay(null);
           setExpandedDay(null);
+          setShowActivityModal(false);
+          setEditingActivity(null);
+          setActivityPendingDelete(null);
+          setSelectedProposal(null);
+          setShowConfirm(false);
           setDashboardView(routeState?.dashboardView ?? "general");
         }
 
@@ -1962,6 +1509,7 @@ export function DashboardPage() {
           }
         }
       } catch (error) {
+        if (!isMounted) return;
         console.error("Error cargando dashboard:", error);
         if (isMounted) setLoadError("No se pudo cargar la información del viaje. Comprueba tu conexión y vuelve a intentar.");
         if (isAccessDeniedError(error)) {
@@ -2079,6 +1627,7 @@ export function DashboardPage() {
       return acc;
     }, {});
 
+    if (loadedGroupId.current !== resolvedGroupId) return;
     setVotesAvailable(votesResult.status === "fulfilled");
     setMembersAvailable(membersResult.status === "fulfilled");
     if (groupResult.status === "fulfilled") {
@@ -2320,6 +1869,7 @@ export function DashboardPage() {
           (activity) => String(activity.id) === String(activityId),
         )?.title ?? "esta actividad";
 
+      setActivityDeleteError("");
       setActivityPendingDelete({ id: activityId, title: activityName });
     },
     [selectedDayWithContext?.activities],
@@ -2331,7 +1881,9 @@ export function DashboardPage() {
       groupId ||
       (currentGroup?.id ? String(currentGroup.id) : null);
 
-    if (!activityPendingDelete || !resolvedGroupId || !accessToken) return;
+    if (!activityPendingDelete || !resolvedGroupId || !accessToken || deleteActivityLock.current || !areRealtimeActionsEnabled || isReadOnly || group?.modulo_itinerario_bloqueado) return;
+    deleteActivityLock.current = true;
+    setActivityDeleteError("");
 
     try {
       setDeletingActivityId(activityPendingDelete.id);
@@ -2340,13 +1892,20 @@ export function DashboardPage() {
         activityPendingDelete.id,
         accessToken,
       );
+      if (loadedGroupId.current !== resolvedGroupId) return;
       setActivityPendingDelete(null);
       await reloadDashboard();
+    } catch (error) {
+      if (loadedGroupId.current === resolvedGroupId) setActivityDeleteError(error instanceof Error ? error.message : "No se pudo eliminar la actividad. Reintenta cuando recuperes la conexión.");
     } finally {
+      deleteActivityLock.current = false;
       setDeletingActivityId(null);
     }
   }, [
     accessToken,
+    areRealtimeActionsEnabled,
+    isReadOnly,
+    group?.modulo_itinerario_bloqueado,
     activityPendingDelete,
     currentGroup?.id,
     groupId,
@@ -2429,111 +1988,6 @@ export function DashboardPage() {
       });
     },
     [socket, groupId, currentGroup?.id],
-  );
-
-  const handleAcceptActivity = useCallback(
-    async (activityId: string) => {
-      const resolvedGroupId =
-        groupIdFromState ||
-        groupId ||
-        (currentGroup?.id ? String(currentGroup.id) : null);
-
-      if (!resolvedGroupId || !accessToken) return;
-
-      if (!areRealtimeActionsEnabled) {
-        setAcceptErrorActivityIds((prev) => ({ ...prev, [activityId]: true }));
-        return;
-      }
-
-      const activity = days
-        .flatMap((day) => day.activities)
-        .find((item) => item.id === activityId);
-      const proposalId = activity?.proposalId;
-
-      if (!proposalId) {
-        setAcceptErrorActivityIds((prev) => ({ ...prev, [activityId]: true }));
-        return;
-      }
-
-      try {
-        setAcceptErrorActivityIds((prev) => ({ ...prev, [activityId]: false }));
-
-        await proposalsService.voteProposal(
-          String(resolvedGroupId),
-          proposalId,
-          { voto: "a_favor" },
-          accessToken,
-        );
-        await reloadDashboard();
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "";
-        setAcceptErrorActivityIds((prev) => ({
-          ...prev,
-          [activityId]: !message.toLowerCase().includes("se mantiene igual"),
-        }));
-      }
-    },
-    [
-      groupIdFromState,
-      groupId,
-      currentGroup?.id,
-      accessToken,
-      days,
-      reloadDashboard,
-      areRealtimeActionsEnabled,
-    ],
-  );
-
-  const handleRejectActivity = useCallback(
-    async (activityId: string) => {
-      const resolvedGroupId =
-        groupIdFromState ||
-        groupId ||
-        (currentGroup?.id ? String(currentGroup.id) : null);
-
-      if (!resolvedGroupId || !accessToken) return;
-
-      if (!areRealtimeActionsEnabled) {
-        setAcceptErrorActivityIds((prev) => ({ ...prev, [activityId]: true }));
-        return;
-      }
-
-      const activity = days
-        .flatMap((day) => day.activities)
-        .find((item) => item.id === activityId);
-      const proposalId = activity?.proposalId;
-
-      if (!proposalId) {
-        setAcceptErrorActivityIds((prev) => ({ ...prev, [activityId]: true }));
-        return;
-      }
-
-      try {
-        setAcceptErrorActivityIds((prev) => ({ ...prev, [activityId]: false }));
-        await proposalsService.voteProposal(
-          String(resolvedGroupId),
-          proposalId,
-          { voto: "en_contra" },
-          accessToken,
-        );
-        await reloadDashboard();
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "";
-        setAcceptErrorActivityIds((prev) => ({
-          ...prev,
-          [activityId]: !message.toLowerCase().includes("se mantiene igual"),
-        }));
-      }
-    },
-    [
-      groupIdFromState,
-      groupId,
-      currentGroup?.id,
-      accessToken,
-      days,
-      reloadDashboard,
-      areRealtimeActionsEnabled,
-    ],
   );
 
   const handleAdminDecision = useCallback(
@@ -3221,9 +2675,9 @@ export function DashboardPage() {
       }
     >
       {isLoading ? (
-        activeTab === "resumen" ? <EditorialLoading /> : <DashboardSwitchLoading group={loadingGroupSnapshot} />
+        activeTab === "resumen" ? <EditorialLoading /> : activeTab === "inicio" ? <ItineraryLoading /> : <DashboardSwitchLoading group={loadingGroupSnapshot} />
       ) : loadError ? (
-        <EditorialError message={loadError} onRetry={() => setRetryVersion(version => version + 1)} />
+        activeTab === "inicio" ? <ItineraryError message={loadError} onRetry={() => setRetryVersion(version => version + 1)} /> : <EditorialError message={loadError} onRetry={() => setRetryVersion(version => version + 1)} />
       ) : requiresInitialBudget && activeTab !== "pagar" ? (
         <div className="flex flex-1 items-center justify-center bg-surface px-6 py-8">
           <div className="w-full max-w-2xl rounded-2xl border border-[#E2E8F0] bg-white p-6 text-center">
@@ -3264,8 +2718,7 @@ export function DashboardPage() {
         <ComparisonPage key={group?.id} group={group} mode="decisions" onBack={() => setActiveTab("resumen")} />
       ) : activeTab === "comparar" ? (
         <ComparisonPage key={group?.id} group={group} onBack={() => setActiveTab("resumen")} />
-      ) : isEmpty &&
-        !(activeTab === "inicio" && dashboardView === "subgrupos") ? (
+      ) : isEmpty && activeTab !== "inicio" ? (
         <EmptyState
           onAdd={isReadOnly ? () => {} : () => setShowActivityModal(true)}
         />
@@ -3341,7 +2794,7 @@ export function DashboardPage() {
           isReadOnly={isReadOnly}
         />
       ) : activeTab === "inicio" && dashboardView === "subgrupos" ? (
-        <div className="flex-1 overflow-y-auto bg-surface px-6 py-6">
+        <div className="atlas-subgroups-frame">
           <div className="mb-4 inline-flex rounded-lg border border-[#D7DEEA] bg-white p-1">
             <button
               type="button"
@@ -3384,293 +2837,23 @@ export function DashboardPage() {
       ) : activeTab === "buscar" ? (
         <ExploreHub group={group} />
       ) : (
-        <div className="flex-1 overflow-y-auto bg-surface px-6 py-6">
-          <div className="mb-4 inline-flex rounded-lg border border-[#D7DEEA] bg-white p-1">
-            <button
-              type="button"
-              onClick={() => setDashboardView("general")}
-              className={`rounded-md px-3 py-1.5 text-sm ${dashboardView === "general" ? "bg-[#1E6FD9] text-white" : "text-[#475569]"}`}
-            >
-              Vista general
-            </button>
-            <button
-              type="button"
-              onClick={() => setDashboardView("subgrupos")}
-              className={`rounded-md px-3 py-1.5 text-sm ${dashboardView === "subgrupos" ? "bg-[#1E6FD9] text-white" : "text-[#475569]"}`}
-            >
-              Vista subgrupos
-            </button>
-          </div>
-          <HeroCard
-            activeDay={activeDay}
-            totalDays={daysWithContext.length}
-            selectedDay={selectedDayWithContext}
-            group={group}
-            onAdd={
-              isReadOnly
-                ? () => {}
-                : () =>
-                    openActivityModalForDay(
-                      activeDay ?? daysWithContext[0]?.dayNumber ?? 1,
-                    )
-            }
-            onExportPdf={handleExportConfirmedItineraryPdf}
-            canManageSubgroups={isCurrentUserAdmin && !isReadOnly}
-            onOpenSubgroups={() => setDashboardView("subgrupos")}
-          />
-          {/* ── Banner modo solo lectura (ERR-211-002 / CU-2.10) ── */}
-          {isReadOnly && (
-            <div className="mb-4 flex items-start gap-3 rounded-2xl border border-[#CBD5E1] bg-[#F8FAFC] px-4 py-3">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                className="mt-0.5 shrink-0 text-[#64748B]"
-                aria-hidden="true"
-              >
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                />
-                <line
-                  x1="12"
-                  y1="8"
-                  x2="12"
-                  y2="12"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <circle cx="12" cy="16" r="1" fill="currentColor" />
-              </svg>
-              <p className="font-body text-[12px] text-[#64748B] leading-relaxed">
-                Este viaje ya finalizó. Puedes consultar el itinerario y el
-                resumen financiero en modo lectura.
-              </p>
-            </div>
-          )}
-          <div
-            className={`overflow-hidden transition-all duration-500 ease-in-out ${
-              daysWithContext.some((d) =>
-                d.activities.some((a) => a.status === "pendiente"),
-              )
-                ? "max-h-32 opacity-100"
-                : "max-h-0 opacity-0"
-            }`}
-          >
-            <InfoBanner memberCount={uniqueMemberCount} />
-          </div>
-          {/* ── Day tabs + single active day ── */}
-          {daysWithContext.length > 0 &&
-            (() => {
-              const activeDayNumber = expandedDay;
-              const activeDayData =
-                activeDayNumber !== null
-                  ? (daysWithContext.find(
-                      (d) => d.dayNumber === activeDayNumber,
-                    ) ?? null)
-                  : null;
-              const isPastActiveDay = isPastItineraryDay(
-                group?.fecha_inicio ?? currentGroup?.fecha_inicio ?? null,
-                activeDayData?.dayNumber ?? 1,
-              );
-
-              return (
-                <div className="space-y-3">
-                  {/* Tab strip */}
-                  <div className="overflow-x-auto rounded-2xl bg-[linear-gradient(135deg,#24105E_0%,#1E0A4E_52%,#2B1163_100%)] px-4 py-3 shadow-[0_8px_28px_rgba(30,10,78,0.22)]">
-                    <div className="flex gap-2">
-                      {daysWithContext.map((day) => {
-                        const isActive = day.dayNumber === activeDayNumber;
-                        const confirmed = day.activities.filter(
-                          (a) => a.status === "confirmada",
-                        ).length;
-                        const pending = day.activities.filter(
-                          (a) => a.status === "pendiente",
-                        ).length;
-                        const isEmpty = day.activities.length === 0;
-                        return (
-                          <button
-                            key={day.dayNumber}
-                            type="button"
-                            onClick={() => {
-                              const next =
-                                day.dayNumber === activeDayNumber
-                                  ? null
-                                  : day.dayNumber;
-                              setActiveDay(next);
-                              setExpandedDay(next);
-                            }}
-                            className={[
-                              "flex shrink-0 flex-col items-center gap-1.5 rounded-2xl px-5 py-3 transition-all duration-200 min-w-[110px]",
-                              isActive
-                                ? "bg-white shadow-[0_10px_28px_rgba(0,0,0,0.22)]"
-                                : "border border-white/10 bg-white/[0.07] hover:bg-white/[0.14]",
-                            ].join(" ")}
-                          >
-                            {/* Day number pill */}
-                            <span
-                              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-body text-[11px] font-bold uppercase tracking-wider ${
-                                isActive
-                                  ? "bg-[#1E6FD9]/12 text-[#1E6FD9]"
-                                  : "bg-white/10 text-white/55"
-                              }`}
-                            >
-                              <span
-                                className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-[#1E6FD9]" : "bg-white/30"}`}
-                              />
-                              Día {day.dayNumber}
-                            </span>
-                            {/* Date */}
-                            <span
-                              className={`font-body text-sm font-semibold leading-tight text-center ${isActive ? "text-[#1E0A4E]" : "text-white/80"}`}
-                            >
-                              {day.date}
-                            </span>
-                            {/* Activity badges */}
-                            <div className="flex items-center gap-1">
-                              {isEmpty ? (
-                                <span
-                                  className={`rounded-full px-2 py-0.5 font-body text-xs font-medium ${isActive ? "bg-[#F1F5F9] text-[#94A3B8]" : "bg-white/10 text-white/35"}`}
-                                >
-                                  Sin actividades
-                                </span>
-                              ) : (
-                                <>
-                                  {confirmed > 0 && (
-                                    <span
-                                      className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 font-body text-xs font-semibold ${isActive ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#35C56A]/20 text-[#9AF0B8]"}`}
-                                    >
-                                      <span className="text-[10px]">✓</span>{" "}
-                                      {confirmed}
-                                    </span>
-                                  )}
-                                  {pending > 0 && (
-                                    <span
-                                      className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 font-body text-xs font-semibold ${isActive ? "bg-[#F3EEFF] text-[#7A4FD6]" : "bg-[#7A4FD6]/25 text-[#D8C8FF]"}`}
-                                    >
-                                      <span className="text-[10px]">●</span>{" "}
-                                      {pending}
-                                    </span>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Progress of selected day */}
-                  <TimelineStrip
-                    activeDay={activeDay}
-                    date={selectedDayWithContext?.date}
-                    activities={selectedDayWithContext?.activities}
-                    onAdd={
-                      isReadOnly
-                        ? undefined
-                        : () =>
-                            openActivityModalForDay(
-                              activeDay ?? daysWithContext[0]?.dayNumber ?? 1,
-                            )
-                    }
-                  />
-
-                  {/* Active day view */}
-                  {activeDayData && (
-                    <DayView
-                      key={activeDayData.dayNumber}
-                      ref={(handle) => {
-                        dayRefs.current[activeDayData.dayNumber] = handle;
-                      }}
-                      dayNumber={activeDayData.dayNumber}
-                      date={activeDayData.date}
-                      activities={activeDayData.activities}
-                      currentUserId={localUser?.id_usuario}
-                      currentUserRole={currentUserRole}
-                      isActive={true}
-                      isExpanded={true}
-                      onSelect={(dn) => {
-                        setActiveDay(dn);
-                        setExpandedDay(dn);
-                      }}
-                      onAddActivity={
-                        isReadOnly ||
-                        isPastActiveDay ||
-                        !areRealtimeActionsEnabled
-                          ? undefined
-                          : openActivityModalForDay
-                      }
-                      onManageContext={
-                        isReadOnly ||
-                        isPastActiveDay ||
-                        !areRealtimeActionsEnabled
-                          ? undefined
-                          : openActivityEditor
-                      }
-                      onOpenBudget={() => setActiveTab("pagar")}
-                      onOpenVault={() => setActiveTab("boveda")}
-                      onAccept={
-                        isReadOnly ||
-                        isPastActiveDay ||
-                        !areRealtimeActionsEnabled
-                          ? undefined
-                          : handleAcceptActivity
-                      }
-                      onReject={
-                        isReadOnly ||
-                        isPastActiveDay ||
-                        !areRealtimeActionsEnabled
-                          ? undefined
-                          : handleRejectActivity
-                      }
-                      onDelete={
-                        isReadOnly ||
-                        isPastActiveDay ||
-                        !areRealtimeActionsEnabled
-                          ? undefined
-                          : handleDeleteActivity
-                      }
-                      onEdit={
-                        isReadOnly ||
-                        isPastActiveDay ||
-                        !areRealtimeActionsEnabled
-                          ? undefined
-                          : (id) => {
-                              const activity = days
-                                .flatMap((d) => d.activities)
-                                .find((a) => a.id === id);
-                              if (!activity) return;
-                              openActivityEditor(activity);
-                            }
-                      }
-                      renderConfirmedActions={
-                        isReadOnly || isPastActiveDay
-                          ? undefined
-                          : renderProposalQuickActions
-                      }
-                      renderPendingActions={
-                        isReadOnly || isPastActiveDay
-                          ? undefined
-                          : renderProposalQuickActions
-                      }
-                      isPastDay={isPastActiveDay}
-                      actionsDisabled={!areRealtimeActionsEnabled}
-                      actionsDisabledReason={offlineActionMessage}
-                    />
-                  )}
-                </div>
-              );
-            })()}
-        </div>
+        <ItineraryPlanner key={group?.id} group={group} days={daysWithContext} selectedDay={activeDay}
+          onSelect={(day) => { setActiveDay(day); setExpandedDay(day); }}
+          onSubgroups={() => setDashboardView("subgrupos")} onExport={handleExportConfirmedItineraryPdf}
+          onRefresh={() => setRetryVersion(version => version + 1)} isReadOnly={isReadOnly} online={areRealtimeActionsEnabled}
+          dayActions={{currentUserId:localUser?.id_usuario,currentUserRole,
+            onAddActivity:openActivityModalForDay,onEdit:(id) => {const activity=days.flatMap(d=>d.activities).find(a=>a.id===id);if(activity)openActivityEditor(activity);},
+            onDelete:handleDeleteActivity,onManageContext:openActivityEditor,
+            onOpenBudget:()=>setActiveTab("pagar"),onOpenVault:()=>setActiveTab("boveda"),
+            onDecisions:(activity)=>navigate(`/dashboard?groupId=${encodeURIComponent(resolvedGroupId||"")}&tab=decisiones&proposalId=${encodeURIComponent(activity.proposalId||"")}`),
+            renderConfirmedActions:(activity)=>activity.kind==="subgroup-slot" && !isReadOnly ? renderProposalQuickActions(activity) : null,
+          }} />
       )}
 
-      <ActivityProposalModal
+      {showActivityModal && !isReadOnly && <ActivityProposalModal
+        key={`${group?.id}:${editingActivity?.id || "new"}`}
+        isOnline={areRealtimeActionsEnabled}
+        isReadOnly={isReadOnly || Boolean(group?.modulo_itinerario_bloqueado)}
         open={showActivityModal && !isReadOnly}
         group={group}
         token={accessToken}
@@ -3690,7 +2873,7 @@ export function DashboardPage() {
           await reloadDashboard();
         }}
         editingActivity={editingActivity}
-      />
+      />}
 
       {voteHistoryActivity?.proposalId && (
         <div
@@ -4104,26 +3287,9 @@ export function DashboardPage() {
         />
       )}
 
-      <ConfirmDialog
-        open={activityPendingDelete !== null}
-        title="Eliminar propuesta"
-        description="Esta acción no se puede deshacer. La propuesta se quitará del itinerario cuando el backend confirme la eliminación."
-        details={activityPendingDelete?.title}
-        confirmLabel="Eliminar propuesta"
-        cancelLabel="Conservar"
-        variant="danger"
-        loading={
-          activityPendingDelete
-            ? deletingActivityId === activityPendingDelete.id
-            : false
-        }
-        onCancel={() => {
-          if (deletingActivityId === null) setActivityPendingDelete(null);
-        }}
-        onConfirm={() => {
-          void confirmDeleteActivity();
-        }}
-      />
+      {activityPendingDelete && <EditorialDialog title="Eliminar actividad" busy={deletingActivityId!==null} onClose={()=>{if(deletingActivityId===null)setActivityPendingDelete(null)}}>
+        <div className="atlas-activity-action"><p>La actividad se quitará del itinerario cuando el servidor confirme la eliminación.</p><h3>{activityPendingDelete.title}</h3>{activityDeleteError&&<p role="alert" className="atlas-collab-error">{activityDeleteError}</p>}<footer><button className="atlas-button atlas-button-secondary" disabled={deletingActivityId!==null} onClick={()=>setActivityPendingDelete(null)}>Conservar</button><button className="atlas-button atlas-button-primary" disabled={deletingActivityId!==null} onClick={()=>void confirmDeleteActivity()}>{deletingActivityId!==null?'Eliminando…':'Eliminar actividad'}</button></footer></div>
+      </EditorialDialog>}
 
       <ConfirmDialog
         open={forcedNotice !== null}
