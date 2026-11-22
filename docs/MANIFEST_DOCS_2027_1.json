@@ -1,0 +1,35 @@
+{
+  "package": "ITHERA_Documentacion_2027-1",
+  "scope": "documentation_only",
+  "files": {
+    "CONTRIBUTING.md": {
+      "sha256": "1829a689ea96ce7c28eef00a54cffb8e70a88562bb28b80564ea1c741a695d1f",
+      "bytes": 4065
+    },
+    "LICENSE": {
+      "sha256": "838988752497fa45832aa741ff06f93510a177def9f214d0de6c21da8b71068d",
+      "bytes": 1118
+    },
+    "README.md": {
+      "sha256": "2b6a443c0dc766e54f37fdea102f620c06b74e02108ffeb27dc1c4d2ca296436",
+      "bytes": 8869
+    },
+    "docs/DESPLIEGUE_ITHERA.md": {
+      "sha256": "656f5c13b77615dcac018cf8349387fd5b3ed7fe22eecbf4a4b767504899425a",
+      "bytes": 5032
+    },
+    "docs/GUIA_INTEGRACION_DOCS_2027_1.md": {
+      "sha256": "ccae04ffea9086d318cda919d51a95702e7db4d2c1a2ac095a9cd69bdf5077bb",
+      "bytes": 4502
+    },
+    "docs/aplicar_docs_2027_1.py": {
+      "sha256": "405923783f7a28b1590123f57f06f01ce9b9c7f0b5bf712636268af0e8e71b32",
+      "bytes": 5179
+    }
+  },
+  "notes": [
+    "No backend/frontend/env changes",
+    "MIT original copyright notice retained",
+    "Review full README/CONTRIBUTING diff before merge"
+  ]
+}

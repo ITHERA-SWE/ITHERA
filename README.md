@@ -2,371 +2,187 @@
 
 > Ecosistema digital colaborativo para planificar viajes grupales en tiempo real.
 
-```text
-Instituto Politecnico Nacional
-Escuela Superior de Computo
-Ingenieria en Sistemas Computacionales
-Unidad de aprendizaje: Analisis y Diseno de Sistemas
-Ciclo escolar: 2026/2
-Grupo: 5CM3
-Profesora: Idalia Maldonado
-Equipo: Ithera
-```
+[**Abrir ITHERA**](https://ithera-theta.vercel.app) · [**Repositorio**](https://github.com/ITHERA-SWE/ITHERA) · [**Backend**](https://ithera-backend.onrender.com)
 
-## Vision del proyecto
+## Información académica
 
-ITHERA es una plataforma web para organizar viajes grupales de forma colaborativa. El sistema concentra en una sola experiencia los procesos de autenticacion, creacion de grupos, invitaciones, busqueda de servicios, itinerario colaborativo, propuestas, votaciones, presupuesto, documentos, checkout simulado, notificaciones y comunicacion en tiempo real.
-
-El objetivo academico del proyecto es aplicar el analisis, diseno, documentacion, construccion y control de cambios de un sistema realista dentro de la materia de Analisis y Diseno de Sistemas.
-
-## Que problema resuelve
-
-Organizar un viaje entre varias personas suele dispersarse entre chats, hojas de calculo, links, notas, capturas y acuerdos verbales. ITHERA propone un espacio centralizado donde el grupo puede:
-
-- Crear y administrar viajes.
-- Invitar integrantes.
-- Proponer actividades, vuelos, hoteles y rutas.
-- Votar y comentar propuestas.
-- Mantener un itinerario comun.
-- Registrar presupuesto y gastos.
-- Consultar mapas, clima y servicios externos.
-- Guardar documentos del viaje.
-- Recibir notificaciones.
-- Sincronizar cambios en tiempo real.
-
-## Stack actualizado
-
-| Capa | Tecnologia actual |
+| Dato | Información |
 | --- | --- |
-| Backend | Node.js, TypeScript, Express |
+| Institución | Instituto Politécnico Nacional |
+| Escuela | Escuela Superior de Cómputo (ESCOM) |
+| Carrera | Ingeniería en Sistemas Computacionales |
+| Unidad de aprendizaje | Análisis y Diseño de Sistemas |
+| Ciclo escolar | **2027/1** |
+| Grupo | **6CM3** |
+| Profesora | **Rojas Mexicano Ismael** |
+| Equipo | **ITHERA** |
+
+## Visión del proyecto
+
+ITHERA es una aplicación web de **planificación colaborativa de viajes**. Reúne en un solo espacio la gestión de viajes e integrantes, la exploración de vuelos y hospedajes, la búsqueda de lugares, los itinerarios por día, las propuestas y votaciones, los documentos y la comunicación en tiempo real. El proyecto permite estudiar y aplicar análisis de requisitos, diseño de software, servicios, integración, pruebas y trabajo colaborativo.
+
+### ¿Qué problema resuelve?
+
+Organizar un viaje grupal normalmente obliga a distribuir información entre chats, notas, enlaces, hojas de cálculo y conversaciones. ITHERA concentra esos elementos para que el grupo pueda consultar **qué está planeado, qué alternativas existen y qué falta decidir**.
+
+### Funcionalidades principales
+
+- **Viajes y personas:** crear viajes, unirse por invitación, administrar integrantes, roles y permisos.
+- **Itinerario colaborativo:** organizar actividades por fechas y horarios, consultar mapas y programar subgrupos.
+- **Explorar:** buscar vuelos, hoteles y lugares; consultar rutas y clima según la disponibilidad de los proveedores.
+- **Decisiones:** comparar alternativas, crear propuestas, comentar y votar.
+- **Documentos y comunicación:** compartir archivos, consultar notificaciones y coordinarse mediante chat y Socket.IO.
+- **Checkout simulado:** representar la confirmación de vuelos u hospedajes **sin efectuar compras ni reservas reales**.
+- **Presupuesto y gastos:** módulos existentes que forman parte del sistema compartido; su evolución funcional se distribuye entre los equipos del curso.
+
+## Diseño del frontend
+
+La interfaz se está modernizando siguiendo la dirección **Editorial Travel Atlas**: fotografía del destino, navegación contextual, tipografía editorial y paleta morado, azul y blanco. El trabajo se integra por etapas y mediante Pull Requests. El avance en `develop` puede diferir de `main` hasta cerrar una entrega estable.
+
+## Arquitectura y tecnologías
+
+| Capa | Tecnologías y servicios |
+| --- | --- |
 | Frontend | React, TypeScript, Vite, Tailwind CSS |
-| Base de datos y auth | Supabase |
+| Backend | Node.js, TypeScript, Express |
+| Datos y autenticación | Supabase (PostgreSQL y Auth) |
 | Tiempo real | Socket.IO |
-| Email | Resend |
-| Mapas, rutas y lugares | Google Maps Platform |
-| Vuelos | Amadeus, Duffel |
+| Mapas, búsqueda de lugares y rutas | Google Maps Platform (Maps JavaScript, Places API New, Routes, Geocoding) |
+| Búsqueda de vuelos | Duffel; integración Amadeus existente |
 | Hoteles | LiteAPI |
-| Clima | Open-Meteo, WeatherAPI |
-| CI/CD | GitHub Actions, Vercel |
-| Testing backend | Jest, ts-jest |
-| Build frontend | Vite |
-
-## Vista rapida de arquitectura
+| Clima | WeatherAPI en el flujo activo de rutas y clima |
+| Correo | Resend |
+| Calidad | GitHub Actions, Jest, TypeScript, lint y build |
+| Despliegue | Vercel (frontend) y Render (backend) |
 
 ```text
-Frontend React/Vite
-  -> services/apiClient
-  -> Backend Express /api
-  -> Servicios de dominio
-  -> Supabase o APIs externas
-
-Socket.IO
-  -> Backend HTTP server
-  -> socket handlers
-  -> Hooks frontend de realtime
+Navegador (React/Vite)
+    | HTTPS /api, autenticación y Socket.IO
+    v
+Backend (Express + TypeScript) ----> Supabase
+    |                                 (Auth, PostgreSQL)
+    +----> Google Maps Platform
+    +----> Duffel / LiteAPI / Amadeus
+    +----> WeatherAPI / Resend
 ```
 
-## Distribucion completa del repositorio
+Los servicios externos requieren credenciales y cuotas propias. La disponibilidad de un proveedor puede variar y no implica que se hayan efectuado reservas reales.
+
+## Repositorio y documentación
 
 ```text
-ithera/
-|-- .github/
-|   |-- ISSUE_TEMPLATE/
-|   |   |-- bug_report.md           # Plantilla para reportar bugs
-|   |   |-- feature_request.md      # Plantilla para nuevas funcionalidades
-|   |   |-- task.md                 # Plantilla para tareas tecnicas
-|   |   `-- config.yml             # Configuracion de templates
-|   |-- workflows/
-|   |   |-- README.md               # Resumen rapido de workflows
-|   |   |-- ci-backend.yml          # CI de backend
-|   |   |-- ci-frontend.yml         # CI de frontend
-|   |   |-- vercel-frontend-preview.yml
-|   |   `-- vercel-frontend-production.yml
-|   |-- CODEOWNERS                 # Revisores automaticos
-|   `-- PULL_REQUEST_TEMPLATE.md   # Template obligatorio de PR
-|
-|-- backend/
-|   |-- src/
-|   |   |-- config/                 # Variables, env y configuracion base
-|   |   |-- domain/                 # Logica de negocio por modulo
-|   |   |   |-- auth/
-|   |   |   |-- budget/
-|   |   |   |-- checkout/
-|   |   |   |-- context-links/
-|   |   |   |-- documents/
-|   |   |   |-- flights/
-|   |   |   |-- groups/
-|   |   |   |-- hotels/
-|   |   |   |-- itinerary/
-|   |   |   |-- maps/
-|   |   |   |-- notifications/
-|   |   |   |-- proposals/
-|   |   |   `-- votes-comments/
-|   |   |-- infrastructure/         # Supabase, sockets, email y APIs externas
-|   |   |   |-- db/
-|   |   |   |-- email/
-|   |   |   |-- external-apis/
-|   |   |   |-- redis/
-|   |   |   `-- sockets/
-|   |   |-- middlewares/            # Auth, errores y rate limit
-|   |   |-- routes/                 # Routers Express por modulo
-|   |   |-- services/               # Servicios transversales
-|   |   `-- index.ts                # Bootstrap HTTP + Socket.IO
-|   |-- tests/                      # Pruebas e informes
-|   |-- .env.example                # Variables requeridas por backend
-|   |-- package.json                # Scripts y dependencias backend
-|   `-- README.md                   # Guia tecnica de backend
-|
-|-- frontend/
-|   |-- public/                     # Archivos publicos
-|   |-- src/
-|   |   |-- assets/                 # Logos, imagenes y recursos visuales
-|   |   |-- components/             # Componentes reutilizables
-|   |   |-- constants/              # Constantes compartidas
-|   |   |-- context/                # AuthContext y TripContext
-|   |   |-- hooks/                  # Sockets, red, sync y notificaciones
-|   |   |-- lib/                    # Clientes base como Supabase
-|   |   |-- mock/                   # Datos mock de apoyo
-|   |   |-- pages/                  # Vistas completas por ruta
-|   |   |-- services/               # Clientes HTTP por modulo
-|   |   |-- styles/                 # Entradas de estilos
-|   |   |-- types/                  # Tipos compartidos
-|   |   |-- App.tsx                 # Definicion de rutas
-|   |   `-- main.tsx                # Bootstrap React
-|   |-- .env.example                # Variables publicas Vite
-|   |-- vercel.json                 # Rewrite SPA para Vercel
-|   |-- package.json                # Scripts y dependencias frontend
-|   `-- README.md                   # Guia tecnica de frontend
-|
-|-- docs/
-|   |-- README.md                   # Indice general de documentacion
-|   |-- ADS/                        # Entregables academicos de ADS
-|   |-- api/                        # Endpoints REST
-|   |-- architecture/               # Arquitectura actual
-|   |-- casos-de-uso/               # Casos de uso
-|   |-- diagramas/                  # Diagramas del sistema
-|   |-- gitflow/                    # Reglas de ramas y releases
-|   |-- issues/                     # Reglas para levantar issues
-|   |-- requerimientos/             # Requerimientos del sistema
-|   |-- workflows/                  # Guia completa de GitHub Actions
-|   `-- vercel-frontend-deploy.md   # Notas de despliegue frontend
-|
-|-- CONTRIBUTING.md                 # Manual de trabajo del equipo
-|-- LICENSE
-|-- package.json                    # Archivo raiz del workspace
-|-- package-lock.json
-`-- README.md                       # Este documento
+ITHERA/
+├── .github/           # Workflows, CODEOWNERS y plantillas de PR
+├── backend/           # API REST, servicios, integraciones y Socket.IO
+├── frontend/          # Interfaz React, rutas, componentes y servicios
+├── docs/              # Documentación técnica, funcional y académica
+├── CONTRIBUTING.md    # Guía de colaboración
+├── LICENSE            # Licencia MIT y atribuciones
+└── README.md
 ```
 
-## Documentacion principal
+Documentos útiles:
 
-| Documento | Uso |
-| --- | --- |
-| [backend/README.md](backend/README.md) | Arquitectura, scripts, variables, modulos y convenciones del backend. |
-| [frontend/README.md](frontend/README.md) | Arquitectura, rutas, servicios, componentes, variables y build del frontend. |
-| [docs/README.md](docs/README.md) | Indice general de documentacion tecnica, funcional y academica. |
-| [docs/architecture/README.md](docs/architecture/README.md) | Vista de arquitectura actual del proyecto. |
-| [docs/api/endpoints.md](docs/api/endpoints.md) | Inventario de endpoints REST. |
-| [docs/workflows/README.md](docs/workflows/README.md) | Guia completa de CI/CD, Vercel y GitHub Actions. |
-| [docs/env/README.md](docs/env/README.md) | Variables de entorno locales, GitHub Actions y Vercel. |
-| [docs/database/README.md](docs/database/README.md) | Supabase, migraciones, RLS y cambios de esquema. |
-| [docs/testing/README.md](docs/testing/README.md) | Estrategia de pruebas y comandos de verificacion. |
-| [docs/realtime/README.md](docs/realtime/README.md) | Eventos Socket.IO, salas, locks y sincronizacion. |
-| [docs/security/README.md](docs/security/README.md) | Secrets, permisos, CORS, uploads y revision segura. |
-| [docs/releases/README.md](docs/releases/README.md) | Checklist de releases, hotfixes y entregas. |
-| [docs/frontend-ui/README.md](docs/frontend-ui/README.md) | Convenciones de paginas, componentes y UI frontend. |
-| [.github/workflows/README.md](.github/workflows/README.md) | Resumen rapido junto a los YAML. |
-| [docs/issues/README.md](docs/issues/README.md) | Reglas para levantar issues. |
-| [docs/gitflow/README.md](docs/gitflow/README.md) | Explicacion del flujo de ramas. |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Reglas oficiales de colaboracion del equipo. |
+- [Backend: arquitectura y servicios](backend/README.md)
+- [Frontend: páginas y componentes](frontend/README.md)
+- [Índice de documentación](docs/README.md)
+- [Endpoints](docs/api/endpoints.md)
+- [Arquitectura](docs/architecture/README.md)
+- [Guía de colaboración](CONTRIBUTING.md)
+- [Despliegue actual](docs/DESPLIEGUE_ITHERA.md)
+- [GitFlow](docs/gitflow/README.md)
+- [Workflows](docs/workflows/README.md)
 
-## Modulos funcionales
+La documentación histórica y las evidencias de entregas previas permanecen en `docs/`; no deben confundirse con la configuración activa de despliegue.
 
-| ID | Modulo | Backend | Frontend |
-| --- | --- | --- | --- |
-| M1 | Autenticacion y acceso | `auth` | `Login`, `Register`, `OTP`, `Profile` |
-| M2 | Gestion de grupos y viajes | `groups`, `trips` | `MyTrips`, `CreateGroup`, `JoinGroup`, `GroupPanel` |
-| M3 | Itinerario colaborativo | `itinerary`, `proposals`, `votes-comments` | `Itinerary`, modales de propuestas |
-| M4 | Busqueda y APIs externas | `flights`, `hotels`, `maps` | `Search` |
-| M5 | Sincronizacion en tiempo real | `infrastructure/sockets` | `useSocket`, `useGroupRealtimeRefresh` |
-| M6 | Presupuesto y gastos | `budget`, `checkout` | `budget`, `Checkout` |
-| M7 | Documentos y notificaciones | `documents`, `notifications`, `context-links` | `documents`, `useNotifications` |
+## Instalación local
 
-## Instalacion local
+**Requisitos:** Node.js y npm compatibles con los `package.json` y `package-lock.json` actuales, más acceso autorizado a los servicios externos que se requieran probar.
 
-Requisitos:
-
-- Node.js 20.
-- npm.
-- Credenciales de Supabase y servicios externos si se probaran integraciones reales.
-
-Instalar backend:
+Desde la raíz del repositorio:
 
 ```bash
-cd backend
-npm install
-cp .env.example .env
-npm run dev
+# Backend
+cp backend/.env.example backend/.env
+npm --prefix backend ci
+npm --prefix backend run dev
+
+# En otra terminal: frontend
+cp frontend/.env.example frontend/.env
+npm --prefix frontend ci
+npm --prefix frontend run dev
 ```
 
-Instalar frontend:
+Configura los `.env` locales con las credenciales correspondientes; **no los agregues a Git**.
 
-```bash
-cd frontend
-npm install
-cp .env.example .env
-npm run dev
-```
-
-URLs locales:
-
-| Servicio | URL |
+| Servicio local | URL |
 | --- | --- |
-| Backend | `http://localhost:3001` |
+| Frontend (Vite) | `http://localhost:5173` |
+| Backend (Express) | `http://localhost:3001` |
+| API REST | `http://localhost:3001/api` |
 | Healthcheck | `http://localhost:3001/health` |
-| API base | `http://localhost:3001/api` |
-| Frontend | `http://localhost:5173` |
 
-## Scripts principales
+### Variables principales
 
-Backend:
+| Frontend (`frontend/.env`) | Backend (`backend/.env`) |
+| --- | --- |
+| `VITE_API_URL` | `FRONTEND_URL` |
+| `VITE_SUPABASE_URL` | `SUPABASE_URL` |
+| `VITE_SUPABASE_ANON_KEY` | `SUPABASE_ANON_KEY`, `SUPABASE_SECRET_KEY` |
+| `VITE_GOOGLE_MAPS_BROWSER_KEY` | `GOOGLE_MAPS_API_KEY` |
+| — | Duffel, LiteAPI, Amadeus, WeatherAPI, Resend |
 
-```bash
-npm run dev
-npm run build
-npm run start
-npm run test
-npm run lint
-```
+Las variables `VITE_*` quedan incluidas en el código distribuido al navegador: **nunca pongas secretos del backend en ellas**. Restringe la clave pública de Google Maps por referentes y por API. Las claves del servidor deben almacenarse solo en Render o en los `.env` locales.
 
-Frontend:
+### Validación
 
 ```bash
-npm run dev
-npm run build
-npm run lint
-npm run preview
+npm --prefix backend run build
+npm --prefix backend test -- --runInBand
+npm --prefix frontend run lint
+npm --prefix frontend run build
+node --test frontend/tests/*.test.mjs
 ```
 
-## GitFlow del equipo
+El comando de build de Render instala las dependencias de tipado necesarias durante la compilación: `npm ci --include=dev && npm run build`.
 
-El flujo oficial esta documentado con mas detalle en [docs/gitflow/README.md](docs/gitflow/README.md) y [CONTRIBUTING.md](CONTRIBUTING.md).
+## Despliegue actual
 
-### Ramas permanentes
-
-| Rama | Proposito | Regla |
-| --- | --- | --- |
-| `main` | Codigo estable para entrega. | No recibe commits directos. |
-| `develop` | Integracion del trabajo aprobado. | Todo entra por PR. |
-
-### Ramas temporales
-
-| Rama | Sale de | Entra a | Uso |
+| Componente | Entorno | URL | Rama |
 | --- | --- | --- | --- |
-| `feature/nombre` | `develop` | `develop` | Nueva funcionalidad o tarea de sprint. |
-| `fix/nombre` | `develop` | `develop` | Correccion de bug no urgente. |
-| `docs/nombre` | `develop` | `develop` | Cambios de documentacion. |
-| `ci/nombre` | `develop` | `develop` | Cambios en workflows o automatizacion. |
-| `release/vX.X` | `develop` | `main` y `develop` | Cierre de sprint o entrega. |
-| `hotfix/nombre` | `main` | `main` y `develop` | Correccion urgente sobre estable. |
+| Aplicación web | Vercel | [ithera-theta.vercel.app](https://ithera-theta.vercel.app) | `develop` |
+| API | Render | [ithera-backend.onrender.com](https://ithera-backend.onrender.com) | `develop` |
+| Datos y sesión | Supabase | Proyecto privado, acceso controlado | — |
 
-Ejemplos:
+El despliegue actual es un **entorno de integración y pruebas**: nuevas funciones se verifican antes de considerarlas entrega final. Render Free puede entrar en reposo por inactividad. Para configuración, Google OAuth, redirecciones, CORS, claves, cuotas y chequeos consulta [la guía de despliegue](docs/DESPLIEGUE_ITHERA.md).
 
-```text
-feature/auth-registro-otp
-feature/frontend-dashboard-viaje
-feature/backend-socket-heartbeat
-fix/socket-disconnect
-docs/readmes-proyecto
-ci/vercel-preview
-release/v1.2-sprint3
-hotfix/token-expiry
-```
+## Colaboración y ramas
 
-### Flujo normal de trabajo
+- `develop`: integración de cambios aprobados y base del despliegue de pruebas.
+- `main`: rama estable de referencia para la entrega, protegida contra merges directos no autorizados.
+- `feat/*`, `fix/*`, `docs/*` y `chore/*`: ramas de trabajo creadas desde `develop`.
+- Todo cambio se presenta mediante **Pull Request**, requiere revisión y debe pasar el CI correspondiente.
+- No se incluyen `.env`, tokens, credenciales ni datos personales de usuarios en commits, logs, capturas o PR.
 
-```bash
-git checkout develop
-git pull origin develop
-git checkout -b feature/nombre-de-la-tarea
-```
+Consulta [CONTRIBUTING.md](CONTRIBUTING.md) para el procedimiento completo.
 
-Antes de abrir PR:
+## Equipo de desarrollo actual
 
-```bash
-git checkout develop
-git pull origin develop
-git checkout feature/nombre-de-la-tarea
-git merge develop
-git push -u origin feature/nombre-de-la-tarea
-```
+| Rol | Integrante |
+| --- | --- |
+| Scrum Master / Project Manager | **Yael Sangrador** |
+| Arquitecto de Software / Lead Backend | **Elizabeth Flores** |
+| Desarrollador Backend | **Axel Hernández** |
+| Lead Frontend | **Daniel Manrique** |
+| Desarrollador Frontend | **Roberto Morales** |
+| Desarrollador Fullstack | **Diego Navarro** |
 
-Todo PR normal debe apuntar a `develop`.
+La lista anterior corresponde al equipo actual; el listado **Contributors** que genera GitHub representa el historial de commits y puede incluir participantes de versiones anteriores.
 
-## Reglas de oro
+## Licencia y atribución
 
-1. No hacer push directo a `main` ni a `develop`.
-2. No hacer merge de tu propio PR.
-3. Todo cambio relevante debe tener issue.
-4. Todo PR debe apuntar a la rama correcta.
-5. Un PR debe resolver una cosa clara.
-6. Todo endpoint nuevo debe documentarse en `docs/api/endpoints.md`.
-7. Todo cambio de workflow debe documentarse en `docs/workflows/README.md`.
-8. Todo cambio de variable, migracion, evento realtime o regla de seguridad debe documentarse.
-9. Todo cambio estructural debe reflejarse en el README correspondiente.
-10. No subir `.env`, secrets, tokens ni credenciales.
-11. No pedir merge con CI fallando.
-12. Si hay cambios visuales, agregar evidencia en el PR.
-13. Si hay duda de alcance, preguntar antes de mezclar cambios no relacionados.
-
-## CI/CD
-
-| Workflow | Archivo | Proposito |
-| --- | --- | --- |
-| CI Backend | `.github/workflows/ci-backend.yml` | Valida backend con lint, type check, build y tests. |
-| CI Frontend | `.github/workflows/ci-frontend.yml` | Valida frontend con lint, type check y build. |
-| Preview Vercel | `.github/workflows/vercel-frontend-preview.yml` | Genera deploy preview en PRs hacia `develop`. |
-| Produccion Vercel | `.github/workflows/vercel-frontend-production.yml` | Despliega frontend desde `develop` o manualmente. |
-
-Guia completa: [docs/workflows/README.md](docs/workflows/README.md).
-
-## Variables de entorno
-
-Backend:
-
-- Copiar `backend/.env.example` a `backend/.env`.
-- Configurar Supabase, APIs externas, email y puerto local.
-
-Frontend:
-
-- Copiar `frontend/.env.example` a `frontend/.env`.
-- Configurar `VITE_API_URL`, Supabase publico y llave de Google Maps para navegador.
-
-Regla: ninguna variable secreta debe subirse al repositorio.
-
-## Recursos
-
-- [Tablero Notion](https://www.notion.so/3169d31c051280f69a33cb0401001bd0)
-- [Seguimiento Google Sheets](https://docs.google.com/spreadsheets/d/1usizFziQstavDTBPxTMygbx_ATeBYn-N/edit)
-- [Documentacion del proyecto](docs/README.md)
-
-## Equipo
-
-| Rol | Integrante | GitHub |
-| --- | --- | --- |
-| Scrum Master | Demian Romero Bautista | `@DemianRomero` |
-| Frontend Dev | Ximena Cardenas Hernandez | `@ximcaher20` |
-| Lider Backend | Hector Said Ferreira Rodriguez | `@HectorSaidFerreira` |
-| Backend Dev | Ali Yair Riano Ortiz | `@AliYairRiano` |
-| Backend Dev | Yael Sebastian Sangrador Curiel | `@YaelSangrador` |
-| Backend Dev | Leonardo Esau Olivares Valdez | `@LeonardoOlivares` |
-| Lider Frontend | Bryan Ayala Banos | `@BryanAyala` |
-| Frontend Dev | Carlos Daniel Juarez Gomez | `@CarlosDanielJuarez` |
-| Frontend Dev | Kevin Antonio Lopez Toledo | `@KevinLopez` |
-| Lider Docs | Gabriel Hernandez Flores | `@GabrielHernandez` |
-| Analista | Emilio Diaz Maturano | `@EmilioDiaz` |
-| Analista | Edgar Correa Cano | `@EdgarCorrea` |
+Distribuido bajo la **licencia MIT** indicada en [LICENSE](LICENSE). Se reconocen las aportaciones y avisos de derechos de autor correspondientes al proyecto original y a las modificaciones del equipo actual. Los avisos originales se conservan según las condiciones de la licencia.
 
 ---
 
-Proyecto academico de Analisis y Diseno de Sistemas - Ingenieria en Sistemas Computacionales - ESCOM IPN - Ciclo 2026/2 - Grupo 5CM3.
+**ITHERA · Análisis y Diseño de Sistemas · ESCOM-IPN · 2027/1 · Grupo 6CM3**
