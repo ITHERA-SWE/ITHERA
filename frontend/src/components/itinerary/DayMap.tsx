@@ -1,21 +1,26 @@
-import { useState } from 'react'
-import type { Activity } from '../ui/DayView/DayView'
-import { mapUrl, validCoordinates } from './itinerary-data'
+import { useLocation, useNavigate } from "react-router-dom";
+import { travelPath } from "../../pages/Search/search-data";
+import { useState } from "react";
+import type { Activity } from "../ui/DayView/DayView";
+import { mapUrl, validCoordinates } from "./itinerary-data";
 export function DayMap({
   activities,
   selectedId,
   onSelect,
 }: {
-  activities: Activity[]
-  selectedId: string | null
-  onSelect: (id: string) => void
+  activities: Activity[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
 }) {
-  const points = activities.filter(validCoordinates)
-  const selected = points.find((a) => a.id === selectedId) ?? points[0]
-  const [expanded, setExpanded] = useState(false)
-  const [failed, setFailed] = useState(false)
-  const [loaded, setLoaded] = useState(false)
-  const [attempt, setAttempt] = useState(0)
+  const location = useLocation(),
+    navigate = useNavigate();
+  const groupId = new URLSearchParams(location.search).get("groupId");
+  const points = activities.filter(validCoordinates);
+  const selected = points.find((a) => a.id === selectedId) ?? points[0];
+  const [expanded, setExpanded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   return (
     <aside className="atlas-day-map" aria-label="Lugares del día">
       <p className="atlas-eyebrow">EL DÍA, EN EL MAPA</p>
@@ -33,9 +38,9 @@ export function DayMap({
                 <button
                   aria-pressed={selected?.id === a.id}
                   onClick={() => {
-                    onSelect(a.id)
-                    setFailed(false)
-                    setLoaded(false)
+                    onSelect(a.id);
+                    setFailed(false);
+                    setLoaded(false);
                   }}
                 >
                   <span>{i + 1}</span>
@@ -62,13 +67,13 @@ export function DayMap({
               {expanded &&
                 (failed ? (
                   <p role="alert">
-                    El mapa no está disponible.{' '}
+                    El mapa no está disponible.{" "}
                     <button
                       className="atlas-text-link"
                       onClick={() => {
-                        setFailed(false)
-                        setLoaded(false)
-                        setAttempt((n) => n + 1)
+                        setFailed(false);
+                        setLoaded(false);
+                        setAttempt((n) => n + 1);
                       }}
                     >
                       Reintentar mapa
@@ -103,6 +108,20 @@ export function DayMap({
               </a>
             </details>
           )}
+          {selected && groupId && (
+            <button
+              className="atlas-text-link"
+              onClick={() =>
+                navigate(
+                  travelPath("/search/routes-weather", groupId, {
+                    activityId: selected.id,
+                  }),
+                )
+              }
+            >
+              Consultar ruta y clima de esta actividad ↗
+            </button>
+          )}
         </>
       )}
       <p className="atlas-map-caption">
@@ -110,5 +129,5 @@ export function DayMap({
         direcciones automáticamente.
       </p>
     </aside>
-  )
+  );
 }

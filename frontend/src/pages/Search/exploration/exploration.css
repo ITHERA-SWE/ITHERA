@@ -1,0 +1,989 @@
+/* Etapa 6 · descubrimiento geográfico; aislado de vuelos, hoteles y Finanzas. */
+.atlas-geo-page {
+  max-width: 1520px;
+  margin: auto;
+  padding: 36px clamp(16px, 3.5vw, 56px) 64px;
+  color: #1e0a4e;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.atlas-geo-page button,
+.atlas-geo-page input,
+.atlas-geo-page select {
+  font: inherit;
+}
+.atlas-geo-page button,
+.atlas-geo-page a {
+  touch-action: manipulation;
+}
+.atlas-geo-page button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.atlas-geo-page :is(button, a, input, select, summary):focus-visible,
+.atlas-geo-proposal :is(button, input, select):focus-visible,
+.atlas-place-detail :is(button, a):focus-visible {
+  outline: 3px solid #1e6fd9;
+  outline-offset: 3px;
+}
+.atlas-geo-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 30px;
+}
+.atlas-geo-heading h1 {
+  font:
+    400 clamp(40px, 4.6vw, 64px)/1.02 "Instrument Serif",
+    Georgia,
+    serif;
+  letter-spacing: -0.025em;
+  margin: 12px 0 18px;
+}
+.atlas-geo-heading h1 em {
+  color: #4b2fa3;
+  font-weight: 400;
+}
+.atlas-geo-heading > div > p:last-child {
+  color: #626679;
+  font-size: 13px;
+  line-height: 1.8;
+  max-width: 640px;
+}
+.atlas-geo-heading > .atlas-text-link {
+  align-self: flex-end;
+  flex-shrink: 0;
+  margin-bottom: 20px;
+}
+.atlas-geo-page h2,
+.atlas-place-detail h2,
+.atlas-geo-proposal h3 {
+  font:
+    400 30px/1.1 "Instrument Serif",
+    Georgia,
+    serif;
+}
+.atlas-geo-page .atlas-eyebrow {
+  color: #4b2fa3;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+}
+.atlas-geo-page .atlas-text-link,
+.atlas-geo-proposal .atlas-text-link,
+.atlas-place-detail .atlas-text-link {
+  color: #4b2fa3;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  padding: 8px 0;
+  display: inline-block;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.atlas-geo-page .atlas-button {
+  min-height: 46px;
+  border-radius: 5px;
+  padding: 12px 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.atlas-geo-page .atlas-button-primary {
+  background: #4b2fa3;
+  color: white;
+  border: 1px solid #4b2fa3;
+}
+.atlas-geo-page .atlas-button-primary:hover:not(:disabled) {
+  background: #1e0a4e;
+}
+.atlas-geo-page .atlas-button-secondary {
+  background: #fff;
+  color: #4b2fa3;
+  border: 1px solid #cfc6e8;
+}
+.atlas-place-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: start;
+  padding: 24px;
+  border: 1px solid #e3deed;
+  border-top: 2px solid #4b2fa3;
+  background: #faf9fd;
+}
+.atlas-place-search > .atlas-button {
+  margin-top: 24px;
+}
+.atlas-geo-input {
+  position: relative;
+  min-width: 0;
+}
+.atlas-geo-input label,
+.atlas-place-toolbar label,
+.atlas-route-activity,
+.atlas-weather-location label,
+.atlas-forecast-heading label,
+.atlas-geo-proposal label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #514762;
+}
+.atlas-geo-input input,
+.atlas-geo-page select,
+.atlas-geo-page input[type="date"],
+.atlas-geo-proposal :is(select, input) {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  border: 1px solid #ccc5dc;
+  background: #fff;
+  padding: 10px 12px;
+  border-radius: 4px;
+  color: #1e0a4e;
+  font-size: 13px;
+}
+.atlas-geo-input input {
+  margin-top: 8px;
+}
+.atlas-geo-input input::placeholder {
+  color: #737080;
+}
+.atlas-geo-input > small {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.atlas-geo-input ul {
+  position: absolute;
+  z-index: 12;
+  top: 100%;
+  width: 100%;
+  max-height: 280px;
+  overflow-y: auto;
+  background: white;
+  box-shadow: 0 12px 30px #1e0a4e18;
+  border: 1px solid #ccc5dc;
+  padding: 4px;
+  list-style: none;
+}
+.atlas-geo-input li button {
+  display: block;
+  padding: 12px;
+  width: 100%;
+  text-align: left;
+  font-size: 12px;
+  border-radius: 3px;
+}
+.atlas-geo-input li[aria-selected="true"] button,
+.atlas-geo-input li button:hover {
+  background: #eee8fb;
+}
+.atlas-geo-input li small {
+  display: block;
+  font-size: 11px;
+  margin-top: 5px;
+  color: #626679;
+}
+.atlas-place-quick {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 15px 0 22px;
+}
+.atlas-place-quick button {
+  font-size: 11px;
+  color: #4b2fa3;
+  border-bottom: 1px solid #d9cfee;
+  padding: 6px 0;
+  margin-right: 10px;
+}
+.atlas-geo-context {
+  font-size: 12px;
+  color: #626679;
+  padding-bottom: 12px;
+}
+.atlas-geo-notice {
+  background: #f5f7fc;
+  border-left: 3px solid #1e6fd9;
+  color: #354366;
+  padding: 14px 16px;
+  font-size: 12px;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+.atlas-geo-notice.is-error {
+  border-color: #b04436;
+  background: #fff5f2;
+  color: #87382e;
+}
+.atlas-geo-notice button {
+  margin-left: 10px;
+}
+.atlas-place-toolbar {
+  display: flex;
+  gap: 20px;
+  align-items: end;
+  border-top: 1px solid #e8e5ee;
+  border-bottom: 1px solid #e8e5ee;
+  padding: 16px 0;
+}
+.atlas-place-toolbar > span {
+  margin-right: auto;
+  font-size: 11px;
+  color: #626679;
+  padding-bottom: 13px;
+}
+.atlas-place-toolbar label {
+  max-width: 220px;
+}
+.atlas-place-toolbar select {
+  min-height: 38px;
+  font-size: 11px;
+  padding: 8px;
+}
+.atlas-place-view {
+  display: none;
+}
+.atlas-geo-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  padding-top: 24px;
+}
+.atlas-place-list,
+.atlas-map-column,
+.atlas-route-map,
+.atlas-route-planner {
+  min-width: 0;
+}
+.atlas-results-origin {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #626679;
+  margin-bottom: 12px;
+}
+.atlas-place-result {
+  padding: 16px 0;
+  border-bottom: 1px solid #e8e5ee;
+  border-left: 3px solid transparent;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.atlas-place-result.is-selected {
+  border-left-color: #4b2fa3;
+  background: #faf8ff;
+}
+.atlas-place-result-select {
+  display: grid;
+  grid-template-columns: minmax(110px, 36%) minmax(0, 1fr);
+  gap: 18px;
+  text-align: left;
+  width: 100%;
+  padding: 0 12px;
+}
+.atlas-place-photo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: #eeecf3;
+  overflow: hidden;
+}
+.atlas-place-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.atlas-place-photo-fallback {
+  display: flex;
+  height: 100%;
+  min-height: 110px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #625979;
+  padding: 10px;
+  font-size: 10px;
+  text-align: center;
+}
+.atlas-place-photo-fallback > span {
+  font-size: 30px;
+  margin-bottom: 5px;
+}
+.atlas-photo-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  background: #eeecf3;
+  color: #625979;
+  animation: atlasGeoPulse 1.8s ease-in-out infinite;
+}
+.atlas-place-number {
+  color: #4b2fa3;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: block;
+  margin: 4px 0 10px;
+}
+.atlas-place-result h2 {
+  font-size: 25px;
+  margin: 0 0 10px;
+}
+.atlas-place-result p,
+.atlas-place-result small {
+  font-size: 11px;
+  color: #626679;
+  line-height: 1.6;
+}
+.atlas-place-result small {
+  display: block;
+  color: #4b2fa3;
+  margin-top: 12px;
+}
+.atlas-place-result-tools {
+  display: flex;
+  gap: 22px;
+  padding: 8px 12px 0;
+  justify-content: flex-end;
+}
+.atlas-interactive-map {
+  position: relative;
+  min-width: 0;
+  min-height: 430px;
+  height: clamp(380px, 44vw, 540px);
+  background: #eeecf3;
+  border: 1px solid #e3deed;
+}
+.atlas-map-canvas {
+  height: 100%;
+  width: 100%;
+}
+.atlas-map-status {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 14px;
+  padding: 32px;
+  color: #625979;
+  font-size: 12px;
+  line-height: 1.8;
+  background: #f1eff5;
+}
+.atlas-map-status strong {
+  font:
+    400 28px/1.1 "Instrument Serif",
+    Georgia,
+    serif;
+  color: #1e0a4e;
+}
+.atlas-map-center {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 10px 14px;
+  background: white;
+  color: #4b2fa3;
+  box-shadow: 0 2px 10px #1e0a4e18;
+  font-size: 11px !important;
+  border: 1px solid #e3deed;
+  border-radius: 3px;
+}
+.atlas-map-drawing-notice {
+  position: absolute;
+  bottom: 26px;
+  left: 12px;
+  right: 12px;
+  font-size: 11px;
+  padding: 10px;
+  background: #fff;
+  color: #514762;
+  border: 1px solid #e3deed;
+}
+.atlas-selected-place {
+  padding: 24px 0;
+}
+.atlas-place-category {
+  font-size: 10px;
+  color: #4b2fa3;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+.atlas-selected-place h2 {
+  font-size: 34px;
+  margin-bottom: 12px;
+}
+.atlas-selected-place > p,
+.atlas-place-detail p {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #626679;
+}
+.atlas-place-rating {
+  margin-top: 12px;
+  color: #4b2fa3 !important;
+}
+.atlas-place-description {
+  margin-top: 16px;
+}
+.atlas-place-transfer {
+  margin: 16px 0;
+  padding: 14px 0;
+  border-block: 1px solid #e8e5ee;
+  font-size: 12px;
+  color: #514762;
+}
+.atlas-place-selected-actions {
+  display: flex;
+  gap: 12px 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.atlas-place-selected-actions .atlas-button {
+  width: 100%;
+}
+.atlas-place-detail .atlas-place-photo {
+  aspect-ratio: 16/7;
+  margin-bottom: 24px;
+}
+.atlas-place-detail h2 {
+  margin-bottom: 14px;
+}
+.atlas-place-detail section {
+  margin-block: 20px;
+  border-top: 1px solid #e8e5ee;
+  padding-top: 18px;
+}
+.atlas-place-detail h3 {
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+.atlas-place-detail > .atlas-button {
+  display: block;
+  margin-top: 24px;
+}
+.atlas-geo-proposal h3 {
+  font-size: 32px;
+  margin: 12px 0;
+}
+.atlas-geo-proposal > p {
+  font-size: 12px;
+  color: #626679;
+  line-height: 1.8;
+  margin-bottom: 18px;
+}
+.atlas-geo-proposal fieldset {
+  border: 0;
+  display: grid;
+  gap: 18px;
+  margin: 24px 0;
+  padding: 0;
+  min-width: 0;
+}
+.atlas-geo-proposal fieldset small {
+  color: #626679;
+  font-size: 11px;
+}
+.atlas-geo-empty {
+  padding: 40px 12px;
+  min-height: 240px;
+}
+.atlas-geo-empty h2 {
+  margin-bottom: 16px;
+  font-size: 30px;
+}
+.atlas-geo-empty p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #626679;
+}
+.atlas-geo-skeleton,
+.atlas-weather-skeleton {
+  color: #625979;
+  font-size: 12px;
+  padding: 24px 12px;
+}
+.atlas-geo-skeleton > span,
+.atlas-map-skeleton {
+  display: block;
+  height: 100px;
+  margin-top: 18px;
+  background: #eeecf3;
+  animation: atlasGeoPulse 1.6s ease-in-out infinite;
+}
+.atlas-map-skeleton {
+  width: 80%;
+  background: #e3dfed;
+}
+.atlas-route-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+  gap: 40px;
+  border-top: 1px solid #e8e5ee;
+  padding-top: 28px;
+}
+.atlas-route-planner h2 {
+  margin: 12px 0 24px;
+  font-size: 36px;
+}
+.atlas-route-planner fieldset {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+  display: grid;
+  gap: 20px;
+}
+.atlas-route-modes {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+}
+.atlas-route-modes button {
+  min-height: 42px;
+  padding: 10px 12px;
+  font-size: 11px;
+  color: #625979;
+  border: 1px solid #e3deed;
+  border-radius: 4px;
+}
+.atlas-route-modes button[aria-pressed="true"] {
+  background: #ede7fb;
+  border-color: #4b2fa3;
+  color: #4b2fa3;
+  font-weight: 700;
+}
+.atlas-route-planner form > .atlas-button {
+  width: 100%;
+  margin: 16px 0;
+}
+.atlas-route-activity {
+  border-top: 1px solid #e8e5ee;
+  padding-top: 20px;
+  margin-top: 10px;
+}
+.atlas-route-result {
+  padding: 28px 0;
+  margin-top: 28px;
+  border-block: 1px solid #e8e5ee;
+}
+.atlas-route-result header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: start;
+}
+.atlas-route-result h2 {
+  margin: 12px 0 18px;
+  font-size: 32px;
+}
+.atlas-route-result h2 span {
+  color: #4b2fa3;
+}
+.atlas-route-result dl {
+  display: flex;
+  gap: 28px;
+  flex-shrink: 0;
+}
+.atlas-route-result dt {
+  font-size: 11px;
+  color: #626679;
+}
+.atlas-route-result dd {
+  margin-top: 6px;
+  font-size: 20px;
+  color: #4b2fa3;
+}
+.atlas-route-result > p {
+  font-size: 12px;
+  color: #626679;
+  line-height: 1.8;
+}
+.atlas-route-result details {
+  margin: 22px 0;
+}
+.atlas-route-result summary {
+  font-size: 12px;
+  color: #4b2fa3;
+  cursor: pointer;
+  padding: 10px 0;
+}
+.atlas-route-result ol {
+  list-style: none;
+  padding: 0;
+  max-width: 850px;
+}
+.atlas-route-result li {
+  display: flex;
+  gap: 18px;
+  padding: 18px 0;
+  border-top: 1px solid #e8e5ee;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.atlas-route-result li > span {
+  color: #4b2fa3;
+  font-size: 11px;
+}
+.atlas-route-result li small {
+  color: #626679;
+}
+.atlas-weather-location {
+  display: flex;
+  justify-content: flex-end;
+  margin: 32px 0 20px;
+}
+.atlas-weather-location label {
+  width: min(100%, 320px);
+}
+.atlas-weather-section {
+  padding-top: 28px;
+  border-top: 2px solid #4b2fa3;
+}
+.atlas-weather-section > header {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  align-items: start;
+}
+.atlas-weather-section h2 {
+  font-size: 38px;
+  margin: 12px 0;
+}
+.atlas-weather-section header p:last-child {
+  color: #626679;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.atlas-weather-section header button {
+  flex-shrink: 0;
+}
+.atlas-weather-overview {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 40px;
+  padding: 28px 0;
+  margin-top: 10px;
+}
+.atlas-weather-current > div {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 14px 0;
+}
+.atlas-weather-current img,
+.atlas-weather-current > div > span {
+  height: 48px;
+  width: 48px;
+  font-size: 36px;
+}
+.atlas-weather-current strong {
+  font:
+    400 52px/1 "Instrument Serif",
+    Georgia,
+    serif;
+}
+.atlas-weather-current p {
+  font-size: 12px;
+  color: #514762;
+}
+.atlas-weather-current small {
+  display: block;
+  font-size: 10px;
+  color: #626679;
+  margin-top: 10px;
+}
+.atlas-weather-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+}
+.atlas-weather-metrics > div {
+  padding: 12px 18px;
+  border-left: 1px solid #e8e5ee;
+}
+.atlas-weather-metrics dt {
+  font-size: 11px;
+  color: #626679;
+  line-height: 1.6;
+}
+.atlas-weather-metrics dd {
+  font-size: 20px;
+  color: #4b2fa3;
+  margin-top: 10px;
+}
+.atlas-forecast-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 20px;
+  padding: 20px 0;
+  border-top: 1px solid #e8e5ee;
+}
+.atlas-forecast-heading h3 {
+  font:
+    400 30px "Instrument Serif",
+    Georgia,
+    serif;
+}
+.atlas-weather-days {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  list-style: none;
+  padding: 0;
+  gap: 0;
+  border-block: 1px solid #e8e5ee;
+}
+.atlas-weather-days li {
+  min-width: 0;
+  border-bottom: 1px solid #e8e5ee;
+}
+.atlas-weather-days button {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  padding: 22px 18px;
+  border-left: 2px solid transparent;
+}
+.atlas-weather-days .is-selected button {
+  border-left-color: #4b2fa3;
+  background: #f4f0fc;
+}
+.atlas-weather-days time {
+  color: #514762;
+  font-size: 11px;
+}
+.atlas-weather-days img {
+  height: 36px;
+  width: 36px;
+}
+.atlas-weather-days button > span {
+  font-size: 28px;
+}
+.atlas-weather-days p,
+.atlas-weather-days strong,
+.atlas-weather-days small {
+  font-size: 11px;
+  color: #626679;
+  line-height: 1.6;
+}
+.atlas-weather-days strong {
+  color: #1e0a4e;
+}
+@keyframes atlasGeoPulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (max-width: 1100px) {
+  .atlas-geo-layout {
+    gap: 20px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .atlas-route-layout {
+    gap: 24px;
+  }
+  .atlas-place-result-select {
+    grid-template-columns: 100px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .atlas-weather-overview {
+    gap: 20px;
+    grid-template-columns: 1fr 1fr;
+  }
+  .atlas-weather-metrics {
+    grid-template-columns: 1fr;
+  }
+  .atlas-weather-metrics > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 10px 18px;
+  }
+  .atlas-weather-metrics dd {
+    font-size: 16px;
+    margin-top: 0;
+  }
+  .atlas-route-result header {
+    flex-direction: column;
+  }
+}
+@media (max-width: 800px) {
+  .atlas-place-search {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 20px;
+  }
+  .atlas-place-search > .atlas-button {
+    grid-column: 1/-1;
+    margin-top: 0;
+  }
+  .atlas-geo-heading {
+    flex-direction: column;
+    align-items: start;
+    gap: 4px;
+  }
+  .atlas-geo-heading > .atlas-text-link {
+    align-self: start;
+    margin-bottom: 0;
+  }
+  .atlas-place-toolbar {
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+  }
+  .atlas-place-toolbar > span {
+    width: 100%;
+    padding: 0;
+  }
+  .atlas-place-toolbar label {
+    flex: 1;
+    min-width: 130px;
+    max-width: none;
+  }
+  .atlas-place-view {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    border-top: 1px solid #e8e5ee;
+    padding-top: 12px;
+  }
+  .atlas-place-view button {
+    padding: 10px 20px;
+    min-height: 42px;
+    font-size: 12px;
+    border-bottom: 2px solid transparent;
+    color: #626679;
+  }
+  .atlas-place-view button[aria-pressed="true"] {
+    border-bottom-color: #4b2fa3;
+    color: #4b2fa3;
+    font-weight: 700;
+  }
+  .atlas-geo-layout {
+    grid-template-columns: 1fr;
+  }
+  .atlas-geo-layout[data-view="list"] .atlas-map-column {
+    display: none;
+  }
+  .atlas-geo-layout[data-view="map"] .atlas-place-list {
+    display: none;
+  }
+  .atlas-geo-layout[data-view="list"]
+    .atlas-map-column:has(.atlas-selected-place) {
+    display: block;
+  }
+  .atlas-geo-layout[data-view="list"]
+    .atlas-map-column
+    > .atlas-interactive-map {
+    display: none;
+  }
+  .atlas-place-result-select {
+    grid-template-columns: minmax(110px, 32%) minmax(0, 1fr);
+  }
+  .atlas-route-layout {
+    grid-template-columns: 1fr;
+  }
+  .atlas-interactive-map {
+    height: 420px;
+    min-height: 360px;
+  }
+  .atlas-route-map {
+    order: 2;
+  }
+  .atlas-weather-section h2 {
+    font-size: 32px;
+  }
+  .atlas-weather-section > header {
+    flex-wrap: wrap;
+  }
+  .atlas-weather-overview {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .atlas-weather-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .atlas-weather-metrics > div {
+    display: block;
+    padding: 8px 12px;
+  }
+  .atlas-weather-metrics dd {
+    margin-top: 8px;
+  }
+}
+@media (max-width: 480px) {
+  .atlas-geo-page {
+    padding-top: 26px;
+  }
+  .atlas-place-search {
+    grid-template-columns: 1fr;
+    padding: 18px 14px;
+  }
+  .atlas-place-toolbar {
+    gap: 10px;
+  }
+  .atlas-place-result h2 {
+    font-size: 24px;
+  }
+  .atlas-place-result-select {
+    grid-template-columns: 104px minmax(0, 1fr);
+    gap: 12px;
+    padding: 0 8px;
+  }
+  .atlas-place-result-select .atlas-place-photo {
+    aspect-ratio: 3/4;
+  }
+  .atlas-route-result dl {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .atlas-route-result h2 {
+    font-size: 28px;
+  }
+  .atlas-weather-metrics {
+    grid-template-columns: 1fr;
+  }
+  .atlas-weather-metrics > div {
+    display: flex;
+  }
+  .atlas-weather-metrics dd {
+    margin: 0;
+  }
+  .atlas-forecast-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+  .atlas-forecast-heading label {
+    width: 100%;
+  }
+  .atlas-weather-days {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .atlas-geo-page * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
