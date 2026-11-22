@@ -135,21 +135,34 @@ export function orderTrips(
   order: "date" | "name",
   today = todayInMexico(),
 ) {
+  const collator = new Intl.Collator("es", {
+    numeric: true,
+    sensitivity: "base",
+  });
+  const rank: Record<TripSection, number> = {
+    current: 0,
+    upcoming: 1,
+    undated: 2,
+    past: 3,
+  };
   return [...items].sort((a, b) => {
-    if (order === "name")
-      return (a.grupos_viaje.nombre || "").localeCompare(
-        b.grupos_viaje.nombre || "",
-        "es",
-      );
-    const x = civilDate(a.grupos_viaje.fecha_inicio),
-      y = civilDate(b.grupos_viaje.fecha_inicio);
-    if (!x && !y) return 0;
-    if (!x) return 1;
-    if (!y) return -1;
-    const bothPast =
-      tripSection(a.grupos_viaje, today) === "past" &&
-      tripSection(b.grupos_viaje, today) === "past";
-    return bothPast ? y.localeCompare(x) : x.localeCompare(y);
+    const x = a.grupos_viaje,
+      y = b.grupos_viaje;
+    const byName = () =>
+      collator.compare(x.nombre || "", y.nombre || "") ||
+      String(x.id).localeCompare(String(y.id), "en", { numeric: true });
+    if (order === "name") return byName();
+    const sx = tripSection(x, today),
+      sy = tripSection(y, today);
+    if (sx !== sy) return rank[sx] - rank[sy];
+    const dx = civilDate(x.fecha_inicio),
+      dy = civilDate(y.fecha_inicio);
+    if (!dx && !dy) return byName();
+    if (!dx) return 1;
+    if (!dy) return -1;
+    return (
+      (sx === "past" ? dy.localeCompare(dx) : dx.localeCompare(dy)) || byName()
+    );
   });
 }
 export interface CreateTripForm {

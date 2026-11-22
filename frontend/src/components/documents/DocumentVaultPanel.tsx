@@ -1,3 +1,4 @@
+import { mergeTripDocuments } from "../account/account-data";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Dispatch, FC, ReactNode, SetStateAction } from "react";
 import { useAuth } from "../../context/useAuth";
@@ -241,6 +242,7 @@ const DocumentVaultWorkspace: FC<Props> = ({
   // actualiza de forma asíncrona, así que un doble clic rápido podía disparar
   // handleUpload dos veces antes de re-renderizar y subir el documento dos veces.
   const uploadingRef = useRef(false);
+  const loadSequence = useRef(0);
   const [error, setError] = useState<string | null>(null);
   const [category, setCategory] = useState<TripDocumentCategory>("otro");
   const [activeFilter, setActiveFilter] = useState<
@@ -590,10 +592,11 @@ const DocumentVaultWorkspace: FC<Props> = ({
     async (silent = false) => {
       if (!groupId || !accessToken) return;
 
+      const sequence = ++loadSequence.current;
       const cacheKey = vaultKey;
       const cached = getVaultCache(cacheKey);
       if (cached && !silent) {
-        setItems(cached.items);
+        setItems(mergeTripDocuments([], cached.items));
         setContextLinks(cached.links);
         setLinkOptions(cached.options);
       }
@@ -608,19 +611,20 @@ const DocumentVaultWorkspace: FC<Props> = ({
           contextLinksService.list(groupId, accessToken),
           contextLinksService.options(groupId, accessToken),
         ]);
-        if (!alive.current) return;
+        if (!alive.current || sequence !== loadSequence.current) return;
+        const uniqueDocuments = mergeTripDocuments([], documents);
         vaultDataCache.set(cacheKey, {
-          items: documents,
+          items: uniqueDocuments,
           links: linksResponse.links,
           options: optionsResponse.options,
           savedAt: Date.now(),
         });
-        setItems(documents);
+        setItems(uniqueDocuments);
         setContextLinks(linksResponse.links);
         setLinkOptions(optionsResponse.options);
       } catch (err) {
-        if (!alive.current) return;
-        if (alive.current) {
+        if (!alive.current || sequence !== loadSequence.current) return;
+        if (alive.current && sequence === loadSequence.current) {
           setError(
             err instanceof Error
               ? err.message
@@ -628,7 +632,7 @@ const DocumentVaultWorkspace: FC<Props> = ({
           );
         }
       } finally {
-        if (alive.current) {
+        if (alive.current && sequence === loadSequence.current) {
           setIsLoading(false);
         }
       }
@@ -778,8 +782,9 @@ const DocumentVaultWorkspace: FC<Props> = ({
       );
       await loadContextLinks();
       if (!alive.current) return;
+      ++loadSequence.current;
       setItems((prev) => {
-        const nextItems = [created, ...prev];
+        const nextItems = mergeTripDocuments(prev, [created]);
         if (groupId) {
           const cached = getVaultCache(vaultKey);
           vaultDataCache.set(vaultKey, {
@@ -797,10 +802,8 @@ const DocumentVaultWorkspace: FC<Props> = ({
       if (!alive.current) return;
       if (confirmedUpload) {
         const confirmed = confirmedUpload;
-        setItems((prev) => [
-          confirmed,
-          ...prev.filter((item) => item.id !== confirmed.id),
-        ]);
+        ++loadSequence.current;
+        setItems((prev) => mergeTripDocuments(prev, [confirmed]));
         resetUploadDraft();
         setError(
           "El archivo ya fue guardado, pero no se pudieron confirmar todas sus asociaciones. Puedes revisarlas desde la lista.",
@@ -811,7 +814,10 @@ const DocumentVaultWorkspace: FC<Props> = ({
         );
     } finally {
       uploadingRef.current = false;
-      if (alive.current) setIsUploading(false);
+      if (alive.current) {
+        setIsUploading(false);
+        setIsLoading(false);
+      }
     }
   };
 

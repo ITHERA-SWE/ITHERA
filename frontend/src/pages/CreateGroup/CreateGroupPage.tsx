@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
 import { useNetworkMonitor } from "../../hooks/useNetworkMonitor";
 import { groupsService, saveCurrentGroup } from "../../services/groups";
@@ -38,7 +38,19 @@ export function CreateGroupPage() {
   const { accessToken } = useAuth(),
     online = useNetworkMonitor(),
     navigate = useNavigate();
-  const [form, setForm] = useState<CreateTripForm>(initial),
+  const [params] = useSearchParams();
+  const [form, setForm] = useState<CreateTripForm>(() => {
+      const members = Number(params.get("members"));
+      return {
+        ...initial,
+        name: (params.get("name") || "").slice(0, 60),
+        destination: params.get("destination") || "",
+        maxMembers:
+          Number.isInteger(members) && members >= 1 && members <= 50
+            ? String(members)
+            : initial.maxMembers,
+      };
+    }),
     [geo, setGeo] = useState<GeocodingResult | null>(null),
     [destinationBusy, setDestinationBusy] = useState(false),
     [errors, setErrors] = useState<ReturnType<typeof validateTrip>>({}),

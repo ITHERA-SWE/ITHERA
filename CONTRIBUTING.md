@@ -1,6 +1,6 @@
 # Contribuir a ITHERA
 
-Este documento describe el flujo de colaboración de **ITHERA-SWE/ITHERA**, proyecto académico de Análisis y Diseño de Sistemas (ESCOM-IPN, ciclo 2027/1, grupo 6CM3).
+Este documento describe el flujo de colaboración de **ITHERA-SWE/ITHERA**, proyecto académico de Ingeniería de Software (ESCOM-IPN, ciclo 2027/1, grupo 6CM3).
 
 ## Ramas y permisos
 

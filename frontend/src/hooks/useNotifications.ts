@@ -1,7 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/useAuth';
-import { useSocket } from './useSocket';
-import { type NotificationItem, normalizeNotification, notificationsService } from '../services/notifications';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useAuth } from "../context/useAuth";
+import { useSocket } from "./useSocket";
+import {
+  type NotificationItem,
+  normalizeNotification,
+  notificationsService,
+} from "../services/notifications";
 
 export const useNotifications = () => {
   const { accessToken, localUser } = useAuth();
@@ -9,46 +13,80 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const seen = useRef(new Set<number>()),
+    request = useRef(0);
+  useEffect(() => {
+    seen.current.clear();
+    const invalidate = () => {
+      request.current++;
+    };
+    return invalidate;
+  }, [accessToken]);
 
-  const localUserId = localUser?.id_usuario ? Number(localUser.id_usuario) : null;
+  const localUserId = localUser?.id_usuario
+    ? Number(localUser.id_usuario)
+    : null;
 
-  const addNotification = useCallback((raw: Partial<NotificationItem>) => {
-    const notification = normalizeNotification(raw);
-    if (!notification.id) return;
-    if (localUserId !== null && Number(notification.usuario_id) !== localUserId) return;
+  const addNotification = useCallback(
+    (raw: Partial<NotificationItem>) => {
+      const notification = normalizeNotification(raw);
+      if (!notification.id) return;
+      if (
+        localUserId !== null &&
+        Number(notification.usuario_id) !== localUserId
+      )
+        return;
 
-    setNotifications((prev) => {
-      if (prev.some((item) => Number(item.id) === Number(notification.id))) return prev;
-      return [notification, ...prev].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      );
-    });
+      if (seen.current.has(Number(notification.id))) return;
+      seen.current.add(Number(notification.id));
+      setNotifications((prev) => {
+        if (prev.some((item) => Number(item.id) === Number(notification.id)))
+          return prev;
+        return [notification, ...prev].sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
+      });
 
-    if (!notification.leida) {
-      setUnreadCount((prev) => prev + 1);
-    }
-  }, [localUserId]);
+      if (!notification.leida) {
+        setUnreadCount((prev) => prev + 1);
+      }
+    },
+    [localUserId],
+  );
 
   const fetchNotifications = useCallback(async () => {
     if (!accessToken) return;
 
+    const sequence = ++request.current;
     try {
       setLoading(true);
+      setError(null);
       const [listRes, countRes] = await Promise.all([
         notificationsService.getNotifications(accessToken),
         notificationsService.getUnreadCount(accessToken),
       ]);
 
+      if (sequence !== request.current) return;
       if (listRes.ok) {
+        seen.current = new Set(
+          listRes.notifications.map((item) => Number(item.id)),
+        );
         setNotifications(listRes.notifications);
       }
       if (countRes.ok) {
         setUnreadCount(countRes.count);
       }
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      if (sequence === request.current)
+        setError(
+          error instanceof Error
+            ? error.message
+            : "No se pudieron cargar las notificaciones.",
+        );
     } finally {
-      setLoading(false);
+      if (sequence === request.current) setLoading(false);
     }
   }, [accessToken]);
 
@@ -73,14 +111,14 @@ export const useNotifications = () => {
       void fetchNotifications();
     };
 
-    socket.on('notification_created', handleNewNotification);
-    socket.on('connect', handleReconnectRefresh);
-    socket.io.on('reconnect', handleReconnectRefresh);
+    socket.on("notification_created", handleNewNotification);
+    socket.on("connect", handleReconnectRefresh);
+    socket.io.on("reconnect", handleReconnectRefresh);
 
     return () => {
-      socket.off('notification_created', handleNewNotification);
-      socket.off('connect', handleReconnectRefresh);
-      socket.io.off('reconnect', handleReconnectRefresh);
+      socket.off("notification_created", handleNewNotification);
+      socket.off("connect", handleReconnectRefresh);
+      socket.io.off("reconnect", handleReconnectRefresh);
     };
   }, [socket, accessToken, localUserId, addNotification, fetchNotifications]);
 
@@ -88,29 +126,35 @@ export const useNotifications = () => {
     if (!accessToken || localUserId === null) return;
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         void fetchNotifications();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [accessToken, localUserId, fetchNotifications]);
 
   const markAsRead = async (id: number) => {
     if (!accessToken) return;
 
-    const wasUnread = notifications.some((n) => Number(n.id) === Number(id) && !n.leida);
-    setNotifications((prev) => prev.map((n) => (Number(n.id) === Number(id) ? { ...n, leida: true } : n)));
+    const wasUnread = notifications.some(
+      (n) => Number(n.id) === Number(id) && !n.leida,
+    );
+    setNotifications((prev) =>
+      prev.map((n) =>
+        Number(n.id) === Number(id) ? { ...n, leida: true } : n,
+      ),
+    );
     if (wasUnread) setUnreadCount((prev) => Math.max(0, prev - 1));
 
     try {
       await notificationsService.markAsRead(id, accessToken);
     } catch (error) {
-      console.error('Error marking as read:', error);
+      console.error("Error marking as read:", error);
       void fetchNotifications();
     }
   };
@@ -124,7 +168,7 @@ export const useNotifications = () => {
     try {
       await notificationsService.markAllAsRead(accessToken);
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      console.error("Error marking all as read:", error);
       void fetchNotifications();
     }
   };
@@ -133,6 +177,7 @@ export const useNotifications = () => {
     notifications,
     unreadCount,
     loading,
+    error,
     markAsRead,
     markAllAsRead,
     refresh: fetchNotifications,

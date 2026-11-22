@@ -1,0 +1,11 @@
+import {pathToFileURL,fileURLToPath} from 'node:url'
+import {dirname} from 'node:path'
+const base=dirname(fileURLToPath(import.meta.url))
+const {build}=await import(pathToFileURL(process.env.ITHERA_REPO_ROOT+'/frontend/node_modules/vite/dist/node/index.js').href)
+import { writeFileSync } from 'node:fs'
+const root=process.env.ITHERA_REPO_ROOT+'/frontend'
+process.chdir(root)
+writeFileSync(base+'/component-entry.tsx',"import React from '__ITHERA_REPO_ROOT__/frontend/node_modules/react/index.js'\nimport {createRoot} from '__ITHERA_REPO_ROOT__/frontend/node_modules/react-dom/client.js'\nimport {SubgroupChatDrawer} from '__ITHERA_REPO_ROOT__/frontend/src/components/chat/SubgroupChatDrawer'\nconst w=window as unknown as {__chatSocket:any;__closeCount:number;__props?:Record<string,unknown>};\ncreateRoot(document.getElementById('root')!).render(<SubgroupChatDrawer open onClose={()=>w.__closeCount++} groupId=\"41\" slotId={7} subgroupId=\"sg-1\" subgroupName=\"Equipo playa\" socket={w.__chatSocket} isSocketConnected accessToken=\"fixture-only-token\" currentUserId=\"1\" currentUserName=\"Viajera\" participants={[]} {...w.__props}/>)\n".replaceAll('__ITHERA_REPO_ROOT__',process.env.ITHERA_REPO_ROOT))
+const result=await build({root,configFile:root+'/vite.config.ts',logLevel:'error',resolve:{alias:{'react/jsx-runtime':root+'/node_modules/react/jsx-runtime.js'}},plugins:[{name:'isolated-auth-validation',enforce:'pre',resolveId(id,importer){if(importer&&/\/lib\/supabase$/.test(id))return base+'/supabase-stub.ts'}}],define:{'process.env.NODE_ENV':JSON.stringify('production'),'import.meta.env.VITE_GOOGLE_MAPS_BROWSER_KEY':JSON.stringify('fixture-only-no-secret'),'import.meta.env.VITE_API_URL':JSON.stringify('http://127.0.0.1:3009/api'),'import.meta.env.VITE_SUPABASE_URL':JSON.stringify('http://127.0.0.1:54321'),'import.meta.env.VITE_SUPABASE_ANON_KEY':JSON.stringify('test-only-no-secret')},build:{write:false,minify:false,lib:{entry:base+'/component-entry.tsx',name:'ItheraIsolatedValidation',formats:['iife']}}})
+for(const out of (Array.isArray(result)?result:[result]))for(const file of out.output)if(file.type==='chunk')writeFileSync(base+'/component-bundle.js',file.code)
+console.log('Bundle aislado de la aplicación generado')

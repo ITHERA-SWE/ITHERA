@@ -1,8 +1,18 @@
-import {EditorialDialog} from '../../components/collaboration/EditorialDialog';
-import { ItineraryPlanner, ItineraryLoading, ItineraryError } from '../../components/itinerary/ItineraryPlanner';
-import '../../components/itinerary/itinerary.css';
+import printStyles from "../../components/itinerary/editorial-print.css?raw";
+import printLogo from "../../assets/ithera-transparente.png";
+import { EditorialDialog } from "../../components/collaboration/EditorialDialog";
+import {
+  ItineraryPlanner,
+  ItineraryLoading,
+  ItineraryError,
+} from "../../components/itinerary/ItineraryPlanner";
+import "../../components/itinerary/itinerary.css";
 import { ExploreHub } from "../../components/trip/ExploreHub";
-import { EditorialError, EditorialLoading, TripOverview } from "../../components/trip/TripOverview";
+import {
+  EditorialError,
+  EditorialLoading,
+  TripOverview,
+} from "../../components/trip/TripOverview";
 import { TripNavigation } from "../../components/trip/TripNavigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -26,9 +36,7 @@ import {
   SidebarDashboard,
 } from "../../components/layout/AppLayout";
 import { ChatDrawer } from "../../components/chat/ChatDrawer";
-import type {
-  Activity as DayActivity,
-} from "../../components/ui/DayView";
+import type { Activity as DayActivity } from "../../components/ui/DayView";
 import { ComparisonPage } from "../Comparison/ComparisonPage";
 import { ProposalDetailModal } from "../../components/ProposalDetailModal/ProposalDetailModal";
 import { ConfirmProposalModal } from "../../components/ConfirmProposalModal/ConfirmProposalModal";
@@ -1078,8 +1086,9 @@ export function DashboardPage() {
     activeTab?: string;
     dashboardView?: "general" | "subgrupos";
   } | null;
-  const groupIdFromState = searchParams.get("groupId") || (
-    routeState?.groupId !== undefined && routeState?.groupId !== null
+  const groupIdFromState =
+    searchParams.get("groupId") ||
+    (routeState?.groupId !== undefined && routeState?.groupId !== null
       ? String(routeState.groupId)
       : null);
   const switchingGroupFromState = routeState?.switchingGroup;
@@ -1098,18 +1107,41 @@ export function DashboardPage() {
   const [activeDay, setActiveDay] = useState<number | null>(null);
   const [, setExpandedDay] = useState<number | null>(null);
   // La URL conserva la sección al recargar, usar Atrás o abrir una notificación.
-  const validTabs = ["resumen", "inicio", "buscar", "comparar", "mapas", "pagar", "boveda", "decisiones"];
-  const requestedTab = searchParams.get("tab") ?? routeState?.activeTab ?? "resumen";
+  const validTabs = [
+    "resumen",
+    "inicio",
+    "buscar",
+    "comparar",
+    "mapas",
+    "pagar",
+    "boveda",
+    "decisiones",
+  ];
+  const requestedTab =
+    searchParams.get("tab") ?? routeState?.activeTab ?? "resumen";
   const activeTab = validTabs.includes(requestedTab) ? requestedTab : "resumen";
-  const setActiveTab = useCallback((tab: string) => {
-    const params = new URLSearchParams(location.search);
-    const id = groupIdFromState || groupId || currentGroup?.id;
-    if (id) params.set("groupId", String(id));
-    params.set("tab", tab);
-    navigate({ pathname: "/dashboard", search: params.toString() }, {
-      state: { ...location.state, activeTab: tab },
-    });
-  }, [location.search, location.state, groupIdFromState, groupId, currentGroup?.id, navigate]);
+  const setActiveTab = useCallback(
+    (tab: string) => {
+      const params = new URLSearchParams(location.search);
+      const id = groupIdFromState || groupId || currentGroup?.id;
+      if (id) params.set("groupId", String(id));
+      params.set("tab", tab);
+      navigate(
+        { pathname: "/dashboard", search: params.toString() },
+        {
+          state: { ...location.state, activeTab: tab },
+        },
+      );
+    },
+    [
+      location.search,
+      location.state,
+      groupIdFromState,
+      groupId,
+      currentGroup?.id,
+      navigate,
+    ],
+  );
   const [dashboardView, setDashboardView] = useState<"general" | "subgrupos">(
     routeState?.dashboardView ?? "general",
   );
@@ -1128,7 +1160,7 @@ export function DashboardPage() {
     title: string;
   } | null>(null);
   const deleteActivityLock = useRef(false);
-  const [activityDeleteError,setActivityDeleteError] = useState("");
+  const [activityDeleteError, setActivityDeleteError] = useState("");
   const [deletingActivityId, setDeletingActivityId] = useState<string | null>(
     null,
   );
@@ -1347,16 +1379,20 @@ export function DashboardPage() {
   );
 
   // Una entrada desde Explorar selecciona únicamente un día recibido del itinerario.
-  const dayRequest = useRef('');
-  const requestedDay = searchParams.get('day');
+  const dayRequest = useRef("");
+  const requestedDay = searchParams.get("day");
   useEffect(() => {
-    const id = String(group?.id || '');
-    const request = `${id}:${requestedDay || ''}`;
+    const id = String(group?.id || "");
+    const request = `${id}:${requestedDay || ""}`;
     const number = Number(requestedDay);
     if (
-      !requestedDay || isLoading || id !== String(resolvedGroupId) ||
-      dayRequest.current === request || !days.some((d) => d.dayNumber === number)
-    ) return;
+      !requestedDay ||
+      isLoading ||
+      id !== String(resolvedGroupId) ||
+      dayRequest.current === request ||
+      !days.some((d) => d.dayNumber === number)
+    )
+      return;
     dayRequest.current = request;
     setActiveDay(number);
     setExpandedDay(number);
@@ -1476,7 +1512,9 @@ export function DashboardPage() {
         ]);
 
         const groupData =
-          groupResult.status === "fulfilled" ? groupResult.value.group : verifiedGroup.group;
+          groupResult.status === "fulfilled"
+            ? groupResult.value.group
+            : verifiedGroup.group;
 
         const startLocation =
           travelContextResult.status === "fulfilled"
@@ -1527,7 +1565,10 @@ export function DashboardPage() {
       } catch (error) {
         if (!isMounted) return;
         console.error("Error cargando dashboard:", error);
-        if (isMounted) setLoadError("No se pudo cargar la información del viaje. Comprueba tu conexión y vuelve a intentar.");
+        if (isMounted)
+          setLoadError(
+            "No se pudo cargar la información del viaje. Comprueba tu conexión y vuelve a intentar.",
+          );
         if (isAccessDeniedError(error)) {
           clearCurrentGroup();
           setForcedNotice({
@@ -1897,7 +1938,16 @@ export function DashboardPage() {
       groupId ||
       (currentGroup?.id ? String(currentGroup.id) : null);
 
-    if (!activityPendingDelete || !resolvedGroupId || !accessToken || deleteActivityLock.current || !areRealtimeActionsEnabled || isReadOnly || group?.modulo_itinerario_bloqueado) return;
+    if (
+      !activityPendingDelete ||
+      !resolvedGroupId ||
+      !accessToken ||
+      deleteActivityLock.current ||
+      !areRealtimeActionsEnabled ||
+      isReadOnly ||
+      group?.modulo_itinerario_bloqueado
+    )
+      return;
     deleteActivityLock.current = true;
     setActivityDeleteError("");
 
@@ -1912,7 +1962,12 @@ export function DashboardPage() {
       setActivityPendingDelete(null);
       await reloadDashboard();
     } catch (error) {
-      if (loadedGroupId.current === resolvedGroupId) setActivityDeleteError(error instanceof Error ? error.message : "No se pudo eliminar la actividad. Reintenta cuando recuperes la conexión.");
+      if (loadedGroupId.current === resolvedGroupId)
+        setActivityDeleteError(
+          error instanceof Error
+            ? error.message
+            : "No se pudo eliminar la actividad. Reintenta cuando recuperes la conexión.",
+        );
     } finally {
       deleteActivityLock.current = false;
       setDeletingActivityId(null);
@@ -1942,11 +1997,14 @@ export function DashboardPage() {
     [setActiveTab],
   );
 
-  const handleEditSubgroupSlot = useCallback((slotId: number) => {
-    setActiveTab("inicio");
-    setDashboardView("subgrupos");
-    setEditSubgroupSlotRequest({ slotId, nonce: Date.now() });
-  }, [setActiveTab]);
+  const handleEditSubgroupSlot = useCallback(
+    (slotId: number) => {
+      setActiveTab("inicio");
+      setDashboardView("subgrupos");
+      setEditSubgroupSlotRequest({ slotId, nonce: Date.now() });
+    },
+    [setActiveTab],
+  );
 
   const handleDeleteSubgroupSlot = useCallback(
     async (slotId: number) => {
@@ -2247,131 +2305,15 @@ export function DashboardPage() {
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width,initial-scale=1" />
           <title>Itinerario Confirmado - ${tripName}</title>
-          <style>
-            :root {
-              --ink:#1E0A4E;
-              --ink-soft:#2E1767;
-              --blue:#1E6FD9;
-              --blue-soft:#EEF4FF;
-              --purple:#7A4FD6;
-              --purple-soft:#F3EEFF;
-              --green:#35C56A;
-              --paper:#FFFFFF;
-              --text:#243247;
-              --muted:#64748B;
-            }
-            * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            body {
-              margin:0;
-              font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;
-              color:var(--text);
-              background:linear-gradient(145deg,#EBE6FA 0%,#EAF2FF 100%);
-              padding:24px;
-            }
-            .sheet {
-              max-width:900px;
-              margin:0 auto;
-              background:var(--paper);
-              border:1px solid #D9E4F7;
-              border-radius:20px;
-              overflow:hidden;
-              box-shadow:0 24px 56px rgba(30,10,78,0.18);
-            }
-            .hero {
-              background:
-                radial-gradient(circle at top right, rgba(122,79,214,.24), transparent 44%),
-                radial-gradient(circle at top left, rgba(30,111,217,.22), transparent 38%),
-                linear-gradient(120deg,var(--ink),var(--ink-soft));
-              color:#fff;
-              padding:28px 30px;
-            }
-            .hero h1 { margin:0; font-size:30px; line-height:1.05; letter-spacing:0; }
-            .hero p { margin:9px 0 0; font-size:14px; color:rgba(255,255,255,.9); }
-            .meta { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
-            .meta span {
-              background:rgba(255,255,255,.14);
-              border:1px solid rgba(255,255,255,.28);
-              padding:6px 10px;
-              border-radius:999px;
-              font-size:11px;
-              font-weight:600;
-            }
-            .content { padding:18px 20px 26px; background:linear-gradient(180deg,#FAFCFF 0%,#FFFFFF 18%); }
-            .day-section + .day-section { margin-top:14px; }
-            .day-section {
-              border:1px solid #DEE7FB;
-              border-radius:16px;
-              background:#fff;
-              overflow:hidden;
-            }
-            .day-header {
-              display:flex;
-              align-items:center;
-              justify-content:space-between;
-              gap:10px;
-              padding:12px 14px;
-              background:linear-gradient(90deg,var(--purple-soft),#F8FAFF);
-              border-bottom:1px solid #E5ECFA;
-            }
-            .day-header h3 { margin:0; color:var(--ink); font-size:16px; }
-            .day-header span { color:#4B5F86; font-size:12px; font-weight:700; }
-            .activity-card {
-              display:flex;
-              gap:12px;
-              background:#fff;
-              border-left:4px solid var(--blue);
-              border-bottom:1px solid #EEF2FB;
-              padding:12px 14px;
-              margin:0;
-            }
-            .day-section .activity-card:last-child { border-bottom:0; }
-            .activity-index {
-              width:28px;
-              height:28px;
-              border-radius:999px;
-              background:linear-gradient(140deg,var(--blue),#4A8DF0);
-              color:#fff;
-              display:grid;
-              place-items:center;
-              font-size:12px;
-              font-weight:800;
-              flex-shrink:0;
-              box-shadow:0 6px 14px rgba(30,111,217,.26);
-            }
-            .activity-content h4 { margin:0; color:var(--ink); font-size:15px; }
-            .activity-content .desc { margin:4px 0 0; color:#4A5C77; font-size:12px; line-height:1.45; }
-            .chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:9px; }
-            .chips span {
-              background:var(--purple-soft);
-              border:1px solid #DCCEFF;
-              color:#452A84;
-              font-size:10.5px;
-              padding:4px 8px;
-              border-radius:999px;
-              font-weight:600;
-            }
-            .footer {
-              border-top:1px solid #E5ECFA;
-              background:#FAFCFF;
-              padding:12px 20px;
-              color:var(--muted);
-              font-size:11px;
-              display:flex;
-              justify-content:space-between;
-              align-items:center;
-            }
-            .dot { width:8px; height:8px; border-radius:999px; background:var(--green); display:inline-block; margin-right:6px; }
-            @media print {
-              body { background:#EEE8FB; padding:0; }
-              .sheet { border:0; border-radius:0; box-shadow:none; max-width:100%; }
-              @page { size:A4; margin:10mm; }
-            }
-          </style>
+          <style>${printStyles}</style>
         </head>
         <body>
           <main class="sheet">
+            <div class="atlas-print-tools"><button onclick="window.print()">Imprimir / Guardar PDF</button></div>
             <header class="hero">
-              <h1>Itinerario confirmado</h1>
+              <img class="print-logo" src="${escapeHtml(new URL(printLogo, window.location.origin).href)}" alt="ITHERA"/>
+              <p class="print-eyebrow">EL ATLAS DEL VIAJE</p>
+              <h1>Itinerario confirmado.</h1>
               <p>${tripName} · ${tripDestination}</p>
               <div class="meta">
                 <span>${confirmedByDay.length} día(s) con actividades confirmadas</span>
@@ -2622,11 +2564,27 @@ export function DashboardPage() {
     <AppLayout
       editorial
       contextualNavigation={
-        <TripNavigation activeTab={activeTab} tripName={group?.nombre || "Tu viaje"}
-          isReadOnly={isReadOnly} isAdmin={!isLoading && !loadError && isCurrentUserAdmin} onTabChange={setActiveTab}
-          onPeople={() => navigate(`/grouppanel?groupId=${encodeURIComponent(resolvedGroupId || "")}`)}
-          onSettings={() => navigate(`/group-settings?groupId=${encodeURIComponent(resolvedGroupId || "")}`)}
-          onSubgroups={() => { setDashboardView("subgrupos"); setActiveTab("inicio"); }} />
+        <TripNavigation
+          activeTab={activeTab}
+          tripName={group?.nombre || "Tu viaje"}
+          isReadOnly={isReadOnly}
+          isAdmin={!isLoading && !loadError && isCurrentUserAdmin}
+          onTabChange={setActiveTab}
+          onPeople={() =>
+            navigate(
+              `/grouppanel?groupId=${encodeURIComponent(resolvedGroupId || "")}`,
+            )
+          }
+          onSettings={() =>
+            navigate(
+              `/group-settings?groupId=${encodeURIComponent(resolvedGroupId || "")}`,
+            )
+          }
+          onSubgroups={() => {
+            setDashboardView("subgrupos");
+            setActiveTab("inicio");
+          }}
+        />
       }
       trip={{
         name: group?.nombre || "Itinerario",
@@ -2691,9 +2649,25 @@ export function DashboardPage() {
       }
     >
       {isLoading ? (
-        activeTab === "resumen" ? <EditorialLoading /> : activeTab === "inicio" ? <ItineraryLoading /> : <DashboardSwitchLoading group={loadingGroupSnapshot} />
+        activeTab === "resumen" ? (
+          <EditorialLoading />
+        ) : activeTab === "inicio" ? (
+          <ItineraryLoading />
+        ) : (
+          <DashboardSwitchLoading group={loadingGroupSnapshot} />
+        )
       ) : loadError ? (
-        activeTab === "inicio" ? <ItineraryError message={loadError} onRetry={() => setRetryVersion(version => version + 1)} /> : <EditorialError message={loadError} onRetry={() => setRetryVersion(version => version + 1)} />
+        activeTab === "inicio" ? (
+          <ItineraryError
+            message={loadError}
+            onRetry={() => setRetryVersion((version) => version + 1)}
+          />
+        ) : (
+          <EditorialError
+            message={loadError}
+            onRetry={() => setRetryVersion((version) => version + 1)}
+          />
+        )
       ) : requiresInitialBudget && activeTab !== "pagar" ? (
         <div className="flex flex-1 items-center justify-center bg-surface px-6 py-8">
           <div className="w-full max-w-2xl rounded-2xl border border-[#E2E8F0] bg-white p-6 text-center">
@@ -2719,21 +2693,56 @@ export function DashboardPage() {
           </div>
         </div>
       ) : activeTab === "resumen" ? (
-        <TripOverview key={group?.id} group={group} days={daysWithContext} selectedDay={activeDay}
-          memberCount={membersAvailable ? uniqueMemberCount : group?.memberCount}
-          votes={voteResultByProposal} votesAvailable={votesAvailable} membersAvailable={membersAvailable}
-          isReadOnly={isReadOnly} isOnline={areRealtimeActionsEnabled}
-          onSelectDay={setActiveDay} onPropose={openActivityModalForDay}
-          onItinerary={(day) => { if (day != null) { setActiveDay(day); setExpandedDay(day); } setDashboardView("general"); setActiveTab("inicio"); }}
-          onDecisions={() => setActiveTab("decisiones")} onExplore={() => setActiveTab("buscar")}
-          onPeople={() => navigate(`/grouppanel?groupId=${encodeURIComponent(resolvedGroupId || "")}`)}
+        <TripOverview
+          key={group?.id}
+          group={group}
+          days={daysWithContext}
+          selectedDay={activeDay}
+          memberCount={
+            membersAvailable ? uniqueMemberCount : group?.memberCount
+          }
+          votes={voteResultByProposal}
+          votesAvailable={votesAvailable}
+          membersAvailable={membersAvailable}
+          isReadOnly={isReadOnly}
+          isOnline={areRealtimeActionsEnabled}
+          onSelectDay={setActiveDay}
+          onPropose={openActivityModalForDay}
+          onItinerary={(day) => {
+            if (day != null) {
+              setActiveDay(day);
+              setExpandedDay(day);
+            }
+            setDashboardView("general");
+            setActiveTab("inicio");
+          }}
+          onDecisions={() => setActiveTab("decisiones")}
+          onExplore={() => setActiveTab("buscar")}
+          onPeople={() =>
+            navigate(
+              `/grouppanel?groupId=${encodeURIComponent(resolvedGroupId || "")}`,
+            )
+          }
           onExport={handleExportConfirmedItineraryPdf}
-          onComments={(activity) => { void openChatModal(activity); }} onVoteHistory={setVoteHistoryActivity}
-          onRetry={() => setRetryVersion(version => version + 1)} />
+          onComments={(activity) => {
+            void openChatModal(activity);
+          }}
+          onVoteHistory={setVoteHistoryActivity}
+          onRetry={() => setRetryVersion((version) => version + 1)}
+        />
       ) : activeTab === "decisiones" ? (
-        <ComparisonPage key={group?.id} group={group} mode="decisions" onBack={() => setActiveTab("resumen")} />
+        <ComparisonPage
+          key={group?.id}
+          group={group}
+          mode="decisions"
+          onBack={() => setActiveTab("resumen")}
+        />
       ) : activeTab === "comparar" ? (
-        <ComparisonPage key={group?.id} group={group} onBack={() => setActiveTab("resumen")} />
+        <ComparisonPage
+          key={group?.id}
+          group={group}
+          onBack={() => setActiveTab("resumen")}
+        />
       ) : isEmpty && activeTab !== "inicio" ? (
         <EmptyState
           onAdd={isReadOnly ? () => {} : () => setShowActivityModal(true)}
@@ -2811,9 +2820,14 @@ export function DashboardPage() {
         />
       ) : activeTab === "inicio" && dashboardView === "subgrupos" ? (
         <div className="atlas-subgroups-frame">
-          <div className="mb-4 inline-flex rounded-lg border border-[#D7DEEA] bg-white p-1">
+          <div
+            className="atlas-view-switch"
+            role="group"
+            aria-label="Vista del itinerario"
+          >
             <button
               type="button"
+              aria-pressed={false}
               onClick={() => setDashboardView("general")}
               className="rounded-md px-3 py-1.5 text-sm text-[#475569]"
             >
@@ -2821,6 +2835,7 @@ export function DashboardPage() {
             </button>
             <button
               type="button"
+              aria-pressed={true}
               onClick={() => setDashboardView("subgrupos")}
               className="rounded-md bg-[#1E6FD9] px-3 py-1.5 text-sm text-white"
             >
@@ -2853,43 +2868,72 @@ export function DashboardPage() {
       ) : activeTab === "buscar" ? (
         <ExploreHub group={group} />
       ) : (
-        <ItineraryPlanner key={group?.id} group={group} days={daysWithContext} selectedDay={activeDay}
-          onSelect={(day) => { setActiveDay(day); setExpandedDay(day); }}
-          onSubgroups={() => setDashboardView("subgrupos")} onExport={handleExportConfirmedItineraryPdf}
-          onRefresh={() => setRetryVersion(version => version + 1)} isReadOnly={isReadOnly} online={areRealtimeActionsEnabled}
-          dayActions={{currentUserId:localUser?.id_usuario,currentUserRole,
-            onAddActivity:openActivityModalForDay,onEdit:(id) => {const activity=days.flatMap(d=>d.activities).find(a=>a.id===id);if(activity)openActivityEditor(activity);},
-            onDelete:handleDeleteActivity,onManageContext:openActivityEditor,
-            onOpenBudget:()=>setActiveTab("pagar"),onOpenVault:()=>setActiveTab("boveda"),
-            onDecisions:(activity)=>navigate(`/dashboard?groupId=${encodeURIComponent(resolvedGroupId||"")}&tab=decisiones&proposalId=${encodeURIComponent(activity.proposalId||"")}`),
-            renderConfirmedActions:(activity)=>activity.kind==="subgroup-slot" && !isReadOnly ? renderProposalQuickActions(activity) : null,
-          }} />
+        <ItineraryPlanner
+          key={group?.id}
+          group={group}
+          days={daysWithContext}
+          selectedDay={activeDay}
+          onSelect={(day) => {
+            setActiveDay(day);
+            setExpandedDay(day);
+          }}
+          onSubgroups={() => setDashboardView("subgrupos")}
+          onExport={handleExportConfirmedItineraryPdf}
+          onRefresh={() => setRetryVersion((version) => version + 1)}
+          isReadOnly={isReadOnly}
+          online={areRealtimeActionsEnabled}
+          dayActions={{
+            currentUserId: localUser?.id_usuario,
+            currentUserRole,
+            onAddActivity: openActivityModalForDay,
+            onEdit: (id) => {
+              const activity = days
+                .flatMap((d) => d.activities)
+                .find((a) => a.id === id);
+              if (activity) openActivityEditor(activity);
+            },
+            onDelete: handleDeleteActivity,
+            onManageContext: openActivityEditor,
+            onOpenBudget: () => setActiveTab("pagar"),
+            onOpenVault: () => setActiveTab("boveda"),
+            onDecisions: (activity) =>
+              navigate(
+                `/dashboard?groupId=${encodeURIComponent(resolvedGroupId || "")}&tab=decisiones&proposalId=${encodeURIComponent(activity.proposalId || "")}`,
+              ),
+            renderConfirmedActions: (activity) =>
+              activity.kind === "subgroup-slot" && !isReadOnly
+                ? renderProposalQuickActions(activity)
+                : null,
+          }}
+        />
       )}
 
-      {showActivityModal && !isReadOnly && <ActivityProposalModal
-        key={`${group?.id}:${editingActivity?.id || "new"}`}
-        isOnline={areRealtimeActionsEnabled}
-        isReadOnly={isReadOnly || Boolean(group?.modulo_itinerario_bloqueado)}
-        open={showActivityModal && !isReadOnly}
-        group={group}
-        token={accessToken}
-        selectedDayNumber={selectedActivityDay}
-        isCurrentUserAdmin={isCurrentUserAdmin}
-        currentUserId={
-          localUser?.id_usuario != null ? String(localUser.id_usuario) : null
-        }
-        members={safeMembers}
-        onClose={() => {
-          unlockProposalForActivity(editingActivity);
-          setEditingActivity(null);
-          setShowActivityModal(false);
-        }}
-        onCreated={async () => {
-          unlockProposalForActivity(editingActivity);
-          await reloadDashboard();
-        }}
-        editingActivity={editingActivity}
-      />}
+      {showActivityModal && !isReadOnly && (
+        <ActivityProposalModal
+          key={`${group?.id}:${editingActivity?.id || "new"}`}
+          isOnline={areRealtimeActionsEnabled}
+          isReadOnly={isReadOnly || Boolean(group?.modulo_itinerario_bloqueado)}
+          open={showActivityModal && !isReadOnly}
+          group={group}
+          token={accessToken}
+          selectedDayNumber={selectedActivityDay}
+          isCurrentUserAdmin={isCurrentUserAdmin}
+          currentUserId={
+            localUser?.id_usuario != null ? String(localUser.id_usuario) : null
+          }
+          members={safeMembers}
+          onClose={() => {
+            unlockProposalForActivity(editingActivity);
+            setEditingActivity(null);
+            setShowActivityModal(false);
+          }}
+          onCreated={async () => {
+            unlockProposalForActivity(editingActivity);
+            await reloadDashboard();
+          }}
+          editingActivity={editingActivity}
+        />
+      )}
 
       {voteHistoryActivity?.proposalId && (
         <div
@@ -3029,7 +3073,9 @@ export function DashboardPage() {
                   {chatProposalActivity.title}
                 </h3>
                 <p className="mt-0.5 font-body text-[11px] text-white/70">
-                  {isSocketConnected ? "Comentarios de la actividad" : "Reconectando..."}
+                  {isSocketConnected
+                    ? "Comentarios de la actividad"
+                    : "Reconectando..."}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -3265,7 +3311,6 @@ export function DashboardPage() {
         </>
       )}
 
-
       {selectedProposal && (
         <ProposalDetailModal
           proposal={selectedProposal}
@@ -3277,7 +3322,9 @@ export function DashboardPage() {
           socket={socket}
           isOnline={areRealtimeActionsEnabled}
           isReadOnly={isReadOnly}
-          onUpdated={() => { void reloadDashboard(); }}
+          onUpdated={() => {
+            void reloadDashboard();
+          }}
         />
       )}
       {showConfirm && selectedProposal && (
@@ -3303,9 +3350,46 @@ export function DashboardPage() {
         />
       )}
 
-      {activityPendingDelete && <EditorialDialog title="Eliminar actividad" busy={deletingActivityId!==null} onClose={()=>{if(deletingActivityId===null)setActivityPendingDelete(null)}}>
-        <div className="atlas-activity-action"><p>La actividad se quitará del itinerario cuando el servidor confirme la eliminación.</p><h3>{activityPendingDelete.title}</h3>{activityDeleteError&&<p role="alert" className="atlas-collab-error">{activityDeleteError}</p>}<footer><button className="atlas-button atlas-button-secondary" disabled={deletingActivityId!==null} onClick={()=>setActivityPendingDelete(null)}>Conservar</button><button className="atlas-button atlas-button-primary" disabled={deletingActivityId!==null} onClick={()=>void confirmDeleteActivity()}>{deletingActivityId!==null?'Eliminando…':'Eliminar actividad'}</button></footer></div>
-      </EditorialDialog>}
+      {activityPendingDelete && (
+        <EditorialDialog
+          title="Eliminar actividad"
+          busy={deletingActivityId !== null}
+          onClose={() => {
+            if (deletingActivityId === null) setActivityPendingDelete(null);
+          }}
+        >
+          <div className="atlas-activity-action">
+            <p>
+              La actividad se quitará del itinerario cuando el servidor confirme
+              la eliminación.
+            </p>
+            <h3>{activityPendingDelete.title}</h3>
+            {activityDeleteError && (
+              <p role="alert" className="atlas-collab-error">
+                {activityDeleteError}
+              </p>
+            )}
+            <footer>
+              <button
+                className="atlas-button atlas-button-secondary"
+                disabled={deletingActivityId !== null}
+                onClick={() => setActivityPendingDelete(null)}
+              >
+                Conservar
+              </button>
+              <button
+                className="atlas-button atlas-button-primary"
+                disabled={deletingActivityId !== null}
+                onClick={() => void confirmDeleteActivity()}
+              >
+                {deletingActivityId !== null
+                  ? "Eliminando…"
+                  : "Eliminar actividad"}
+              </button>
+            </footer>
+          </div>
+        </EditorialDialog>
+      )}
 
       <ConfirmDialog
         open={forcedNotice !== null}

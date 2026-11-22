@@ -218,6 +218,7 @@ export function MyTripsPage() {
                 <option value="date">Por fecha</option>
                 <option value="name">Por nombre</option>
               </select>
+              <small>Dentro de cada sección</small>
             </label>
           </div>
         </div>

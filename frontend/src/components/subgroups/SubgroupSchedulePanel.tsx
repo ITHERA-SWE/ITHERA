@@ -1,4 +1,4 @@
-import {EditorialDialog} from "../collaboration/EditorialDialog";
+import { EditorialDialog } from "../collaboration/EditorialDialog";
 import {
   useCallback,
   useEffect,
@@ -80,13 +80,17 @@ type EnrichedPlaceResult = PlaceResult & RoutePreview;
 
 type EnrichedPlaceAutocompleteResult = PlaceAutocompleteResult & RoutePreview;
 
-function placeResultToAutocompleteSuggestion(place: EnrichedPlaceResult): EnrichedPlaceAutocompleteResult | null {
+function placeResultToAutocompleteSuggestion(
+  place: EnrichedPlaceResult,
+): EnrichedPlaceAutocompleteResult | null {
   if (!place.id) return null;
   return {
     placeId: place.id,
-    description: [place.name, place.formattedAddress].filter(Boolean).join(' · ') || place.id,
-    mainText: place.name || 'Lugar sin nombre',
-    secondaryText: place.formattedAddress || 'Direccion no disponible',
+    description:
+      [place.name, place.formattedAddress].filter(Boolean).join(" · ") ||
+      place.id,
+    mainText: place.name || "Lugar sin nombre",
+    secondaryText: place.formattedAddress || "Direccion no disponible",
     routeDistanceText: place.routeDistanceText,
     routeDurationText: place.routeDurationText,
     routeDistanceMeters: place.routeDistanceMeters,
@@ -248,13 +252,63 @@ function ActionModal({
   children: ReactNode;
 }) {
   const lock = useRef(false);
-  const [localBusy,setLocalBusy] = useState(false);
-  const [localError,setLocalError] = useState("");
+  const [localBusy, setLocalBusy] = useState(false);
+  const [localError, setLocalError] = useState("");
   if (!open) return null;
-  const busy=confirmLoading||localBusy;
-  return <EditorialDialog title={title} onClose={onClose} busy={busy}>
-    <div className="atlas-activity-action" data-panel-size={panelClassName}><p>{subtitle}</p>{children}{localError&&<p role="alert" className="atlas-collab-error">{localError}</p>}<footer><button className="atlas-button atlas-button-secondary" disabled={busy} onClick={onClose}>Cancelar</button><button className="atlas-button atlas-button-primary" disabled={confirmDisabled||busy} aria-busy={busy} onClick={async()=>{if(lock.current)return;lock.current=true;setLocalBusy(true);setLocalError("");try{await onConfirm()}catch(e){setLocalError(e instanceof Error?e.message:"No se pudo completar la acción.")}finally{lock.current=false;setLocalBusy(false)}}}>{busy?<><InlineSpinner size={15}/> Guardando…</>:confirmLabel}</button></footer></div>
-  </EditorialDialog>;
+  const busy = confirmLoading || localBusy;
+  return (
+    <EditorialDialog title={title} onClose={onClose} busy={busy}>
+      <div className="atlas-activity-action" data-panel-size={panelClassName}>
+        <p>{subtitle}</p>
+        {children}
+        {localError && (
+          <p role="alert" className="atlas-collab-error">
+            {localError}
+          </p>
+        )}
+        <footer>
+          <button
+            className="atlas-button atlas-button-secondary"
+            disabled={busy}
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
+          <button
+            className="atlas-button atlas-button-primary"
+            disabled={confirmDisabled || busy}
+            aria-busy={busy}
+            onClick={async () => {
+              if (lock.current) return;
+              lock.current = true;
+              setLocalBusy(true);
+              setLocalError("");
+              try {
+                await onConfirm();
+              } catch (e) {
+                setLocalError(
+                  e instanceof Error
+                    ? e.message
+                    : "No se pudo completar la acción.",
+                );
+              } finally {
+                lock.current = false;
+                setLocalBusy(false);
+              }
+            }}
+          >
+            {busy ? (
+              <>
+                <InlineSpinner size={15} /> Guardando…
+              </>
+            ) : (
+              confirmLabel
+            )}
+          </button>
+        </footer>
+      </div>
+    </EditorialDialog>
+  );
 }
 
 const entityKey = (entity: ContextEntityRef): string =>
@@ -303,7 +357,8 @@ const pickCreatedExpenseId = (
   );
   const sorted = [...(candidates.length > 0 ? candidates : pool)].sort(
     (a, b) =>
-      new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime(),
+      new Date(b.createdAt ?? 0).getTime() -
+      new Date(a.createdAt ?? 0).getTime(),
   );
   return sorted[0]?.id ?? null;
 };
@@ -350,7 +405,6 @@ const toLocalInputValue = (value?: string | null) => {
 
 const toLocalTimeValue = (value?: string | null) =>
   toLocalInputValue(value).slice(11, 16) || "12:00";
-
 
 const isSameLocalDay = (first?: string | null, second?: string | null) =>
   toLocalInputValue(first).slice(0, 10) !== "" &&
@@ -636,29 +690,35 @@ export function SubgroupSchedulePanel({
     name: string;
   } | null>(null);
 
-  const loadContextLinks = useCallback(async (silent = false) => {
-    if (!groupId || !accessToken) {
-      setContextLinks([]);
-      return;
-    }
+  const loadContextLinks = useCallback(
+    async (silent = false) => {
+      if (!groupId || !accessToken) {
+        setContextLinks([]);
+        return;
+      }
 
-    const cacheKey = String(groupId);
-    const cached = getFreshCache(
-      subgroupContextLinksCache,
-      cacheKey,
-      SUBGROUP_SCHEDULE_CACHE_TTL_MS,
-    );
-    if (cached && !silent) {
-      setContextLinks(cached.links);
-    }
+      const cacheKey = String(groupId);
+      const cached = getFreshCache(
+        subgroupContextLinksCache,
+        cacheKey,
+        SUBGROUP_SCHEDULE_CACHE_TTL_MS,
+      );
+      if (cached && !silent) {
+        setContextLinks(cached.links);
+      }
 
-    const linksResponse = await contextLinksService.list(groupId, accessToken);
-    subgroupContextLinksCache.set(cacheKey, {
-      links: linksResponse.links,
-      savedAt: Date.now(),
-    });
-    setContextLinks(linksResponse.links);
-  }, [accessToken, groupId]);
+      const linksResponse = await contextLinksService.list(
+        groupId,
+        accessToken,
+      );
+      subgroupContextLinksCache.set(cacheKey, {
+        links: linksResponse.links,
+        savedAt: Date.now(),
+      });
+      setContextLinks(linksResponse.links);
+    },
+    [accessToken, groupId],
+  );
 
   const loadLinkOptions = useCallback(
     async (force = false) => {
@@ -684,52 +744,56 @@ export function SubgroupSchedulePanel({
     setLinkOptionsLoaded(false);
   }, [groupId]);
 
-  const load = useCallback(async (silent = false) => {
-    if (!groupId || !accessToken) return;
+  const load = useCallback(
+    async (silent = false) => {
+      if (!groupId || !accessToken) return;
 
-    const cacheKey = String(groupId);
-    const cached = getFreshCache(
-      subgroupScheduleCache,
-      cacheKey,
-      SUBGROUP_SCHEDULE_CACHE_TTL_MS,
-    );
-
-    if (cached && !silent) {
-      setSlots(cached.slots);
-      setMyUserId(cached.myUserId);
-      onScheduleChanged?.(cached.slots);
-    }
-
-    const hasVisibleData = (cached?.slots.length ?? slotsLengthRef.current) > 0;
-
-    try {
-      if (!silent && !hasVisibleData) setLoading(true);
-      setError(null);
-      const response = await subgroupScheduleService.getSchedule(
-        groupId,
-        accessToken,
+      const cacheKey = String(groupId);
+      const cached = getFreshCache(
+        subgroupScheduleCache,
+        cacheKey,
+        SUBGROUP_SCHEDULE_CACHE_TTL_MS,
       );
-      const nextSlots = response.slots ?? [];
-      subgroupScheduleCache.set(cacheKey, {
-        slots: nextSlots,
-        myUserId: response.myUserId ?? null,
-        savedAt: Date.now(),
-      });
-      setSlots(nextSlots);
-      onScheduleChanged?.(nextSlots);
-      setMyUserId(response.myUserId ?? null);
-    } catch (err) {
-      if (!cached) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "No se pudo cargar el horario de subgrupos",
-        );
+
+      if (cached && !silent) {
+        setSlots(cached.slots);
+        setMyUserId(cached.myUserId);
+        onScheduleChanged?.(cached.slots);
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [accessToken, groupId, onScheduleChanged]);
+
+      const hasVisibleData =
+        (cached?.slots.length ?? slotsLengthRef.current) > 0;
+
+      try {
+        if (!silent && !hasVisibleData) setLoading(true);
+        setError(null);
+        const response = await subgroupScheduleService.getSchedule(
+          groupId,
+          accessToken,
+        );
+        const nextSlots = response.slots ?? [];
+        subgroupScheduleCache.set(cacheKey, {
+          slots: nextSlots,
+          myUserId: response.myUserId ?? null,
+          savedAt: Date.now(),
+        });
+        setSlots(nextSlots);
+        onScheduleChanged?.(nextSlots);
+        setMyUserId(response.myUserId ?? null);
+      } catch (err) {
+        if (!cached) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "No se pudo cargar el horario de subgrupos",
+          );
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [accessToken, groupId, onScheduleChanged],
+  );
 
   useEffect(() => {
     const cacheKey = groupId ? String(groupId) : null;
@@ -1097,9 +1161,9 @@ export function SubgroupSchedulePanel({
     const slot = slots.find((item) => item.id === slotId);
     const activitySubgroup =
       activityId != null && slot
-        ? slot.subgroups.find((subgroup) =>
+        ? (slot.subgroups.find((subgroup) =>
             subgroup.activities.some((activity) => activity.id === activityId),
-          ) ?? null
+          ) ?? null)
         : null;
     const scopedMemberIds =
       activitySubgroup?.members
@@ -1316,11 +1380,11 @@ export function SubgroupSchedulePanel({
     const slot = slots.find((item) => item.id === slotId);
     const scopedSubgroup =
       draftActionModal?.activityId != null
-        ? slot?.subgroups.find((item) =>
+        ? (slot?.subgroups.find((item) =>
             item.activities.some(
               (activity) => activity.id === draftActionModal.activityId,
             ),
-          ) ?? null
+          ) ?? null)
         : null;
     const scopedMemberIds = new Set(
       (scopedSubgroup?.members ?? [])
@@ -1371,7 +1435,9 @@ export function SubgroupSchedulePanel({
     }
     setError(null);
     if (!groupId || !accessToken) return null;
-    const previousExpenseIds = new Set(linkOptions.expenses.map((item) => item.id));
+    const previousExpenseIds = new Set(
+      linkOptions.expenses.map((item) => item.id),
+    );
 
     const budgetResponse = await budgetService.createExpense(
       groupId,
@@ -1955,7 +2021,10 @@ export function SubgroupSchedulePanel({
 
   const onDeleteSlot = async (slotId: number) => {
     if (!groupId || !accessToken) return;
-    if (!window.confirm("Eliminar este horario de subgrupos y todo su contenido?")) return;
+    if (
+      !window.confirm("Eliminar este horario de subgrupos y todo su contenido?")
+    )
+      return;
     await runAction(async () => {
       await subgroupScheduleService.deleteSlot(groupId, slotId, accessToken);
       await load();
@@ -2071,11 +2140,11 @@ export function SubgroupSchedulePanel({
 
     const subgroup =
       draftActionModal?.activityId != null
-        ? slot.subgroups.find((item) =>
+        ? (slot.subgroups.find((item) =>
             item.activities.some(
               (activity) => activity.id === draftActionModal.activityId,
             ),
-          ) ?? null
+          ) ?? null)
         : null;
 
     const scopedIds = new Set(
@@ -2186,7 +2255,9 @@ export function SubgroupSchedulePanel({
         );
         const places: EnrichedPlaceResult[] = routeOrigin
           ? await Promise.all(
-              (response.data ?? []).slice(0, 8).map((place) => enrichPlaceWithRoute(place)),
+              (response.data ?? [])
+                .slice(0, 8)
+                .map((place) => enrichPlaceWithRoute(place)),
             )
           : (response.data ?? []).slice(0, 8);
         places.sort(
@@ -2196,7 +2267,9 @@ export function SubgroupSchedulePanel({
         );
         const nextSuggestions = places
           .map((place) => placeResultToAutocompleteSuggestion(place))
-          .filter((suggestion): suggestion is EnrichedPlaceAutocompleteResult => Boolean(suggestion))
+          .filter((suggestion): suggestion is EnrichedPlaceAutocompleteResult =>
+            Boolean(suggestion),
+          )
           .slice(0, 6);
         placeAutocompleteCache.set(autocompleteCacheKey, {
           items: nextSuggestions,
@@ -2316,14 +2389,36 @@ export function SubgroupSchedulePanel({
 
   return (
     <>
-      <div className="atlas-subgroups space-y-5">
+      <div className="atlas-subgroups atlas-subgroup-workspace space-y-5">
         <header className="atlas-subgroups-heading">
           <p className="atlas-eyebrow">PLANES PARALELOS / SUBGRUPOS</p>
-          <h2>Un viaje compartido.<br/><em>Diferentes maneras de vivirlo.</em></h2>
-          <p>{group?.nombre}{group?.destino ? ` · ${group.destino}` : ""}</p>
-          <p>{actionableSlots.length} horario(s) activo(s) · {actionableOptionCount} opciones disponibles</p>
-          <HelpButton title="Subgrupos" description="Los horarios de días pasados quedan como historial. Las validaciones de disponibilidad y participación se mantienen." placement="right" />
-          {isAdmin && (!tripEndDate || tripEndDate >= todayValue()) && <button className="atlas-button atlas-button-primary" type="button" onClick={openCreateSlotModal}>Crear horario</button>}
+          <h2>
+            Un viaje compartido.
+            <br />
+            <em>Diferentes maneras de vivirlo.</em>
+          </h2>
+          <p>
+            {group?.nombre}
+            {group?.destino ? ` · ${group.destino}` : ""}
+          </p>
+          <p>
+            {actionableSlots.length} horario(s) activo(s) ·{" "}
+            {actionableOptionCount} opciones disponibles
+          </p>
+          <HelpButton
+            title="Subgrupos"
+            description="Los horarios de días pasados quedan como historial. Las validaciones de disponibilidad y participación se mantienen."
+            placement="right"
+          />
+          {isAdmin && (!tripEndDate || tripEndDate >= todayValue()) && (
+            <button
+              className="atlas-button atlas-button-primary"
+              type="button"
+              onClick={openCreateSlotModal}
+            >
+              Crear horario
+            </button>
+          )}
         </header>
 
         {error && (
@@ -2376,65 +2471,68 @@ export function SubgroupSchedulePanel({
         )}
 
         <div className="space-y-3">
-          {/* Day card carousel */}
-          <div className="overflow-x-auto rounded-2xl bg-[linear-gradient(135deg,#24105E_0%,#1E0A4E_52%,#2B1163_100%)] px-4 py-3 shadow-[0_8px_28px_rgba(30,10,78,0.22)]">
-            <div className="flex gap-2">
-              {subgroupDayGroups.map((dayGroup) => {
-                const isActive = expandedSubgroupDay === dayGroup.key;
-                const optionCount = dayGroup.slots.reduce(
-                  (sum, slot) => sum + slot.subgroups.length,
-                  0,
-                );
-                const isEmpty = dayGroup.slots.length === 0;
-                return (
-                  <button
-                    key={dayGroup.key}
-                    type="button"
-                    onClick={() =>
-                      setExpandedSubgroupDay((current) =>
-                        current === dayGroup.key ? null : dayGroup.key,
-                      )
-                    }
-                    className={[
-                      "flex shrink-0 flex-col items-center gap-1.5 rounded-2xl px-5 py-3 transition-all duration-200 min-w-[110px]",
-                      isActive
-                        ? "bg-white shadow-[0_10px_28px_rgba(0,0,0,0.22)]"
-                        : "border border-white/10 bg-white/[0.07] hover:bg-white/[0.14]",
-                    ].join(" ")}
-                  >
-                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-body text-[11px] font-bold uppercase tracking-wider ${
-                      isActive ? "bg-[#1E6FD9]/12 text-[#1E6FD9]" : "bg-white/10 text-white/55"
-                    }`}>
-                      <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-[#1E6FD9]" : "bg-white/30"}`} />
-                      DÍA {dayGroup.dayNumber}
-                    </span>
-                    <span className={`font-body text-sm font-semibold leading-tight text-center ${isActive ? "text-[#1E0A4E]" : "text-white/80"}`}>
-                      {dayGroup.label}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      {isEmpty ? (
-                        <span className={`rounded-full px-2 py-0.5 font-body text-xs font-medium ${isActive ? "bg-[#F1F5F9] text-[#94A3B8]" : "bg-white/10 text-white/35"}`}>
-                          Sin horarios
-                        </span>
-                      ) : (
-                        <>
-                          {dayGroup.slots.length > 0 && (
-                            <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 font-body text-xs font-semibold ${isActive ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#35C56A]/20 text-[#9AF0B8]"}`}>
-                              <span className="text-[10px]">●</span> {dayGroup.slots.length}
-                            </span>
-                          )}
-                          {optionCount > 0 && (
-                            <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 font-body text-xs font-semibold ${isActive ? "bg-[#F3EEFF] text-[#7A4FD6]" : "bg-[#7A4FD6]/25 text-[#D8C8FF]"}`}>
-                              <span className="text-[10px]">●</span> {optionCount}
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+          <div
+            className="atlas-subgroup-days"
+            role="tablist"
+            aria-label="Días de subgrupos"
+            onKeyDown={(event) => {
+              if (
+                !["ArrowRight", "ArrowLeft", "Home", "End"].includes(
+                  event.key,
+                ) ||
+                !subgroupDayGroups.length
+              )
+                return;
+              event.preventDefault();
+              const index = subgroupDayGroups.findIndex(
+                (day) => day.key === expandedSubgroupDay,
+              );
+              const next =
+                event.key === "Home"
+                  ? 0
+                  : event.key === "End"
+                    ? subgroupDayGroups.length - 1
+                    : (Math.max(0, index) +
+                        (event.key === "ArrowRight" ? 1 : -1) +
+                        subgroupDayGroups.length) %
+                      subgroupDayGroups.length;
+              setExpandedSubgroupDay(subgroupDayGroups[next].key);
+              const target =
+                event.currentTarget.querySelectorAll<HTMLButtonElement>(
+                  "[role=tab]",
+                )[next];
+              target?.focus();
+              target?.scrollIntoView({ block: "nearest", inline: "nearest" });
+            }}
+          >
+            {subgroupDayGroups.map((dayGroup, index) => {
+              const active = expandedSubgroupDay === dayGroup.key;
+              const options = dayGroup.slots.reduce(
+                (total, slot) => total + slot.subgroups.length,
+                0,
+              );
+              return (
+                <button
+                  key={dayGroup.key}
+                  id={`atlas-subgroup-tab-${index}`}
+                  role="tab"
+                  aria-selected={active}
+                  aria-controls={`atlas-subgroup-panel-${dayGroup.key}`}
+                  tabIndex={
+                    active || (!expandedSubgroupDay && index === 0) ? 0 : -1
+                  }
+                  onClick={() => setExpandedSubgroupDay(dayGroup.key)}
+                >
+                  <span>Día {dayGroup.dayNumber}</span>
+                  <strong>{dayGroup.label}</strong>
+                  <small>
+                    {dayGroup.slots.length
+                      ? `${dayGroup.slots.length} horario(s) · ${options} opción(es)`
+                      : "Sin horarios"}
+                  </small>
+                </button>
+              );
+            })}
           </div>
 
           {/* Expanded day content */}
@@ -2443,640 +2541,611 @@ export function SubgroupSchedulePanel({
             if (!expanded) return null;
 
             return (
-              <div key={dayGroup.key} className="space-y-5">
-                    {dayGroup.slots.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white px-5 py-8 text-center">
-                        <p className="font-semibold text-[#1E0A4E]">
-                          Sin horarios para este dia.
-                        </p>
-                        <p className="mt-1 text-sm text-[#64748B]">
-                          Crea un horario de subgrupos cuando necesiten
-                          dividirse.
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        {dayGroup.slots.map((slot) => {
-                          const myMembership = slot.memberships.find(
-                            (membership) => {
-                              const mUid =
-                                membership.user_id != null
-                                  ? String(membership.user_id)
-                                  : String(membership.usuarios?.id_usuario);
-                              return String(mUid) === String(myUserId);
-                            },
-                          );
-                          const mySubgroupId =
-                            myMembership?.subgroup_id != null
-                              ? String(myMembership.subgroup_id)
-                              : null;
-                          const mySubgroup = slot.subgroups.find(
-                            (sg) =>
-                              mySubgroupId != null &&
-                              String(sg.id) === mySubgroupId,
-                          );
-                          const freeBusy =
-                            actionBusyKey === `join:${slot.id}:free`;
-                          const deleteSlotBusy =
-                            actionBusyKey === `slot-delete:${slot.id}`;
-                          const slotActionsBusy = actionBusyKey != null;
+              <div
+                key={dayGroup.key}
+                id={`atlas-subgroup-panel-${dayGroup.key}`}
+                role="tabpanel"
+                aria-label={dayGroup.label}
+                className="space-y-5"
+              >
+                {dayGroup.slots.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white px-5 py-8 text-center">
+                    <p className="font-semibold text-[#1E0A4E]">
+                      Sin horarios para este dia.
+                    </p>
+                    <p className="mt-1 text-sm text-[#64748B]">
+                      Crea un horario de subgrupos cuando necesiten dividirse.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {dayGroup.slots.map((slot) => {
+                      const myMembership = slot.memberships.find(
+                        (membership) => {
+                          const mUid =
+                            membership.user_id != null
+                              ? String(membership.user_id)
+                              : String(membership.usuarios?.id_usuario);
+                          return String(mUid) === String(myUserId);
+                        },
+                      );
+                      const mySubgroupId =
+                        myMembership?.subgroup_id != null
+                          ? String(myMembership.subgroup_id)
+                          : null;
+                      const mySubgroup = slot.subgroups.find(
+                        (sg) =>
+                          mySubgroupId != null &&
+                          String(sg.id) === mySubgroupId,
+                      );
+                      const freeBusy = actionBusyKey === `join:${slot.id}:free`;
+                      const deleteSlotBusy =
+                        actionBusyKey === `slot-delete:${slot.id}`;
+                      const slotActionsBusy = actionBusyKey != null;
 
-                          return (
-                            <section
-                              key={slot.id}
-                              ref={(element) => {
-                                slotCardRefs.current[slot.id] = element;
-                              }}
-                              className="overflow-hidden rounded-[28px] border border-[#E2E8F0] bg-white shadow-[0_18px_52px_rgba(30,10,78,0.06)]"
-                            >
-                              <div className="border-b border-[#EEF2F7] bg-[linear-gradient(135deg,rgba(248,250,252,0.98),rgba(244,241,255,0.92))] px-6 py-5">
-                                <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-                                  <div className="space-y-3">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <span className="rounded-full border border-[#D7DEEA] bg-white px-3 py-1 text-xs font-semibold text-[#475569]">
-                                        Horario libre
-                                      </span>
-                                      <span className="rounded-full border border-[#D8C8FF] bg-[#F3EEFF] px-3 py-1 text-xs font-semibold text-[#6D45C0]">
-                                        {dt(slot.starts_at)} -{" "}
-                                        {dt(slot.ends_at)}
-                                      </span>
-                                    </div>
-                                    <div>
-                                      <h3 className="font-heading text-2xl text-[#1E0A4E]">
-                                        {slot.title}
-                                      </h3>
-                                      <p className="mt-1 text-sm text-[#64748B]">
-                                        Tu estado actual:{" "}
-                                        <span className="font-semibold text-[#1E0A4E]">
-                                          {mySubgroup
-                                            ? `En ${mySubgroup.name}`
-                                            : "Libre"}
-                                        </span>
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  <div className="flex flex-wrap items-center gap-3">
-                                    <button
-                                      type="button"
-                                      disabled={slotActionsBusy}
-                                      aria-busy={freeBusy}
-                                      onClick={() => void onJoin(slot.id, null)}
-                                      className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-[#D7DEEA] bg-white px-5 text-sm font-semibold text-[#1E0A4E] transition hover:border-[#1E6FD9] hover:text-[#1E6FD9] disabled:cursor-not-allowed disabled:opacity-60"
-                                    >
-                                      {freeBusy && <InlineSpinner size={14} />}
-                                      {freeBusy
-                                        ? "Guardando..."
-                                        : myMembership?.subgroup_id
-                                          ? "Quedar libre"
-                                          : "Estoy libre"}
-                                    </button>
-                                    {isAdmin && !isSlotInPastDay(slot) && (
-                                      <>
-                                        <button
-                                          type="button"
-                                          disabled={slotActionsBusy}
-                                          onClick={() =>
-                                            openEditSlotModal(slot)
-                                          }
-                                          className="inline-flex min-h-[52px] items-center justify-center rounded-2xl border border-[#D7DEEA] bg-white px-5 text-sm font-semibold text-[#475569] disabled:cursor-not-allowed disabled:opacity-60"
-                                        >
-                                          Editar horario
-                                        </button>
-                                        <button
-                                          type="button"
-                                          disabled={slotActionsBusy}
-                                          aria-busy={deleteSlotBusy}
-                                          onClick={() =>
-                                            void onDeleteSlot(slot.id)
-                                          }
-                                          className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-red-200 bg-[#FFF5F5] px-5 text-sm font-semibold text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
-                                        >
-                                          {deleteSlotBusy && (
-                                            <InlineSpinner size={14} />
-                                          )}
-                                          {deleteSlotBusy
-                                            ? "Eliminando..."
-                                            : "Eliminar"}
-                                        </button>
-                                      </>
-                                    )}
-                                  </div>
+                      return (
+                        <section
+                          key={slot.id}
+                          ref={(element) => {
+                            slotCardRefs.current[slot.id] = element;
+                          }}
+                          className="overflow-hidden rounded-[28px] border border-[#E2E8F0] bg-white shadow-[0_18px_52px_rgba(30,10,78,0.06)]"
+                        >
+                          <div className="border-b border-[#EEF2F7] bg-[linear-gradient(135deg,rgba(248,250,252,0.98),rgba(244,241,255,0.92))] px-6 py-5">
+                            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                              <div className="space-y-3">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="rounded-full border border-[#D7DEEA] bg-white px-3 py-1 text-xs font-semibold text-[#475569]">
+                                    Horario libre
+                                  </span>
+                                  <span className="rounded-full border border-[#D8C8FF] bg-[#F3EEFF] px-3 py-1 text-xs font-semibold text-[#6D45C0]">
+                                    {dt(slot.starts_at)} - {dt(slot.ends_at)}
+                                  </span>
+                                </div>
+                                <div>
+                                  <h3 className="font-heading text-2xl text-[#1E0A4E]">
+                                    {slot.title}
+                                  </h3>
+                                  <p className="mt-1 text-sm text-[#64748B]">
+                                    Tu estado actual:{" "}
+                                    <span className="font-semibold text-[#1E0A4E]">
+                                      {mySubgroup
+                                        ? `En ${mySubgroup.name}`
+                                        : "Libre"}
+                                    </span>
+                                  </p>
                                 </div>
                               </div>
 
-                              <div className="px-6 py-6">
-                                <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                                  <div>
-                                    <h4 className="font-heading text-lg text-[#1E0A4E]">
-                                      Planes disponibles
-                                    </h4>
-                                    <p className="mt-1 text-sm text-[#64748B]">
-                                      Cada opcion funciona como una mini
-                                      actividad dentro de este bloque del viaje.
-                                    </p>
-                                  </div>
-                                  {!isSlotInPastDay(slot) && (
+                              <div className="flex flex-wrap items-center gap-3">
+                                <button
+                                  type="button"
+                                  disabled={slotActionsBusy}
+                                  aria-busy={freeBusy}
+                                  onClick={() => void onJoin(slot.id, null)}
+                                  className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-[#D7DEEA] bg-white px-5 text-sm font-semibold text-[#1E0A4E] transition hover:border-[#1E6FD9] hover:text-[#1E6FD9] disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                  {freeBusy && <InlineSpinner size={14} />}
+                                  {freeBusy
+                                    ? "Guardando..."
+                                    : myMembership?.subgroup_id
+                                      ? "Quedar libre"
+                                      : "Estoy libre"}
+                                </button>
+                                {isAdmin && !isSlotInPastDay(slot) && (
+                                  <>
                                     <button
                                       type="button"
                                       disabled={slotActionsBusy}
-                                      onClick={() =>
-                                        openCreateSubgroupModal(slot)
-                                      }
-                                      className="inline-flex items-center justify-center rounded-2xl bg-[#1E6FD9] px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                      onClick={() => openEditSlotModal(slot)}
+                                      className="inline-flex min-h-[52px] items-center justify-center rounded-2xl border border-[#D7DEEA] bg-white px-5 text-sm font-semibold text-[#475569] disabled:cursor-not-allowed disabled:opacity-60"
                                     >
-                                      {isAdmin
-                                        ? "Agregar opcion"
-                                        : "Proponer opcion"}
+                                      Editar horario
                                     </button>
-                                  )}
-                                </div>
+                                    <button
+                                      type="button"
+                                      disabled={slotActionsBusy}
+                                      aria-busy={deleteSlotBusy}
+                                      onClick={() => void onDeleteSlot(slot.id)}
+                                      className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-red-200 bg-[#FFF5F5] px-5 text-sm font-semibold text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                      {deleteSlotBusy && (
+                                        <InlineSpinner size={14} />
+                                      )}
+                                      {deleteSlotBusy
+                                        ? "Eliminando..."
+                                        : "Eliminar"}
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
 
-                                {slot.subgroups.length === 0 ? (
-                                  <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-5 py-10 text-center">
-                                    <p className="font-semibold text-[#1E0A4E]">
-                                      Aun no hay planes dentro de este horario.
-                                    </p>
-                                    <p className="mt-1 text-sm text-[#64748B]">
-                                      Abre el modal y agrega una opcion con
-                                      lugar, hora y contexto para que el grupo
-                                      elija facil.
-                                    </p>
-                                  </div>
-                                ) : (
-                                  <div className="grid gap-5 xl:grid-cols-2">
-                                    {slot.subgroups.map((subgroup) => {
-                                      const canManageSubgroup =
-                                        isAdmin ||
-                                        Number(subgroup.created_by) ===
-                                          Number(myUserId);
-                                      const isMine =
-                                        mySubgroupId != null &&
-                                        String(mySubgroupId) ===
-                                          String(subgroup.id);
-                                      const joinBusy =
-                                        actionBusyKey ===
-                                        `join:${slot.id}:${subgroup.id}`;
-                                      const deleteSubgroupBusy =
-                                        actionBusyKey ===
-                                        `subgroup-delete:${slot.id}:${subgroup.id}`;
-                                      const expenseOpenBusy =
-                                        actionBusyKey ===
-                                        `expense-open:${slot.id}:${subgroup.id}`;
-                                      const documentOpenBusy =
-                                        actionBusyKey ===
-                                        `document-open:${slot.id}:${subgroup.id}`;
-                                      const chatOpenBusy =
-                                        actionBusyKey ===
-                                        `chat-open:${slot.id}:${subgroup.id}`;
-                                      const details = primaryActivity(subgroup);
-                                      const linkedContext =
-                                        getLinksForSubgroupActivity(
-                                          details?.id,
-                                        );
-                                      const linkedExpenses =
-                                        linkedContext.filter(
-                                          (entity) => entity.type === "expense",
-                                        );
-                                      const linkedDocuments =
-                                        linkedContext.filter(
-                                          (entity) =>
-                                            entity.type === "document",
-                                        );
-                                      const coverImage =
-                                        details?.id != null
-                                          ? subgroupPhotoByActivityId[
-                                              details.id
-                                            ] || fallbackSubgroupImage
-                                          : fallbackSubgroupImage;
-                                      const openEditWithContext = () =>
-                                        openEditSubgroupModal(slot, subgroup);
-                                      const openExpenseAssociationModal =
-                                        () => {
-                                          if (details?.id == null) return;
-                                          setActionBusyKey(
-                                            `expense-open:${slot.id}:${subgroup.id}`,
-                                          );
-                                          setDraftExpenseTab("associate");
-                                          openDraftActionModal(
-                                            slot.id,
-                                            "expense",
-                                            details.id,
-                                          );
-                                          window.setTimeout(
-                                            () =>
-                                              setActionBusyKey((current) =>
-                                                current ===
-                                                `expense-open:${slot.id}:${subgroup.id}`
-                                                  ? null
-                                                  : current,
-                                              ),
-                                            250,
-                                          );
-                                        };
-                                      const openDocumentAssociationModal =
-                                        () => {
-                                          if (details?.id == null) return;
-                                          setActionBusyKey(
-                                            `document-open:${slot.id}:${subgroup.id}`,
-                                          );
-                                          setDraftDocumentTab("associate");
-                                          openDraftActionModal(
-                                            slot.id,
-                                            "document",
-                                            details.id,
-                                          );
-                                          window.setTimeout(
-                                            () =>
-                                              setActionBusyKey((current) =>
-                                                current ===
-                                                `document-open:${slot.id}:${subgroup.id}`
-                                                  ? null
-                                                  : current,
-                                              ),
-                                            250,
-                                          );
-                                        };
-                                      const openChatForSubgroup = () => {
-                                        setActionBusyKey(
-                                          `chat-open:${slot.id}:${subgroup.id}`,
-                                        );
-                                        setChatSubgroup({
-                                          slotId: slot.id,
-                                          subgroupId: subgroup.id,
-                                          name: subgroup.name,
-                                        });
-                                        window.setTimeout(
-                                          () =>
-                                            setActionBusyKey((current) =>
-                                              current ===
-                                              `chat-open:${slot.id}:${subgroup.id}`
-                                                ? null
-                                                : current,
-                                            ),
-                                          250,
-                                        );
-                                      };
+                          <div className="px-6 py-6">
+                            <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                              <div>
+                                <h4 className="font-heading text-lg text-[#1E0A4E]">
+                                  Planes disponibles
+                                </h4>
+                                <p className="mt-1 text-sm text-[#64748B]">
+                                  Cada opcion funciona como una mini actividad
+                                  dentro de este bloque del viaje.
+                                </p>
+                              </div>
+                              {!isSlotInPastDay(slot) && (
+                                <button
+                                  type="button"
+                                  disabled={slotActionsBusy}
+                                  onClick={() => openCreateSubgroupModal(slot)}
+                                  className="inline-flex items-center justify-center rounded-2xl bg-[#1E6FD9] px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                  {isAdmin
+                                    ? "Agregar opcion"
+                                    : "Proponer opcion"}
+                                </button>
+                              )}
+                            </div>
 
-                                      return (
-                                        <article
-                                          key={subgroup.id}
-                                          ref={(element) => {
-                                            subgroupCardRefs.current[
-                                              `${slot.id}:${subgroup.id}`
-                                            ] = element;
-                                          }}
-                                          className={`overflow-hidden rounded-[24px] border bg-white shadow-[0_16px_40px_rgba(15,23,42,0.08)] ${
-                                            isMine
-                                              ? "border-[#1E6FD9]"
-                                              : "border-[#E2E8F0]"
-                                          }`}
-                                        >
-                                          <div className="relative min-h-[280px] overflow-hidden">
-                                            <img
-                                              src={coverImage}
-                                              alt={
-                                                details?.title ?? subgroup.name
-                                              }
-                                              className="absolute inset-0 h-full w-full object-cover"
-                                            />
-                                            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(14,11,33,0.12),rgba(14,11,33,0.78))]" />
-                                            <div className="relative flex h-full min-h-[280px] flex-col justify-between p-5 text-white">
-                                              <div className="flex flex-wrap items-start justify-between gap-3">
-                                                <div className="flex flex-wrap gap-2">
-                                                  <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">
-                                                    Subgrupo
-                                                  </span>
-                                                  {details?.starts_at && (
-                                                    <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">
-                                                      {dt(details.starts_at)}
-                                                    </span>
-                                                  )}
-                                                  {isMine && (
-                                                    <span className="rounded-full bg-[#35C56A] px-3 py-1 text-xs font-semibold text-white">
-                                                      Tu opcion
-                                                    </span>
-                                                  )}
+                            {slot.subgroups.length === 0 ? (
+                              <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-5 py-10 text-center">
+                                <p className="font-semibold text-[#1E0A4E]">
+                                  Aun no hay planes dentro de este horario.
+                                </p>
+                                <p className="mt-1 text-sm text-[#64748B]">
+                                  Abre el modal y agrega una opcion con lugar,
+                                  hora y contexto para que el grupo elija facil.
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="grid gap-5 xl:grid-cols-2">
+                                {slot.subgroups.map((subgroup) => {
+                                  const canManageSubgroup =
+                                    isAdmin ||
+                                    Number(subgroup.created_by) ===
+                                      Number(myUserId);
+                                  const isMine =
+                                    mySubgroupId != null &&
+                                    String(mySubgroupId) ===
+                                      String(subgroup.id);
+                                  const joinBusy =
+                                    actionBusyKey ===
+                                    `join:${slot.id}:${subgroup.id}`;
+                                  const deleteSubgroupBusy =
+                                    actionBusyKey ===
+                                    `subgroup-delete:${slot.id}:${subgroup.id}`;
+                                  const expenseOpenBusy =
+                                    actionBusyKey ===
+                                    `expense-open:${slot.id}:${subgroup.id}`;
+                                  const documentOpenBusy =
+                                    actionBusyKey ===
+                                    `document-open:${slot.id}:${subgroup.id}`;
+                                  const chatOpenBusy =
+                                    actionBusyKey ===
+                                    `chat-open:${slot.id}:${subgroup.id}`;
+                                  const details = primaryActivity(subgroup);
+                                  const linkedContext =
+                                    getLinksForSubgroupActivity(details?.id);
+                                  const linkedExpenses = linkedContext.filter(
+                                    (entity) => entity.type === "expense",
+                                  );
+                                  const linkedDocuments = linkedContext.filter(
+                                    (entity) => entity.type === "document",
+                                  );
+                                  const coverImage =
+                                    details?.id != null
+                                      ? subgroupPhotoByActivityId[details.id] ||
+                                        fallbackSubgroupImage
+                                      : fallbackSubgroupImage;
+                                  const openEditWithContext = () =>
+                                    openEditSubgroupModal(slot, subgroup);
+                                  const openExpenseAssociationModal = () => {
+                                    if (details?.id == null) return;
+                                    setActionBusyKey(
+                                      `expense-open:${slot.id}:${subgroup.id}`,
+                                    );
+                                    setDraftExpenseTab("associate");
+                                    openDraftActionModal(
+                                      slot.id,
+                                      "expense",
+                                      details.id,
+                                    );
+                                    window.setTimeout(
+                                      () =>
+                                        setActionBusyKey((current) =>
+                                          current ===
+                                          `expense-open:${slot.id}:${subgroup.id}`
+                                            ? null
+                                            : current,
+                                        ),
+                                      250,
+                                    );
+                                  };
+                                  const openDocumentAssociationModal = () => {
+                                    if (details?.id == null) return;
+                                    setActionBusyKey(
+                                      `document-open:${slot.id}:${subgroup.id}`,
+                                    );
+                                    setDraftDocumentTab("associate");
+                                    openDraftActionModal(
+                                      slot.id,
+                                      "document",
+                                      details.id,
+                                    );
+                                    window.setTimeout(
+                                      () =>
+                                        setActionBusyKey((current) =>
+                                          current ===
+                                          `document-open:${slot.id}:${subgroup.id}`
+                                            ? null
+                                            : current,
+                                        ),
+                                      250,
+                                    );
+                                  };
+                                  const openChatForSubgroup = () => {
+                                    setActionBusyKey(
+                                      `chat-open:${slot.id}:${subgroup.id}`,
+                                    );
+                                    setChatSubgroup({
+                                      slotId: slot.id,
+                                      subgroupId: subgroup.id,
+                                      name: subgroup.name,
+                                    });
+                                    window.setTimeout(
+                                      () =>
+                                        setActionBusyKey((current) =>
+                                          current ===
+                                          `chat-open:${slot.id}:${subgroup.id}`
+                                            ? null
+                                            : current,
+                                        ),
+                                      250,
+                                    );
+                                  };
+
+                                  return (
+                                    <article
+                                      key={subgroup.id}
+                                      ref={(element) => {
+                                        subgroupCardRefs.current[
+                                          `${slot.id}:${subgroup.id}`
+                                        ] = element;
+                                      }}
+                                      className={`overflow-hidden rounded-[24px] border bg-white shadow-[0_16px_40px_rgba(15,23,42,0.08)] ${
+                                        isMine
+                                          ? "border-[#1E6FD9]"
+                                          : "border-[#E2E8F0]"
+                                      }`}
+                                    >
+                                      <div className="relative min-h-[280px] overflow-hidden">
+                                        <img
+                                          src={coverImage}
+                                          alt={details?.title ?? subgroup.name}
+                                          className="absolute inset-0 h-full w-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(14,11,33,0.12),rgba(14,11,33,0.78))]" />
+                                        <div className="relative flex h-full min-h-[280px] flex-col justify-between p-5 text-white">
+                                          <div className="flex flex-wrap items-start justify-between gap-3">
+                                            <div className="flex flex-wrap gap-2">
+                                              <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">
+                                                Subgrupo
+                                              </span>
+                                              {details?.starts_at && (
+                                                <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">
+                                                  {dt(details.starts_at)}
+                                                </span>
+                                              )}
+                                              {isMine && (
+                                                <span className="rounded-full bg-[#35C56A] px-3 py-1 text-xs font-semibold text-white">
+                                                  Tu opcion
+                                                </span>
+                                              )}
+                                            </div>
+                                            {canManageSubgroup &&
+                                              !isSlotInPastDay(slot) && (
+                                                <div className="flex gap-2">
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      openEditSubgroupModal(
+                                                        slot,
+                                                        subgroup,
+                                                      )
+                                                    }
+                                                    className="rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur"
+                                                  >
+                                                    Editar
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    disabled={slotActionsBusy}
+                                                    aria-busy={
+                                                      deleteSubgroupBusy
+                                                    }
+                                                    onClick={() =>
+                                                      void onDeleteSubgroup(
+                                                        slot.id,
+                                                        subgroup.id,
+                                                      )
+                                                    }
+                                                    className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-[#8B1E3F]/60 px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                                                  >
+                                                    {deleteSubgroupBusy && (
+                                                      <InlineSpinner
+                                                        size={12}
+                                                      />
+                                                    )}
+                                                    {deleteSubgroupBusy
+                                                      ? "Eliminando..."
+                                                      : "Eliminar"}
+                                                  </button>
                                                 </div>
-                                                {canManageSubgroup &&
-                                                  !isSlotInPastDay(slot) && (
-                                                    <div className="flex gap-2">
-                                                      <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                          openEditSubgroupModal(
-                                                            slot,
-                                                            subgroup,
-                                                          )
-                                                        }
-                                                        className="rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur"
-                                                      >
-                                                        Editar
-                                                      </button>
+                                              )}
+                                          </div>
+
+                                          <div>
+                                            <h5 className="font-heading text-[28px] leading-tight">
+                                              {details?.title ?? subgroup.name}
+                                            </h5>
+                                            {details?.location && (
+                                              <p className="mt-2 max-w-xl text-sm text-white/90">
+                                                {details.location}
+                                              </p>
+                                            )}
+                                            {details?.description && (
+                                              <p className="mt-2 max-w-xl text-sm leading-6 text-white/82">
+                                                {details.description}
+                                              </p>
+                                            )}
+                                          </div>
+
+                                          <div className="flex flex-wrap items-center gap-3 pt-4">
+                                            {!isSlotInPastDay(slot) && (
+                                              <button
+                                                type="button"
+                                                disabled={slotActionsBusy}
+                                                aria-busy={joinBusy}
+                                                onClick={() =>
+                                                  void onJoin(
+                                                    slot.id,
+                                                    subgroup.id,
+                                                  )
+                                                }
+                                                className={`inline-flex min-h-[54px] items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold shadow-[0_14px_28px_rgba(15,23,42,0.18)] disabled:cursor-not-allowed disabled:opacity-60 ${
+                                                  isMine
+                                                    ? "bg-white text-[#1E0A4E]"
+                                                    : "bg-[#1E6FD9] text-white"
+                                                }`}
+                                              >
+                                                {joinBusy && (
+                                                  <InlineSpinner size={14} />
+                                                )}
+                                                {joinBusy
+                                                  ? "Guardando..."
+                                                  : isMine
+                                                    ? "Estoy aqui"
+                                                    : "Unirme a este plan"}
+                                              </button>
+                                            )}
+                                            <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white/90 backdrop-blur">
+                                              {subgroup.members.length === 0
+                                                ? "Aun nadie se suma"
+                                                : `${subgroup.members.length} ${subgroup.members.length === 1 ? "persona ya esta dentro" : "personas ya estan dentro"}`}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div className="space-y-4 px-5 py-5">
+                                        <section className="rounded-2xl bg-[#F8FAFC] px-4 py-4">
+                                          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#64748B]">
+                                            Personas dentro
+                                          </p>
+                                          <MemberCircles
+                                            members={subgroup.members}
+                                          />
+                                          {subgroup.members.length > 0 && (
+                                            <p className="mt-3 text-sm leading-6 text-[#475569]">
+                                              {subgroup.members
+                                                .map(memberName)
+                                                .join(", ")}
+                                            </p>
+                                          )}
+                                        </section>
+
+                                        <div className="grid gap-2 sm:grid-cols-3">
+                                          <button
+                                            type="button"
+                                            disabled={slotActionsBusy}
+                                            aria-busy={expenseOpenBusy}
+                                            onClick={
+                                              details?.id != null
+                                                ? openExpenseAssociationModal
+                                                : openEditWithContext
+                                            }
+                                            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#CFE0FF] bg-[#EEF4FF] px-4 py-3 text-sm font-semibold text-[#1E6FD9] disabled:cursor-not-allowed disabled:opacity-60"
+                                          >
+                                            {expenseOpenBusy && (
+                                              <InlineSpinner size={14} />
+                                            )}
+                                            {expenseOpenBusy
+                                              ? "Abriendo..."
+                                              : linkedExpenses.length > 0
+                                                ? "Elegir gasto"
+                                                : "Agregar gasto"}
+                                          </button>
+                                          <button
+                                            type="button"
+                                            disabled={slotActionsBusy}
+                                            aria-busy={documentOpenBusy}
+                                            onClick={
+                                              details?.id != null
+                                                ? openDocumentAssociationModal
+                                                : openEditWithContext
+                                            }
+                                            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#D8C8FF] bg-[#F3EEFF] px-4 py-3 text-sm font-semibold text-[#6D45C0] disabled:cursor-not-allowed disabled:opacity-60"
+                                          >
+                                            {documentOpenBusy && (
+                                              <InlineSpinner size={14} />
+                                            )}
+                                            {documentOpenBusy
+                                              ? "Abriendo..."
+                                              : linkedDocuments.length > 0
+                                                ? "Elegir comprobante"
+                                                : "Agregar comprobante"}
+                                          </button>
+                                          <button
+                                            type="button"
+                                            disabled={slotActionsBusy}
+                                            aria-busy={chatOpenBusy}
+                                            onClick={openChatForSubgroup}
+                                            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#B9F0CB] bg-[#ECFDF5] px-4 py-3 text-sm font-semibold text-[#0A8A3E] disabled:cursor-not-allowed disabled:opacity-60"
+                                          >
+                                            {chatOpenBusy && (
+                                              <InlineSpinner size={14} />
+                                            )}
+                                            {chatOpenBusy
+                                              ? "Abriendo..."
+                                              : "Abrir chat"}
+                                          </button>
+                                        </div>
+
+                                        <section className="rounded-2xl border border-[#E2E8F0] bg-white px-4 py-4">
+                                          <div className="flex flex-wrap items-center justify-between gap-3">
+                                            <div>
+                                              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#64748B]">
+                                                Asociaciones confirmadas
+                                              </p>
+                                              <p className="mt-1 text-sm text-[#64748B]">
+                                                Estos gastos y comprobantes ya
+                                                estan vinculados a este
+                                                elemento.
+                                              </p>
+                                            </div>
+                                          </div>
+
+                                          {linkedContext.length === 0 ? (
+                                            <p className="mt-4 rounded-xl bg-[#F8FAFC] px-3 py-3 text-sm text-[#64748B]">
+                                              Aun no hay asociaciones
+                                              confirmadas.
+                                            </p>
+                                          ) : (
+                                            <div className="mt-4 flex flex-wrap gap-2">
+                                              {linkedExpenses.map((entity) => (
+                                                <button
+                                                  key={entityKey(entity)}
+                                                  type="button"
+                                                  onClick={
+                                                    openExpenseAssociationModal
+                                                  }
+                                                  className="rounded-full border border-[#CFE0FF] bg-[#EEF4FF] px-3 py-1.5 text-xs font-semibold text-[#1E6FD9]"
+                                                  title={entity.label}
+                                                >
+                                                  Gasto: {entity.label}
+                                                </button>
+                                              ))}
+                                              {linkedDocuments.map((entity) => (
+                                                <button
+                                                  key={entityKey(entity)}
+                                                  type="button"
+                                                  onClick={
+                                                    openDocumentAssociationModal
+                                                  }
+                                                  className="rounded-full border border-[#D8C8FF] bg-[#F3EEFF] px-3 py-1.5 text-xs font-semibold text-[#6D45C0]"
+                                                  title={entity.label}
+                                                >
+                                                  Documento: {entity.label}
+                                                </button>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </section>
+
+                                        {subgroup.activities.slice(1).length >
+                                          0 && (
+                                          <section className="rounded-2xl bg-[#F8FAFC] px-4 py-4">
+                                            <div className="mb-3 flex items-center justify-between gap-2">
+                                              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#64748B]">
+                                                Planes internos
+                                              </p>
+                                              <span className="text-xs text-[#94A3B8]">
+                                                {
+                                                  subgroup.activities.slice(1)
+                                                    .length
+                                                }{" "}
+                                                notas
+                                              </span>
+                                            </div>
+                                            <div className="space-y-2">
+                                              {subgroup.activities
+                                                .slice(1)
+                                                .map((activity) => (
+                                                  <div
+                                                    key={activity.id}
+                                                    className="flex items-center justify-between gap-3 rounded-xl border border-[#E2E8F0] bg-white px-3 py-3 text-sm text-[#334155]"
+                                                  >
+                                                    <div>
+                                                      <p className="font-semibold text-[#1E0A4E]">
+                                                        {activity.title}
+                                                      </p>
+                                                      {activity.description && (
+                                                        <p className="mt-1 text-xs text-[#64748B]">
+                                                          {activity.description}
+                                                        </p>
+                                                      )}
+                                                    </div>
+                                                    {(isAdmin ||
+                                                      Number(
+                                                        activity.created_by,
+                                                      ) ===
+                                                        Number(myUserId)) && (
                                                       <button
                                                         type="button"
                                                         disabled={
                                                           slotActionsBusy
                                                         }
                                                         aria-busy={
-                                                          deleteSubgroupBusy
+                                                          actionBusyKey ===
+                                                          `activity-delete:${slot.id}:${activity.id}`
                                                         }
                                                         onClick={() =>
-                                                          void onDeleteSubgroup(
+                                                          void onDeleteActivity(
                                                             slot.id,
-                                                            subgroup.id,
+                                                            activity.id,
                                                           )
                                                         }
-                                                        className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-[#8B1E3F]/60 px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                                                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                                                       >
-                                                        {deleteSubgroupBusy && (
+                                                        {actionBusyKey ===
+                                                          `activity-delete:${slot.id}:${activity.id}` && (
                                                           <InlineSpinner
                                                             size={12}
                                                           />
                                                         )}
-                                                        {deleteSubgroupBusy
+                                                        {actionBusyKey ===
+                                                        `activity-delete:${slot.id}:${activity.id}`
                                                           ? "Eliminando..."
                                                           : "Eliminar"}
                                                       </button>
-                                                    </div>
-                                                  )}
-                                              </div>
-
-                                              <div>
-                                                <h5 className="font-heading text-[28px] leading-tight">
-                                                  {details?.title ??
-                                                    subgroup.name}
-                                                </h5>
-                                                {details?.location && (
-                                                  <p className="mt-2 max-w-xl text-sm text-white/90">
-                                                    {details.location}
-                                                  </p>
-                                                )}
-                                                {details?.description && (
-                                                  <p className="mt-2 max-w-xl text-sm leading-6 text-white/82">
-                                                    {details.description}
-                                                  </p>
-                                                )}
-                                              </div>
-
-                                              <div className="flex flex-wrap items-center gap-3 pt-4">
-                                                {!isSlotInPastDay(slot) && (
-                                                  <button
-                                                    type="button"
-                                                    disabled={slotActionsBusy}
-                                                    aria-busy={joinBusy}
-                                                    onClick={() =>
-                                                      void onJoin(
-                                                        slot.id,
-                                                        subgroup.id,
-                                                      )
-                                                    }
-                                                    className={`inline-flex min-h-[54px] items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold shadow-[0_14px_28px_rgba(15,23,42,0.18)] disabled:cursor-not-allowed disabled:opacity-60 ${
-                                                      isMine
-                                                        ? "bg-white text-[#1E0A4E]"
-                                                        : "bg-[#1E6FD9] text-white"
-                                                    }`}
-                                                  >
-                                                    {joinBusy && (
-                                                      <InlineSpinner
-                                                        size={14}
-                                                      />
                                                     )}
-                                                    {joinBusy
-                                                      ? "Guardando..."
-                                                      : isMine
-                                                        ? "Estoy aqui"
-                                                        : "Unirme a este plan"}
-                                                  </button>
-                                                )}
-                                                <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white/90 backdrop-blur">
-                                                  {subgroup.members.length === 0
-                                                    ? "Aun nadie se suma"
-                                                    : `${subgroup.members.length} ${subgroup.members.length === 1 ? "persona ya esta dentro" : "personas ya estan dentro"}`}
-                                                </div>
-                                              </div>
+                                                  </div>
+                                                ))}
                                             </div>
-                                          </div>
-
-                                          <div className="space-y-4 px-5 py-5">
-                                            <section className="rounded-2xl bg-[#F8FAFC] px-4 py-4">
-                                              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#64748B]">
-                                                Personas dentro
-                                              </p>
-                                              <MemberCircles
-                                                members={subgroup.members}
-                                              />
-                                              {subgroup.members.length > 0 && (
-                                                <p className="mt-3 text-sm leading-6 text-[#475569]">
-                                                  {subgroup.members
-                                                    .map(memberName)
-                                                    .join(", ")}
-                                                </p>
-                                              )}
-                                            </section>
-
-                                            <div className="grid gap-2 sm:grid-cols-3">
-                                              <button
-                                                type="button"
-                                                disabled={slotActionsBusy}
-                                                aria-busy={expenseOpenBusy}
-                                                onClick={
-                                                  details?.id != null
-                                                    ? openExpenseAssociationModal
-                                                    : openEditWithContext
-                                                }
-                                                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#CFE0FF] bg-[#EEF4FF] px-4 py-3 text-sm font-semibold text-[#1E6FD9] disabled:cursor-not-allowed disabled:opacity-60"
-                                              >
-                                                {expenseOpenBusy && (
-                                                  <InlineSpinner size={14} />
-                                                )}
-                                                {expenseOpenBusy
-                                                  ? "Abriendo..."
-                                                  : linkedExpenses.length > 0
-                                                    ? "Elegir gasto"
-                                                    : "Agregar gasto"}
-                                              </button>
-                                              <button
-                                                type="button"
-                                                disabled={slotActionsBusy}
-                                                aria-busy={documentOpenBusy}
-                                                onClick={
-                                                  details?.id != null
-                                                    ? openDocumentAssociationModal
-                                                    : openEditWithContext
-                                                }
-                                                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#D8C8FF] bg-[#F3EEFF] px-4 py-3 text-sm font-semibold text-[#6D45C0] disabled:cursor-not-allowed disabled:opacity-60"
-                                              >
-                                                {documentOpenBusy && (
-                                                  <InlineSpinner size={14} />
-                                                )}
-                                                {documentOpenBusy
-                                                  ? "Abriendo..."
-                                                  : linkedDocuments.length > 0
-                                                    ? "Elegir comprobante"
-                                                    : "Agregar comprobante"}
-                                              </button>
-                                              <button
-                                                type="button"
-                                                disabled={slotActionsBusy}
-                                                aria-busy={chatOpenBusy}
-                                                onClick={openChatForSubgroup}
-                                                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#B9F0CB] bg-[#ECFDF5] px-4 py-3 text-sm font-semibold text-[#0A8A3E] disabled:cursor-not-allowed disabled:opacity-60"
-                                              >
-                                                {chatOpenBusy && (
-                                                  <InlineSpinner size={14} />
-                                                )}
-                                                {chatOpenBusy
-                                                  ? "Abriendo..."
-                                                  : "Abrir chat"}
-                                              </button>
-                                            </div>
-
-                                            <section className="rounded-2xl border border-[#E2E8F0] bg-white px-4 py-4">
-                                              <div className="flex flex-wrap items-center justify-between gap-3">
-                                                <div>
-                                                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#64748B]">
-                                                    Asociaciones confirmadas
-                                                  </p>
-                                                  <p className="mt-1 text-sm text-[#64748B]">
-                                                    Estos gastos y comprobantes
-                                                    ya estan vinculados a este
-                                                    elemento.
-                                                  </p>
-                                                </div>
-                                              </div>
-
-                                              {linkedContext.length === 0 ? (
-                                                <p className="mt-4 rounded-xl bg-[#F8FAFC] px-3 py-3 text-sm text-[#64748B]">
-                                                  Aun no hay asociaciones
-                                                  confirmadas.
-                                                </p>
-                                              ) : (
-                                                <div className="mt-4 flex flex-wrap gap-2">
-                                                  {linkedExpenses.map(
-                                                    (entity) => (
-                                                      <button
-                                                        key={entityKey(entity)}
-                                                        type="button"
-                                                        onClick={
-                                                          openExpenseAssociationModal
-                                                        }
-                                                        className="rounded-full border border-[#CFE0FF] bg-[#EEF4FF] px-3 py-1.5 text-xs font-semibold text-[#1E6FD9]"
-                                                        title={entity.label}
-                                                      >
-                                                        Gasto: {entity.label}
-                                                      </button>
-                                                    ),
-                                                  )}
-                                                  {linkedDocuments.map(
-                                                    (entity) => (
-                                                      <button
-                                                        key={entityKey(entity)}
-                                                        type="button"
-                                                        onClick={
-                                                          openDocumentAssociationModal
-                                                        }
-                                                        className="rounded-full border border-[#D8C8FF] bg-[#F3EEFF] px-3 py-1.5 text-xs font-semibold text-[#6D45C0]"
-                                                        title={entity.label}
-                                                      >
-                                                        Documento:{" "}
-                                                        {entity.label}
-                                                      </button>
-                                                    ),
-                                                  )}
-                                                </div>
-                                              )}
-                                            </section>
-
-                                            {subgroup.activities.slice(1)
-                                              .length > 0 && (
-                                              <section className="rounded-2xl bg-[#F8FAFC] px-4 py-4">
-                                                <div className="mb-3 flex items-center justify-between gap-2">
-                                                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#64748B]">
-                                                    Planes internos
-                                                  </p>
-                                                  <span className="text-xs text-[#94A3B8]">
-                                                    {
-                                                      subgroup.activities.slice(
-                                                        1,
-                                                      ).length
-                                                    }{" "}
-                                                    notas
-                                                  </span>
-                                                </div>
-                                                <div className="space-y-2">
-                                                  {subgroup.activities
-                                                    .slice(1)
-                                                    .map((activity) => (
-                                                      <div
-                                                        key={activity.id}
-                                                        className="flex items-center justify-between gap-3 rounded-xl border border-[#E2E8F0] bg-white px-3 py-3 text-sm text-[#334155]"
-                                                      >
-                                                        <div>
-                                                          <p className="font-semibold text-[#1E0A4E]">
-                                                            {activity.title}
-                                                          </p>
-                                                          {activity.description && (
-                                                            <p className="mt-1 text-xs text-[#64748B]">
-                                                              {
-                                                                activity.description
-                                                              }
-                                                            </p>
-                                                          )}
-                                                        </div>
-                                                        {(isAdmin ||
-                                                          Number(
-                                                            activity.created_by,
-                                                          ) ===
-                                                            Number(
-                                                              myUserId,
-                                                            )) && (
-                                                          <button
-                                                            type="button"
-                                                            disabled={
-                                                              slotActionsBusy
-                                                            }
-                                                            aria-busy={
-                                                              actionBusyKey ===
-                                                              `activity-delete:${slot.id}:${activity.id}`
-                                                            }
-                                                            onClick={() =>
-                                                              void onDeleteActivity(
-                                                                slot.id,
-                                                                activity.id,
-                                                              )
-                                                            }
-                                                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
-                                                          >
-                                                            {actionBusyKey ===
-                                                              `activity-delete:${slot.id}:${activity.id}` && (
-                                                              <InlineSpinner
-                                                                size={12}
-                                                              />
-                                                            )}
-                                                            {actionBusyKey ===
-                                                            `activity-delete:${slot.id}:${activity.id}`
-                                                              ? "Eliminando..."
-                                                              : "Eliminar"}
-                                                          </button>
-                                                        )}
-                                                      </div>
-                                                    ))}
-                                                </div>
-                                              </section>
-                                            )}
-                                          </div>
-                                        </article>
-                                      );
-                                    })}
-                                  </div>
-                                )}
+                                          </section>
+                                        )}
+                                      </div>
+                                    </article>
+                                  );
+                                })}
                               </div>
-                            </section>
-                          );
-                        })}
-                      </>
-                    )}
+                            )}
+                          </div>
+                        </section>
+                      );
+                    })}
+                  </>
+                )}
               </div>
             );
           })}
@@ -3493,81 +3562,81 @@ export function SubgroupSchedulePanel({
                       </p>
                     )}
                     <div className="max-h-[320px] overflow-y-auto rounded-2xl border border-[#E2E8F0] bg-white">
-                    {(subgroupModalDraft.selectedPlace
-                      ? [subgroupModalDraft.selectedPlace]
-                      : subgroupModalDraft.results
-                    ).map((place) => {
-                      const isSelected =
-                        subgroupModalDraft.selectedPlace?.id === place.id;
-                      return (
-                        <button
-                          key={
-                            place.id ||
-                            `${place.name}-${place.formattedAddress}`
-                          }
-                          type="button"
-                          onClick={() =>
-                            setActivityDraft(subgroupModalSlot.id, {
-                              selectedPlace: place,
-                            })
-                          }
-                          className={`block w-full border-b border-[#EEF2F7] px-4 py-4 text-left last:border-b-0 ${
-                            isSelected ? "bg-[#EEF4FF]" : "hover:bg-[#F8FAFC]"
-                          }`}
-                        >
-                          <p className="text-sm font-semibold text-[#1E0A4E]">
-                            {place.name || "Lugar sin nombre"}
-                          </p>
-                          <p className="mt-1 text-sm text-[#64748B]">
-                            {place.formattedAddress ||
-                              "Direccion no disponible"}
-                          </p>
-                          {place.routeDurationSeconds != null &&
-                            place.routeDurationSeconds >
-                              LONG_ROUTE_THRESHOLD_SECONDS && (
-                              <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-red-700">
-                                <span className="text-red-600">
-                                  <svg
-                                    width="11"
-                                    height="11"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    aria-hidden="true"
-                                  >
-                                    <path
-                                      d="M12 8v5"
-                                      stroke="currentColor"
-                                      strokeWidth="2.4"
-                                      strokeLinecap="round"
-                                    />
-                                    <path
-                                      d="M12 17h.01"
-                                      stroke="currentColor"
-                                      strokeWidth="3"
-                                      strokeLinecap="round"
-                                    />
-                                    <path
-                                      d="M10.3 4.1 2.6 17.4A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.6L13.7 4.1a2 2 0 0 0-3.4 0Z"
-                                      stroke="currentColor"
-                                      strokeWidth="2"
-                                      strokeLinejoin="round"
-                                    />
-                                  </svg>
-                                </span>
-                                A mas de 1 hora
-                                {place.routeDurationText
-                                  ? ` (${place.routeDurationText})`
-                                  : ""}
+                      {(subgroupModalDraft.selectedPlace
+                        ? [subgroupModalDraft.selectedPlace]
+                        : subgroupModalDraft.results
+                      ).map((place) => {
+                        const isSelected =
+                          subgroupModalDraft.selectedPlace?.id === place.id;
+                        return (
+                          <button
+                            key={
+                              place.id ||
+                              `${place.name}-${place.formattedAddress}`
+                            }
+                            type="button"
+                            onClick={() =>
+                              setActivityDraft(subgroupModalSlot.id, {
+                                selectedPlace: place,
+                              })
+                            }
+                            className={`block w-full border-b border-[#EEF2F7] px-4 py-4 text-left last:border-b-0 ${
+                              isSelected ? "bg-[#EEF4FF]" : "hover:bg-[#F8FAFC]"
+                            }`}
+                          >
+                            <p className="text-sm font-semibold text-[#1E0A4E]">
+                              {place.name || "Lugar sin nombre"}
+                            </p>
+                            <p className="mt-1 text-sm text-[#64748B]">
+                              {place.formattedAddress ||
+                                "Direccion no disponible"}
+                            </p>
+                            {place.routeDurationSeconds != null &&
+                              place.routeDurationSeconds >
+                                LONG_ROUTE_THRESHOLD_SECONDS && (
+                                <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-red-700">
+                                  <span className="text-red-600">
+                                    <svg
+                                      width="11"
+                                      height="11"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      aria-hidden="true"
+                                    >
+                                      <path
+                                        d="M12 8v5"
+                                        stroke="currentColor"
+                                        strokeWidth="2.4"
+                                        strokeLinecap="round"
+                                      />
+                                      <path
+                                        d="M12 17h.01"
+                                        stroke="currentColor"
+                                        strokeWidth="3"
+                                        strokeLinecap="round"
+                                      />
+                                      <path
+                                        d="M10.3 4.1 2.6 17.4A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.6L13.7 4.1a2 2 0 0 0-3.4 0Z"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                  </span>
+                                  A mas de 1 hora
+                                  {place.routeDurationText
+                                    ? ` (${place.routeDurationText})`
+                                    : ""}
+                                </p>
+                              )}
+                            {place.primaryCategory && (
+                              <p className="mt-2 text-xs font-semibold text-[#1E6FD9]">
+                                {place.primaryCategory}
                               </p>
                             )}
-                          {place.primaryCategory && (
-                            <p className="mt-2 text-xs font-semibold text-[#1E6FD9]">
-                              {place.primaryCategory}
-                            </p>
-                          )}
-                        </button>
-                      );
-                    })}
+                          </button>
+                        );
+                      })}
                     </div>
                   </>
                 )}
@@ -3580,9 +3649,10 @@ export function SubgroupSchedulePanel({
                   Agregar gasto o comprobante
                 </p>
                 <p className="mt-1 text-sm leading-6 text-[#64748B]">
-                  Asocia gastos existentes y comprobantes (tickets, reservaciones,
-                  recibos) para esta opcion. Si necesitas registrar un gasto nuevo,
-                  primero crea la opcion y despues usa su boton de gasto.
+                  Asocia gastos existentes y comprobantes (tickets,
+                  reservaciones, recibos) para esta opcion. Si necesitas
+                  registrar un gasto nuevo, primero crea la opcion y despues usa
+                  su boton de gasto.
                 </p>
                 <div className="mt-4 grid gap-2">
                   <button
@@ -3849,14 +3919,18 @@ export function SubgroupSchedulePanel({
             : "Durante la creacion de la opcion solo puedes asociar gastos ya registrados. Para evitar duplicados, crea gastos nuevos despues de guardar la opcion."
         }
         confirmLabel={
-          draftExpenseTab === "associate" || draftActionModal?.activityId == null
+          draftExpenseTab === "associate" ||
+          draftActionModal?.activityId == null
             ? "Guardar seleccion"
             : "Guardar gasto"
         }
         confirmLoading={actionBusyKey === "draft-expense"}
         onClose={closeDraftActionModal}
         onConfirm={() => {
-          if (draftExpenseTab === "associate" || draftActionModal?.activityId == null) {
+          if (
+            draftExpenseTab === "associate" ||
+            draftActionModal?.activityId == null
+          ) {
             if (draftActionModal?.activityId != null && modalDraft) {
               void runAction(async () => {
                 await syncDraftLinksForActivity(
@@ -3897,7 +3971,8 @@ export function SubgroupSchedulePanel({
             </button>
           )}
         </div>
-        {draftExpenseTab === "associate" || draftActionModal?.activityId == null ? (
+        {draftExpenseTab === "associate" ||
+        draftActionModal?.activityId == null ? (
           linkOptions.expenses.length === 0 ? (
             <p className="text-sm text-[#64748B]">
               No hay gastos registrados para asociar.
