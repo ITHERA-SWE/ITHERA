@@ -1346,6 +1346,22 @@ export function DashboardPage() {
     [days, getLinksForActivity],
   );
 
+  // Una entrada desde Explorar selecciona únicamente un día recibido del itinerario.
+  const dayRequest = useRef('');
+  const requestedDay = searchParams.get('day');
+  useEffect(() => {
+    const id = String(group?.id || '');
+    const request = `${id}:${requestedDay || ''}`;
+    const number = Number(requestedDay);
+    if (
+      !requestedDay || isLoading || id !== String(resolvedGroupId) ||
+      dayRequest.current === request || !days.some((d) => d.dayNumber === number)
+    ) return;
+    dayRequest.current = request;
+    setActiveDay(number);
+    setExpandedDay(number);
+  }, [requestedDay, group?.id, resolvedGroupId, days, isLoading]);
+
   const selectedDayWithContext =
     activeDay !== null
       ? daysWithContext.find((day) => day.dayNumber === activeDay)
