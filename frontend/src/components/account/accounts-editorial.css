@@ -1,0 +1,1176 @@
+/* Etapa 8: estilos limitados a las superficies de cuenta, personas y archivos. */
+.atlas-auth-screen,
+.atlas-account-page,
+.atlas-account-dialog,
+.atlas-vault {
+  --account-line: #e5e1ed;
+  --account-muted: #67627a;
+  font:
+    14px/1.6 "Plus Jakarta Sans",
+    sans-serif;
+  color: #1e0a4e;
+}
+.atlas-auth-screen *,
+.atlas-account-page *,
+.atlas-account-dialog *,
+.atlas-vault * {
+  box-sizing: border-box;
+  min-width: 0;
+}
+.atlas-auth-screen :focus-visible,
+.atlas-account-page :focus-visible,
+.atlas-account-dialog :focus-visible,
+.atlas-vault :focus-visible {
+  outline: 3px solid #1e6fd9;
+  outline-offset: 4px;
+}
+.atlas-auth-screen button,
+.atlas-account-page button,
+.atlas-account-dialog button,
+.atlas-vault button {
+  cursor: pointer;
+}
+.atlas-auth-screen button:disabled,
+.atlas-account-page button:disabled,
+.atlas-account-dialog button:disabled,
+.atlas-vault button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.atlas-account-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1.8;
+  text-transform: uppercase;
+  color: #4b2fa3;
+  margin: 0 0 14px;
+}
+.atlas-auth-screen {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.15fr);
+  min-height: 100dvh;
+  background: #fff;
+}
+.atlas-auth-story {
+  background: #1e0a4e;
+  color: #fff;
+  padding: 44px clamp(28px, 5vw, 80px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+.atlas-auth-story .atlas-account-eyebrow {
+  color: #d3c6f6;
+}
+.atlas-auth-story-copy {
+  padding: 65px 0 45px;
+  max-width: 440px;
+}
+.atlas-auth-story-copy h2 {
+  font:
+    400 clamp(46px, 4.5vw, 76px)/1.02 "Instrument Serif",
+    serif;
+  letter-spacing: -0.025em;
+  margin: 20px 0 28px;
+}
+.atlas-auth-story-copy em {
+  color: #d9cef7;
+}
+.atlas-auth-story-copy > p:last-of-type {
+  max-width: 315px;
+  color: #e0d9ef;
+  line-height: 1.9;
+}
+.atlas-auth-story-copy svg {
+  max-width: 220px;
+  width: 60%;
+  height: auto;
+  margin-top: 32px;
+  opacity: 0.65;
+}
+.atlas-auth-story footer {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  border-top: 1px solid #ffffff30;
+  padding-top: 22px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: #d3c6f6;
+}
+.atlas-auth-form-panel {
+  padding: 54px clamp(28px, 6vw, 110px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.atlas-auth-content {
+  width: 100%;
+  max-width: 480px;
+}
+.atlas-auth-mobile-logo {
+  display: none;
+}
+.atlas-auth-content h1 {
+  font:
+    400 clamp(38px, 3.5vw, 54px)/1.08 "Instrument Serif",
+    serif;
+  letter-spacing: -0.025em;
+  color: #1e0a4e;
+  margin: 8px 0 16px;
+}
+.atlas-auth-content > p {
+  color: #67627a;
+}
+.atlas-auth-content form {
+  margin-top: 28px;
+}
+.atlas-auth-content form > div {
+  margin-bottom: 16px;
+}
+.atlas-auth-content label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b3156;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.atlas-auth-content input:not([type="checkbox"]) {
+  border: 1px solid #d8d2e4;
+  border-radius: 5px;
+  background: #fff;
+  min-height: 46px;
+  font-size: 14px;
+  color: #1e0a4e;
+  box-shadow: none;
+}
+.atlas-auth-content input[type="checkbox"] {
+  accent-color: #4b2fa3;
+}
+.atlas-auth-content button[type="submit"],
+.atlas-auth-content button[class*="bg-gradient"] {
+  background: #4b2fa3;
+  border-radius: 5px;
+  min-height: 46px;
+  box-shadow: none;
+}
+.atlas-auth-content a {
+  color: #4b2fa3;
+}
+.atlas-auth-content [class*="rounded-2xl"] {
+  border-radius: 6px;
+}
+.atlas-auth-content [class*="shadow-xl"] {
+  box-shadow: none;
+}
+.atlas-auth-content [role="alert"] {
+  overflow-wrap: anywhere;
+}
+.atlas-auth-content input[maxlength="1"] {
+  width: 100%;
+  height: 54px;
+  padding: 4px;
+  text-align: center;
+  font-size: 22px;
+}
+.atlas-account-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+  background: #fff;
+}
+.atlas-account-page {
+  max-width: 1380px;
+  width: 100%;
+  padding: 44px clamp(20px, 4vw, 64px) 80px;
+  margin: auto;
+}
+.atlas-account-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  border-bottom: 1px solid var(--account-line);
+  padding-bottom: 30px;
+  margin-bottom: 30px;
+}
+.atlas-account-heading h1 {
+  font:
+    400 clamp(38px, 4vw, 62px)/1.04 "Instrument Serif",
+    serif;
+  letter-spacing: -0.025em;
+  margin: 0 0 18px;
+}
+.atlas-account-heading h1 em {
+  font-weight: 400;
+  color: #4b2fa3;
+}
+.atlas-account-heading > div > p:last-child {
+  margin-bottom: 0;
+  color: var(--account-muted);
+  max-width: 600px;
+}
+.atlas-account-heading-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.atlas-account-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 18px;
+  border: 1px solid #d9d2e8;
+  border-radius: 5px;
+  background: #fff;
+  color: #1e0a4e;
+  font:
+    600 12px/1.4 "Plus Jakarta Sans",
+    sans-serif;
+  text-decoration: none;
+  transition:
+    background 0.16s,
+    border-color 0.16s;
+  white-space: normal;
+  text-align: center;
+}
+.atlas-account-button:hover {
+  background: #f7f4fc;
+  border-color: #a89acb;
+}
+.atlas-account-button.is-primary {
+  background: #4b2fa3;
+  border-color: #4b2fa3;
+  color: #fff;
+}
+.atlas-account-button.is-primary:hover {
+  background: #39217f;
+}
+.atlas-account-button.is-danger {
+  background: #fff6f6;
+  border-color: #e4baba;
+  color: #9b2525;
+}
+.atlas-account-link {
+  border: 0;
+  background: transparent;
+  color: #4b2fa3;
+  padding: 6px 0;
+  min-height: 32px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.atlas-account-link:hover {
+  text-decoration: underline;
+}
+.atlas-account-link.is-danger {
+  color: #9b2525;
+}
+.atlas-account-caption {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #67627a;
+}
+.atlas-account-notice {
+  background: #f5f2fc;
+  border-left: 3px solid #4b2fa3;
+  padding: 13px 16px;
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 16px 0;
+  overflow-wrap: anywhere;
+  color: #40325e;
+}
+.atlas-account-notice.is-error {
+  border-color: #ae3232;
+  background: #fff5f5;
+  color: #922626;
+}
+.atlas-account-notice button {
+  margin-left: 10px;
+}
+.atlas-account-section {
+  padding: 28px 0;
+  border-top: 1px solid var(--account-line);
+}
+.atlas-account-section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.atlas-account-section h2,
+.atlas-account-dialog h2,
+.atlas-people-directory > header h2,
+.atlas-people-access h2,
+.atlas-vault h2 {
+  font:
+    400 30px/1.15 "Instrument Serif",
+    serif;
+  letter-spacing: -0.015em;
+  margin: 0 0 18px;
+}
+.atlas-account-section > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+.atlas-account-section-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: 0;
+  text-align: left;
+  padding: 0;
+  color: #1e0a4e;
+  font:
+    400 30px "Instrument Serif",
+    serif;
+}
+.atlas-account-fields {
+  display: grid;
+  gap: 20px;
+}
+.atlas-account-field,
+.atlas-profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b3156;
+}
+.atlas-account-field input,
+.atlas-account-field textarea,
+.atlas-account-field select,
+.atlas-profile-field input {
+  background: #fff !important;
+  color: #1e0a4e !important;
+  border: 1px solid #d8d2e4 !important;
+  box-shadow: none !important;
+  border-radius: 5px !important;
+  min-height: 46px;
+  padding: 11px 13px;
+  font-family: inherit;
+  font-size: 14px;
+  width: 100%;
+  max-width: 100%;
+}
+.atlas-account-field input[readonly],
+.atlas-profile-field input[readonly] {
+  background: #f7f6f9 !important;
+  color: #67627a !important;
+}
+.atlas-account-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.atlas-account-form fieldset,
+.atlas-account-dialog fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.atlas-account-form-submit,
+.atlas-account-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+.atlas-account-form-submit {
+  justify-content: space-between;
+  border-top: 1px solid var(--account-line);
+  padding-top: 24px;
+}
+.atlas-account-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 17px 0;
+  border-bottom: 1px solid var(--account-line);
+  cursor: pointer;
+}
+.atlas-account-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #4b2fa3;
+  margin-top: 3px;
+  flex: none;
+}
+.atlas-account-check strong,
+.atlas-account-check small {
+  display: block;
+}
+.atlas-account-check strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.atlas-account-check small {
+  font-size: 12px;
+  font-weight: 400;
+  color: #67627a;
+  margin-top: 5px;
+}
+.atlas-account-danger,
+.atlas-account-danger h2 {
+  color: #8e2828;
+}
+.atlas-account-danger .atlas-account-button {
+  width: 100%;
+  margin: 8px 0;
+}
+.atlas-account-avatar {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #eee7fa;
+  color: #4b2fa3;
+  font-weight: 700;
+  flex: none;
+  width: 44px;
+  height: 44px;
+}
+.atlas-account-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.atlas-profile-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 60px;
+}
+.atlas-profile-identity {
+  border-right: 1px solid var(--account-line);
+  padding-right: 30px;
+}
+.atlas-profile-identity > .atlas-account-avatar {
+  height: 100px;
+  width: 100px;
+  font:
+    400 40px "Instrument Serif",
+    serif;
+  margin-bottom: 24px;
+}
+.atlas-profile-identity h2 {
+  font:
+    400 30px/1.1 "Instrument Serif",
+    serif;
+  overflow-wrap: anywhere;
+  margin: 0 0 12px;
+}
+.atlas-profile-identity p {
+  color: #67627a;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.atlas-profile-sections {
+  max-width: 760px;
+}
+.atlas-profile-photo-preview {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin: 20px 0;
+}
+.atlas-profile-photo-preview img {
+  width: 76px;
+  height: 76px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.atlas-profile-photo-preview > div {
+  display: grid;
+  gap: 10px;
+}
+.atlas-profile-notification-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--account-line);
+}
+.atlas-profile-notification-row p {
+  margin: 0;
+}
+.atlas-profile-notification-row small {
+  color: #67627a;
+}
+.atlas-settings-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 64px;
+}
+.atlas-settings-side {
+  padding-left: 28px;
+  border-left: 1px solid var(--account-line);
+}
+.atlas-settings-side p {
+  font-size: 12px;
+  color: #67627a;
+}
+.atlas-settings-side .atlas-account-section h2 {
+  font-size: 28px;
+}
+.atlas-people-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 40px;
+}
+.atlas-people-directory > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--account-line);
+}
+.atlas-people-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.atlas-people-list > li {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--account-line);
+  align-items: center;
+}
+.atlas-member-identity {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.atlas-member-identity h3 {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0 0 5px;
+}
+.atlas-member-identity p {
+  font-size: 11px;
+  color: #67627a;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.atlas-member-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+.atlas-member-self {
+  font-size: 10px;
+  color: #4b2fa3;
+  margin-left: 8px;
+}
+.atlas-people-access {
+  border-left: 1px solid var(--account-line);
+  padding-left: 28px;
+}
+.atlas-people-access section {
+  padding: 0 0 24px;
+  margin: 0 0 24px;
+  border-bottom: 1px solid var(--account-line);
+}
+.atlas-people-access h3 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+.atlas-group-code {
+  font:
+    400 36px "Instrument Serif",
+    serif;
+  letter-spacing: 0.1em;
+  color: #4b2fa3;
+  background: #f6f3fc;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+.atlas-group-code button {
+  font-size: 11px;
+  letter-spacing: 0;
+}
+.atlas-people-invite-preview {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.atlas-people-invite-preview input {
+  max-width: 100%;
+  min-width: 0;
+  background: #faf9fc;
+  border: 1px solid var(--account-line);
+  padding: 9px;
+  color: #67627a;
+  font-size: 11px;
+}
+.atlas-people-qr {
+  display: block;
+  width: 132px;
+  height: 132px;
+  object-fit: contain;
+  margin: 20px 0;
+}
+.atlas-people-requests > article,
+.atlas-people-invitations > article {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--account-line);
+  overflow-wrap: anywhere;
+}
+.atlas-people-requests p,
+.atlas-people-invitations p {
+  font-size: 12px;
+  margin: 4px 0;
+  color: #67627a;
+}
+.atlas-people-delegation {
+  padding: 24px;
+  background: #f5f2fc;
+  border-left: 3px solid #4b2fa3;
+  margin: 0 0 28px;
+}
+.atlas-people-delegation h2 {
+  font:
+    400 28px "Instrument Serif",
+    serif;
+  margin: 4px 0;
+}
+.atlas-people-delegation p {
+  font-size: 12px;
+}
+.atlas-vault {
+  background: #fff;
+  padding: 32px clamp(18px, 3vw, 44px);
+  max-width: 1400px;
+  margin: auto;
+  width: 100%;
+}
+.atlas-vault .atlas-account-heading h2 {
+  font-size: 44px;
+  margin: 0 0 12px;
+}
+.atlas-vault-tools {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  margin: 24px 0;
+  border-bottom: 1px solid var(--account-line);
+  padding-bottom: 20px;
+  flex-wrap: wrap;
+}
+.atlas-vault-tools label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.atlas-vault-tools input,
+.atlas-vault-tools select {
+  border: 1px solid #d8d2e4;
+  border-radius: 4px;
+  min-height: 42px;
+  padding: 8px 12px;
+  background: #fff;
+  max-width: 100%;
+  color: #1e0a4e;
+}
+.atlas-vault-tools input {
+  width: 240px;
+}
+.atlas-vault-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.atlas-document-row {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  gap: 20px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--account-line);
+  align-items: start;
+}
+.atlas-document-type {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: #4b2fa3;
+  background: #f1ebfb;
+  width: 48px;
+  min-height: 60px;
+  display: grid;
+  place-items: center;
+  border-radius: 2px;
+  border-top: 3px solid #c3b1e8;
+}
+.atlas-document-info h3 {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+.atlas-document-info p {
+  margin: 4px 0;
+  font-size: 11px;
+  color: #67627a;
+  overflow-wrap: anywhere;
+}
+.atlas-document-info .atlas-document-note {
+  font-size: 12px;
+  color: #40325e;
+  margin: 10px 0;
+}
+.atlas-document-protected {
+  display: inline-block;
+  font-size: 10px;
+  color: #4b2fa3;
+  background: #f2edf9;
+  padding: 2px 7px;
+  margin: 0 8px 6px 0;
+}
+.atlas-document-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.atlas-document-links span {
+  font-size: 10px;
+  background: #f5f3fa;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+.atlas-document-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 270px;
+}
+.atlas-vault-empty {
+  padding: 65px 24px;
+  text-align: center;
+  border-bottom: 1px solid var(--account-line);
+}
+.atlas-vault-empty h3 {
+  font:
+    400 32px "Instrument Serif",
+    serif;
+  margin-bottom: 12px;
+}
+.atlas-vault-empty p {
+  color: #67627a;
+  font-size: 13px;
+}
+.atlas-account-dialog {
+  padding: 4px 0 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.atlas-account-dialog > p {
+  color: #67627a;
+  font-size: 13px;
+}
+.atlas-account-dialog .atlas-account-field {
+  margin: 15px 0;
+}
+.atlas-account-dialog .atlas-confirm-details {
+  margin-top: 18px;
+  padding: 12px;
+  background: #f6f3fb;
+}
+.atlas-invite-grid {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 24px;
+  border-bottom: 1px solid var(--account-line);
+  padding-bottom: 24px;
+  margin: 24px 0;
+}
+.atlas-invite-grid img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+}
+.atlas-invite-grid .atlas-account-button {
+  margin-top: 10px;
+  width: 100%;
+}
+.atlas-invite-members {
+  list-style: none;
+  padding: 0;
+  max-height: 220px;
+  overflow: auto;
+}
+.atlas-invite-members li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--account-line);
+  font-size: 12px;
+}
+.atlas-account-dialog input,
+.atlas-account-dialog textarea,
+.atlas-account-dialog select {
+  max-width: 100%;
+}
+.atlas-account-state {
+  padding: 40px 24px;
+  max-width: 750px;
+  margin: auto;
+}
+@media (max-width: 1100px) {
+  .atlas-people-layout {
+    grid-template-columns: minmax(0, 1fr) 270px;
+    gap: 24px;
+  }
+  .atlas-profile-layout {
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 30px;
+  }
+  .atlas-settings-layout {
+    grid-template-columns: minmax(0, 1fr) 230px;
+    gap: 28px;
+  }
+  .atlas-account-heading h1 {
+    font-size: 46px;
+  }
+  .atlas-document-row {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+  .atlas-document-actions {
+    grid-column: 2;
+    max-width: none;
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 767px) {
+  .atlas-auth-screen {
+    display: block;
+  }
+  .atlas-auth-story {
+    display: none;
+  }
+  .atlas-auth-form-panel {
+    display: block;
+    padding: 28px 22px 56px;
+    min-height: 100dvh;
+  }
+  .atlas-auth-mobile-logo {
+    display: block;
+    margin-bottom: 45px;
+  }
+  .atlas-auth-content {
+    margin: auto;
+  }
+  .atlas-auth-content h1 {
+    font-size: 42px;
+  }
+  .atlas-account-page {
+    padding: 28px 20px 60px;
+  }
+  .atlas-account-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+    padding-bottom: 24px;
+  }
+  .atlas-account-heading h1 {
+    font-size: 43px;
+  }
+  .atlas-account-heading-actions {
+    width: 100%;
+  }
+  .atlas-profile-layout,
+  .atlas-settings-layout,
+  .atlas-people-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 30px;
+  }
+  .atlas-profile-identity {
+    border-right: 0;
+    border-bottom: 1px solid var(--account-line);
+    padding: 0 0 24px;
+  }
+  .atlas-profile-identity > .atlas-account-avatar {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 16px;
+  }
+  .atlas-profile-identity h2 {
+    font-size: 27px;
+  }
+  .atlas-settings-side,
+  .atlas-people-access {
+    border-left: 0;
+    border-top: 1px solid var(--account-line);
+    padding: 28px 0 0;
+  }
+  .atlas-people-access {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .atlas-people-access section {
+    margin: 0;
+  }
+  .atlas-people-list > li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .atlas-member-actions {
+    flex-direction: row;
+    gap: 20px;
+    align-items: center;
+    padding-left: 60px;
+  }
+  .atlas-account-field-row {
+    grid-template-columns: 1fr;
+  }
+  .atlas-account-section h2 {
+    font-size: 28px;
+  }
+  .atlas-vault {
+    padding: 24px 18px;
+  }
+  .atlas-vault .atlas-account-heading h2 {
+    font-size: 38px;
+  }
+  .atlas-vault-tools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .atlas-vault-tools label {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .atlas-vault-tools input {
+    width: 100%;
+  }
+  .atlas-vault-tools select {
+    flex: 1;
+  }
+  .atlas-document-row {
+    gap: 12px;
+    grid-template-columns: 40px minmax(0, 1fr);
+    padding: 20px 0;
+  }
+  .atlas-document-type {
+    width: 38px;
+    min-height: 50px;
+    font-size: 8px;
+  }
+  .atlas-document-actions {
+    gap: 16px;
+  }
+  .atlas-invite-grid {
+    grid-template-columns: 100px minmax(0, 1fr);
+    gap: 14px;
+  }
+  .atlas-invite-grid img {
+    width: 100px;
+    height: 100px;
+  }
+  .atlas-account-dialog-actions .atlas-account-button {
+    flex: 1;
+  }
+  .atlas-account-dialog-actions {
+    justify-content: stretch;
+  }
+  .atlas-account-form-submit > .atlas-account-button {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .atlas-auth-screen *,
+  .atlas-account-page *,
+  .atlas-account-dialog *,
+  .atlas-vault * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+.atlas-vault-tools [role="group"] {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.atlas-vault-tools [role="group"] button {
+  padding: 8px 12px;
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 11px;
+  background: transparent;
+  color: #67627a;
+}
+.atlas-vault-tools [role="group"] button[aria-pressed="true"] {
+  background: #f0eafb;
+  color: #4b2fa3;
+  border-color: #d8cbef;
+}
+.atlas-document-links {
+  list-style: none;
+  padding: 0;
+}
+.atlas-document-info h2,
+.atlas-document-info h3 {
+  font:
+    600 14px/1.5 "Plus Jakarta Sans",
+    sans-serif;
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+.atlas-document-info small {
+  font-size: 10px;
+  color: #67627a;
+}
+.atlas-account-dialog
+  .atlas-vault-action
+  > fieldset
+  > div:not(.atlas-preserve-finance) {
+  border-radius: 5px;
+}
+.atlas-account-dialog .atlas-vault-action input:not([type="checkbox"]),
+.atlas-account-dialog .atlas-vault-action textarea,
+.atlas-account-dialog .atlas-vault-action select {
+  border-radius: 5px;
+}
+.atlas-profile-sections .font-heading {
+  font-family: "Instrument Serif", serif;
+}
+.atlas-profile-sections .atlas-account-fields .atlas-profile-field label {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: #514567;
+}
+.atlas-auth-content button:not([type="button"]) {
+  background-image: none;
+}
+.atlas-account-dialog .atlas-invite-grid + p {
+  margin: 0;
+}
+.atlas-vault h1 {
+  font:
+    400 clamp(36px, 4vw, 54px)/1.04 "Instrument Serif",
+    serif;
+  letter-spacing: -0.025em;
+  margin: 0 0 18px;
+}
+.atlas-vault h1 em {
+  color: #4b2fa3;
+  font-weight: 400;
+}
+.atlas-people-list > li {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+}
+.atlas-member-identity {
+  display: block;
+}
+.atlas-member-identity strong {
+  display: block;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.atlas-member-identity small {
+  font-size: 11px;
+  color: #4b2fa3;
+}
+.atlas-people-access ul {
+  list-style: none;
+  padding: 0;
+}
+.atlas-people-access li {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--account-line);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.atlas-people-access li strong,
+.atlas-people-access li small {
+  display: block;
+}
+.atlas-people-access li small {
+  color: #67627a;
+}
+.atlas-people-access li p {
+  font-size: 11px;
+  color: #67627a;
+}
+.atlas-people-access .atlas-account-dialog-actions {
+  margin-top: 12px;
+}
+.atlas-member-actions {
+  margin-left: auto;
+}
+.atlas-profile-photo-preview .atlas-account-avatar {
+  height: 76px;
+  width: 76px;
+}
+.atlas-account-section-toggle > span {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 12px;
+}
+@media (max-width: 767px) {
+  .atlas-people-list > li {
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: start;
+  }
+  .atlas-member-actions {
+    grid-column: 2;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+  }
+  .atlas-member-identity {
+    width: 100%;
+  }
+  .atlas-people-directory > header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-bottom: 16px;
+    gap: 8px;
+  }
+  .atlas-document-actions .atlas-account-link {
+    min-height: 38px;
+  }
+  .atlas-auth-content input[maxlength="1"] {
+    height: 48px;
+    font-size: 20px;
+  }
+  .atlas-auth-content [class*="gap-3"]:has(> input[maxlength="1"]) {
+    gap: 8px;
+  }
+}
