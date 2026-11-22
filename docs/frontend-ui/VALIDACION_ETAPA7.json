@@ -1,0 +1,926 @@
+{
+  "environment": {
+    "node": "24.22.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.8",
+    "python": "3.12.14"
+  },
+  "base": {
+    "commit": "7abfe0156cd947b4a940b82b764afbca2ae21f72",
+    "overlay": "Etapas 2 a 6 completas",
+    "stage6_zip_sha256": "1ce0ddc3e4291fcb12d0d52615b5eb483044374fb46342fde24c24ac36bb3422",
+    "hashes_verified_before_changes": 83
+  },
+  "commands": [
+    {
+      "command": "npm --prefix frontend run lint",
+      "result": "PASS"
+    },
+    {
+      "command": "cd frontend && npx tsc --noEmit -p tsconfig.app.json",
+      "result": "PASS"
+    },
+    {
+      "command": "npm --prefix frontend run build",
+      "result": "PASS"
+    },
+    {
+      "command": "node --test frontend/tests/*.test.mjs",
+      "result": "PASS"
+    },
+    {
+      "command": "TZ=Pacific/Auckland node --test frontend/tests/editorial-trips.test.mjs",
+      "result": "PASS"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS"
+    },
+    {
+      "command": "bash -n (12 bloques de la guía, sin ejecutar comandos de integración)",
+      "result": "PASS"
+    }
+  ],
+  "unit_tests": {
+    "total": 76,
+    "existing": 62,
+    "new": 14,
+    "result": "PASS",
+    "timezone_repeat": "14 aprobadas con TZ=Pacific/Auckland"
+  },
+  "integration_stage7": {
+    "environment": "Aplicación React compilada en jsdom; API HTTP, Socket.IO, Google y sesión de prueba controlados. No son altas, invitaciones ni correos reales. No valida layout o servicios externos.",
+    "results": [
+      {
+        "case": "Galería agrupa viajes por fechas reales y estados, con rol e integrantes recibidos",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Filtros locales y búsqueda por destino sin acento no hacen peticiones nuevas",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Enlace histórico por hash conserva acceso a viajes finalizados y solo lectura",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Abrir una tarjeta conserva ID y rol y llega al Resumen del viaje verificado",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Fotos faltantes o fallidas muestran fallback neutral, sin imágenes de sustitución",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Sin viajes aparece invitación editorial para crear o unirse, sin métricas ficticias",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Error de historial se diferencia del vacío y permite reintentar",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Actualización Socket.IO del historial descarta respuesta anterior atrasada",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Formulario exige nombre, destino, fechas y presupuesto sin fabricar valores",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Presupuesto cero o negativo y regreso no posterior impiden creación",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Creación preserva contrato completo, privacidad y un solo POST ante doble envío",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Destino elegido con teclado guarda las coordenadas e identificador realmente recibidos",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Editar el destino después de elegirlo descarta coordenadas del destino anterior",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Fallo de Google permite conservar el destino escrito sin datos de ubicación inventados",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Error del servidor conserva borrador; nombre duplicado se muestra sin éxito falso",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Invitaciones opcionales validan correos, duplicados y capacidad incluyendo organizador",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Resultados de invitaciones cuentan solo creaciones reales y conservan estados existentes",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Fallo parcial de invitaciones permite reintentar sin volver a crear el viaje",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Sin conexión conserva el formulario y bloquea mutaciones",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Salir durante la creación completa las invitaciones autorizadas sin reemplazar el contexto actual",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Crear viaje sin sesión conserva la protección y redirige a login sin alta anónima",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Unirse sin código ofrece captura, sin pedir acceso ni mostrar información privada",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Código público concede acceso solo después de un POST y conserva el ID real",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Solicitud privada queda pendiente sin guardar membresía ni permitir entrada",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "JOIN_REQUEST_PENDING del backend se presenta como solicitud pendiente existente",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Invitación personal conserva token exacto en preview y aceptación",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Capacidad máxima deshabilita incorporación; no simula una solicitud",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Invitación INVALID muestra el error real sin afirmar acceso ni una expiración no distinguible",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Invitación USED muestra el error real sin afirmar acceso ni una expiración no distinguible",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Servicio de preview caído permite reintentar con el mismo código y token",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Rechazo por correo de invitación conserva enlace y no guarda acceso",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Miembro existente muestra el 409 y puede regresar a Mis viajes sin falsear otro guardado",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Usuario sin sesión conserva URL completa en login y no ejecuta join anónimo",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Cambiar el código descarta token personal ajeno y no permite aceptar preview anterior",
+        "result": "PASS",
+        "consoleErrors": 0
+      },
+      {
+        "case": "Respuesta atrasada de preview no reemplaza la invitación nueva",
+        "result": "PASS",
+        "consoleErrors": 0
+      }
+    ]
+  },
+  "regressions": [
+    {
+      "stage": 3,
+      "environment": "Aplicación React compilada + jsdom. API HTTP y Socket.IO locales con fixtures. Sin proveedores ni credenciales reales. No valida layout, CORS ni modalidad nativa.",
+      "results": [
+        {
+          "case": "Vuelos utiliza GET /flights/search con fechas, cabina y pasajeros; mantiene el grupo de URL",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Filtros de escalas, aerolínea, moneda y precio cambian filas sin repetir la búsqueda",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Proponer vuelo guarda la oferta y el historial en el grupo correcto; enlaza al comparador",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Error al guardar mantiene los resultados y permite reintentar la propuesta",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Error de historial distingue la propuesta guardada de la búsqueda no registrada",
+          "result": "PASS",
+          "consoleErrors": 1
+        },
+        {
+          "case": "Hotel envía huéspedes, habitaciones y edades reales al endpoint LiteAPI existente",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Cambiar destino de hotel descarta las coordenadas del destino anterior",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Hoteles no fabrican estrellas; filtros, detalles, foto fallida y cierre reutilizan los datos recibidos",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Proponer hotel conserva prebook, payload de simulación, propuesta e historial",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Fallo de prebook no se presenta como reserva confirmada",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "API 503 muestra servicio no disponible y reintento recupera la búsqueda",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "API de hoteles y estado vacío se distinguen",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Google no disponible permite capturar IATA manualmente y buscar con Duffel",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Autocomplete de aeropuertos permite seleccionar con teclado",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Cambiar de modo durante una búsqueda no inserta resultados atrasados en hoteles",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Atrás restaura el modo y conserva groupId",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Viaje finalizado deshabilita búsquedas y propuestas",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Itinerario bloqueado conserva búsqueda pero no permite proponer",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Datos incompletos no guardan propuestas con precio cero inventado",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Cambiar de herramienta durante la verificación del viaje conserva el groupId de URL",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "La URL histórica sin groupId se normaliza sin perder el viaje del router",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Contexto revocado impide montar formularios y permite reintento",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "La desconexión mantiene formulario y deshabilita consultas",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Regresión del Resumen de Etapa 2 y accesos separados de Explorar",
+          "result": "PASS",
+          "consoleErrors": 0
+        }
+      ]
+    },
+    {
+      "stage": 4,
+      "environment": "Aplicación React real compilada en jsdom, API HTTP y Socket.IO locales con fixtures. No valida proveedores, CORS, layout, teclado real o modalidad nativa.",
+      "results": [
+        {
+          "case": "Comparador muestra alternativas persistidas, advierte monedas distintas y seleccionar no vota",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Decisiones conserva actividades y filtros de categoría y estado",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Voto rápido repetido genera un POST y refresca mi voto y aprobación",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Error al votar no anuncia éxito; reintento registra abstención",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Participación no disponible no se transforma en cero votos ni permite votar",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Aprobación del organizador exige confirmación y usa el endpoint existente",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Rechazo fallido conserva confirmación y permite reintentar",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Viajero carece de aprobación administrativa y solo edita propuestas propias",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Comentarios: carga, envío único, edición propia y eliminación confirmada",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Fallo de comentarios mantiene error y reintento sin inventar una conversación vacía",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Evento de comentario actualiza la conversación sin duplicados",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Solo lectura permite consultar y bloquea votos, comentarios y checkout",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Desconexión bloquea mutaciones y reconexión restaura participación",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Cambiar de viaje descarta propuestas y comentarios anteriores",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Detalle desde comparador conserva operaciones y groupId al buscar",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Checkout rechaza grupo ajeno y no envía operaciones",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Checkout de propuesta sin aprobar no permite simular",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Checkout vuelo preserva payload, envía una vez y muestra comprobante de simulación",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Checkout hotel usa endpoint de reserva y huéspedes existentes",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Checkout fallido conserva formulario, no presenta éxito y permite reintentar",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Regresión: Resumen Etapa2 y formularios de búsqueda Etapa3 mantienen contexto",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Edición y eliminación de propuesta propia conservan PUT y DELETE",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Vacío inicial ofrece la búsqueda y no presenta alternativas ficticias",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Itinerario bloqueado deshabilita modificaciones de propuestas y comentarios",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Evento de otro grupo no recarga la conversación del viaje activo",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Checkout muestra el gasto que informa el servidor y vuelve al mismo viaje",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Checkout no afirma un gasto creado si el servidor devuelve null",
+          "result": "PASS",
+          "consoleErrors": 0
+        }
+      ]
+    },
+    {
+      "stage": 5,
+      "environment": "Aplicación React compilada en jsdom con API HTTP y Socket.IO locales. Respuestas controladas; no prueba Supabase ni proveedores, layout o modalidad nativa.",
+      "results": [
+        {
+          "case": "Agenda cronológica integra confirmadas, propuestas, horarios desconocidos y coincidencias",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Selector de días cambia la agenda y admite flechas, Inicio y Fin",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Filtros de estado no confunden día vacío con propuestas ocultas",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Detalle conserva dirección, horario y vínculos sin simular una reserva real",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Mapa incluye únicamente coordenadas reales; error de mapa conserva agenda y dirección",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Día sin coordenadas no fabrica un mapa",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Nueva actividad conserva POST, fechas, fin y payload; doble clic envía una vez",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Error de creación conserva borrador y permite reintentar",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Conflicto 409 muestra confirmación y conserva los campos",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Edición conserva PATCH y los timestamps originales si no se cambian",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Eliminar requiere confirmación; fallo no borra y reintento usa DELETE",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Viajero solo edita lo propio; no elimina una propuesta ajena",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Solo lectura conserva consulta y exportación; no habilita edición ni creación",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Pérdida de conexión conserva borrador y bloquea envío",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Google no disponible no bloquea la agenda ni crea datos de sustitución",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Fallo del itinerario ofrece reintento y no se presenta como día vacío",
+          "result": "PASS",
+          "consoleErrors": 1
+        },
+        {
+          "case": "Calendario ausente muestra estado específico sin inventar días",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Cambio de viaje cierra el borrador del anterior y descarta su agenda",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Una actividad abre exactamente su propuesta en Decisiones de Etapa4",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Resumen lleva al día seleccionado; Explorar y comparador conservan su entrada",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Compartir usa el servicio existente, el grupo correcto y la vigencia del servidor",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Fallo al compartir permite reintentar sin fabricar enlaces",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Consulta pública existente conserva contenido y ausencia de edición",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Enlace compartido vencido conserva el error del servicio y oculta contenido",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Exportación conserva HTML y abre el diálogo de impresión existente",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Sin verificar vínculos no se permite un guardado que pueda perder asociaciones",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Error posterior a crear actividad se identifica y evita repetir el alta",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Subgrupos conserva creación de horario con sus campos y endpoint",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Bloqueo del itinerario deshabilita creación y modificaciones",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Evento de itinerario recarga la agenda conservando el día seleccionado",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Respuesta de alta atrasada no reabre el formulario ni la agenda del viaje anterior",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Crear desde un día vacío conserva la fecha y el día de asignación",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Actualización colaborativa de integrantes no reinicializa el borrador abierto",
+          "result": "PASS",
+          "consoleErrors": 0
+        }
+      ]
+    },
+    {
+      "stage": 6,
+      "environment": "Aplicación React real en jsdom; API HTTP, Socket.IO, mapas y proveedores simulados para pruebas. No valida credenciales, Google/WeatherAPI reales ni diseño renderizado.",
+      "results": [
+        {
+          "case": "Búsqueda usa contrato real y conserva lugares sin coordenadas, descartando solo los lejanos",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Fotos ausentes y fallidas, calificación ausente y cero reseñas conservan su significado",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Filtros de categoría y valoración operan sobre datos recibidos y permiten limpiar",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Selección de marcador sincroniza lista y ficha; marcadores previos se limpian",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Lugar sin coordenadas no recibe marcador ni traslado ni acción de mapa",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Error del mapa no bloquea búsqueda, direcciones ni propuestas",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Servicio de lugares fallido permite reintentar sin resultados ficticios",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Respuesta vacía se distingue de filtros y de error",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Autocompletado accesible por flechas y Enter consulta detalle por ID",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Sugerencias caídas admiten búsqueda manual sin sustituir el proveedor",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Cambio de ubicación invalida resultados pendientes del destino anterior",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Ubicación nueva puede buscarse mientras la consulta anterior termina; gana la consulta más reciente",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Ubicación escrita se geocodifica por backend antes de buscar",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Hospedaje sin coordenadas no reutiliza la posición de otra ubicación y permite búsqueda textual",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Detalle presenta información recibida y no ejecuta guardados al abrirse",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Propuesta usa días reales, hora canónica, payload existente y un solo POST al doble clic",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Horario cerrado o intervalo no admitido impide enviar la propuesta",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Fallo de guardado conserva el formulario y permite reintentar",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Propuestas bloqueadas por readonly",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Propuestas bloqueadas por locked",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Cambio de viaje durante búsqueda no revela resultados ni propuestas del viaje anterior",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Desconexión bloquea acciones remotas conservando resultados recibidos",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Actividad real abre destino de ruta y conserva el groupId prioritario de URL",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Actividad de otro viaje o sin coordenadas no genera un destino ficticio",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Ruta conserva contrato DRIVE, métricas y trazado de backend",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Ruta conserva contrato WALK, métricas y trazado de backend",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Ruta conserva contrato TRANSIT, métricas y trazado de backend",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Edición de destino descarta trazado y métricas de la ruta anterior",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Error de ruta conserva clima e inputs y permite reintentar",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Respuesta sin ruta muestra mensaje sin tiempos ni trazados de sustitución",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Sin polilínea preserva fallback Directions, identificado como referencia distinta",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Clima separa condiciones actuales y pronóstico, muestra unidades y ausencias sin soles ficticios",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Clima fallido o sin datos permite reintento sin bloquear ruta",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Clima del destino utiliza las coordenadas resueltas de la ruta",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Itinerario ofrece entrada contextual a ruta por ID real de actividad",
+          "result": "PASS",
+          "consoleErrors": 0
+        }
+      ]
+    }
+  ],
+  "unique_integration_cases": 154,
+  "focused_rechecks": [
+    {
+      "environment": "Aplicación React compilada en jsdom; API HTTP, Socket.IO, Google y sesión de prueba controlados. No son altas, invitaciones ni correos reales. No valida layout o servicios externos.",
+      "results": [
+        {
+          "case": "Invitaciones opcionales validan correos, duplicados y capacidad incluyendo organizador",
+          "result": "PASS",
+          "consoleErrors": 0
+        }
+      ]
+    },
+    {
+      "environment": "Aplicación React compilada en jsdom; API HTTP, Socket.IO, Google y sesión de prueba controlados. No son altas, invitaciones ni correos reales. No valida layout o servicios externos.",
+      "results": [
+        {
+          "case": "Crear viaje sin sesión conserva la protección y redirige a login sin alta anónima",
+          "result": "PASS",
+          "consoleErrors": 0
+        },
+        {
+          "case": "Usuario sin sesión conserva URL completa en login y no ejecuta join anónimo",
+          "result": "PASS",
+          "consoleErrors": 0
+        }
+      ]
+    }
+  ],
+  "applier": {
+    "checks": [
+      "Continuidad exacta Etapa 6 comprobada sin escrituras",
+      "Dependencia de Etapa 6 modificada",
+      "Mis viajes incompatible rechazado",
+      "Colisión con archivo nuevo",
+      "Contenido alterado detectado por hash",
+      "Ruta fuera de repositorio rechazada",
+      "Enlace simbólico fuera del repo rechazado",
+      "Guarda Git: main (respuestas simuladas)",
+      "Guarda Git: develop (respuestas simuladas)",
+      "Guarda Git: HEAD separado (respuestas simuladas)",
+      "Guarda Git: cambios locales (respuestas simuladas)",
+      "Guarda Git: conflictos Git (respuestas simuladas)",
+      "Historia sin ancestro base (Git simulado)",
+      "Rollback de archivos tras fallo de escritura",
+      "Extracción exacta de todos los archivos; conserva etapas anteriores y .env",
+      "Segunda aplicación rechazada"
+    ],
+    "result": "PASS",
+    "git_writes": false,
+    "note": "Guarda Git probada con respuestas simuladas; hashes, lectura ZIP, aplicación y rollback ejecutados en árbol temporal real."
+  },
+  "browser": {
+    "result": "BLOCKED",
+    "reason": "[pid=18][err] [18:18:1121/205219.555048:FATAL:chrome/browser/process_singleton_posix.cc:297] Check failed: . socket() failed: Operation not permitted (1)",
+    "screenshots": false,
+    "responsive_verified": false
+  },
+  "real_services": {
+    "Google": "NOT_TESTED_WITH_REAL_CREDENTIALS",
+    "Supabase": "NOT_TESTED_WITH_REAL_CREDENTIALS",
+    "email_delivery": "NOT_TESTED; no se enviaron invitaciones ni correos reales. Las solicitudes se dirigieron exclusivamente a un servidor HTTP de prueba."
+  },
+  "backend": {
+    "modified": false,
+    "tests": "NOT_RUN; comandos incluidos para ejecución local"
+  },
+  "dependencies_changed": false,
+  "environment_files_changed": false,
+  "git_writes": false,
+  "warnings": [
+    "Se conserva el aviso de bundle mayor a 500 kB.",
+    "Chromium no pudo iniciar: inspección visual responsive, contraste y foco nativos pendientes.",
+    "La configuración http-proxy de npm produce un aviso propio del entorno; no se cambió la configuración del proyecto."
+  ]
+}
