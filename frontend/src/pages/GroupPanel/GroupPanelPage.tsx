@@ -1,3 +1,7 @@
+import { useNetworkMonitor } from "../../hooks/useNetworkMonitor";
+import { AccountTripNav } from "../../components/account/AccountTripNav";
+import { AccountAvatar } from "../../components/account/AccountAvatar";
+import "../../components/account/accounts-editorial.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppLayout } from "../../components/layout/AppLayout";
@@ -10,8 +14,10 @@ import {
   saveCurrentGroup,
   clearCurrentGroup,
 } from "../../services/groups";
-import { HelpButton } from "../../components/ui/HelpButton";
-import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
+import {
+  AccountConfirmDialog as ConfirmDialog,
+  AccountDialog,
+} from "../../components/account/AccountDialog";
 import { ToastContainer } from "../../components/ui/Toast/ToastContainer";
 import { useToast } from "../../hooks/useToast";
 import type {
@@ -59,14 +65,19 @@ type GroupPanelRealtimePayload = {
 };
 
 const GROUP_PANEL_CACHE_TTL_MS = 10 * 60 * 1000;
-const getGroupPanelCacheKey = (groupId: string) =>
-  `ithera:group-panel:${groupId}`;
+const getGroupPanelCacheKey = (groupId: string, userId: string) =>
+  `ithera:group-panel:${userId}:${groupId}`;
 
-function readGroupPanelCache(groupId: string): GroupPanelCache | null {
+function readGroupPanelCache(
+  groupId: string,
+  userId: string,
+): GroupPanelCache | null {
   if (!groupId || typeof window === "undefined") return null;
 
   try {
-    const raw = window.sessionStorage.getItem(getGroupPanelCacheKey(groupId));
+    const raw = window.sessionStorage.getItem(
+      getGroupPanelCacheKey(groupId, userId),
+    );
     if (!raw) return null;
 
     const parsed = JSON.parse(raw) as GroupPanelCache;
@@ -74,7 +85,7 @@ function readGroupPanelCache(groupId: string): GroupPanelCache | null {
       !parsed ||
       Date.now() - Number(parsed.savedAt ?? 0) > GROUP_PANEL_CACHE_TTL_MS
     ) {
-      window.sessionStorage.removeItem(getGroupPanelCacheKey(groupId));
+      window.sessionStorage.removeItem(getGroupPanelCacheKey(groupId, userId));
       return null;
     }
 
@@ -84,12 +95,16 @@ function readGroupPanelCache(groupId: string): GroupPanelCache | null {
   }
 }
 
-function writeGroupPanelCache(groupId: string, snapshot: GroupPanelCache) {
+function writeGroupPanelCache(
+  groupId: string,
+  userId: string,
+  snapshot: GroupPanelCache,
+) {
   if (!groupId || typeof window === "undefined") return;
 
   try {
     window.sessionStorage.setItem(
-      getGroupPanelCacheKey(groupId),
+      getGroupPanelCacheKey(groupId, userId),
       JSON.stringify({ ...snapshot, savedAt: Date.now() }),
     );
   } catch {
@@ -121,7 +136,18 @@ function isClosedGroup(group?: Group | null) {
   );
 }
 
-export function GroupPanelPage() {
+function GroupPanelWorkspace() {
+  const alive = useRef(true);
+  const actionLocks = useRef(new Set<string>());
+  const online = useNetworkMonitor();
+  const [adminDataError, setAdminDataError] = useState("");
+  const [actionError, setActionError] = useState("");
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { accessToken, localUser } = useAuth();
@@ -133,7 +159,10 @@ export function GroupPanelPage() {
     initialCurrentGroup && String(initialCurrentGroup.id) === String(groupId)
       ? initialCurrentGroup
       : null;
-  const cachedPanel = useMemo(() => readGroupPanelCache(groupId), [groupId]);
+  const cachedPanel = useMemo(
+    () => readGroupPanelCache(groupId, String(localUser?.id_usuario ?? "")),
+    [groupId, localUser?.id_usuario],
+  );
   const realtimeRefreshTimerRef = useRef<number | null>(null);
   const latestPanelSnapshotRef = useRef<GroupPanelCache>(
     cachedPanel ?? {
@@ -170,7 +199,7 @@ export function GroupPanelPage() {
       usedCount: 0,
     },
   );
-  const [loading, setLoading] = useState(!cachedPanel);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const toast = useToast();
   const [copied, setCopied] = useState(false);
@@ -217,7 +246,7 @@ export function GroupPanelPage() {
 
   const persistPanelCache = useCallback(
     (nextSnapshot: Partial<GroupPanelCache>) => {
-      if (!groupId) return;
+      if (!groupId || !alive.current) return;
 
       const snapshot: GroupPanelCache = {
         ...latestPanelSnapshotRef.current,
@@ -226,9 +255,13 @@ export function GroupPanelPage() {
       };
 
       latestPanelSnapshotRef.current = snapshot;
-      writeGroupPanelCache(groupId, snapshot);
+      writeGroupPanelCache(
+        groupId,
+        String(localUser?.id_usuario ?? ""),
+        snapshot,
+      );
     },
-    [groupId],
+    [groupId, localUser?.id_usuario],
   );
   const loadAdminData = useCallback(
     async (targetGroup: Group | null, targetMembers: GroupMember[]) => {
@@ -244,7 +277,7 @@ export function GroupPanelPage() {
         (memberRole === "admin" || targetGroup?.myRole === "admin") &&
         !isClosedGroup(targetGroup);
 
-      if (!canManage || reachedCapacity) {
+      if (!canManage) {
         const emptyInviteSettings = {
           expiresAt: null,
           maxUses: null,
@@ -267,16 +300,29 @@ export function GroupPanelPage() {
         return;
       }
 
+      setAdminDataError("");
       const effectiveIsPrivate = targetGroup?.es_publico !== true;
       const [inviteRes, qrRes, invitationsRes, joinRequestsRes] =
         await Promise.all([
-          groupsService.getInvite(groupId, accessToken),
-          groupsService.getQr(groupId, accessToken),
+          reachedCapacity
+            ? Promise.resolve({
+                inviteLink: "",
+                inviteSettings: {
+                  expiresAt: null,
+                  maxUses: null,
+                  usedCount: 0,
+                },
+              })
+            : groupsService.getInvite(groupId, accessToken),
+          reachedCapacity
+            ? Promise.resolve({ qrBase64: "" })
+            : groupsService.getQr(groupId, accessToken),
           groupsService.getInvitations(groupId, accessToken),
           effectiveIsPrivate
             ? groupsService.getJoinRequests(groupId, accessToken)
             : Promise.resolve({ requests: [] }),
         ]);
+      if (!alive.current) return;
 
       const nextInviteSettings = inviteRes.inviteSettings ?? {
         expiresAt: null,
@@ -335,6 +381,7 @@ export function GroupPanelPage() {
           groupsService.getGroupDetails(groupId, accessToken),
           groupsService.getMembers(groupId, accessToken),
         ]);
+        if (!alive.current) return;
 
         const loadedCurrentMember = membersRes.members.find(
           (member) =>
@@ -360,6 +407,7 @@ export function GroupPanelPage() {
             groupId,
             accessToken,
           );
+          if (!alive.current) return;
           const nextDelegations = delegationRes.requests ?? [];
           setAdminDelegations(nextDelegations);
           persistPanelCache({
@@ -368,6 +416,7 @@ export function GroupPanelPage() {
             adminDelegations: nextDelegations,
           });
         } catch {
+          if (!alive.current) return;
           setAdminDelegations([]);
           persistPanelCache({
             group: loadedGroup,
@@ -377,10 +426,15 @@ export function GroupPanelPage() {
         }
 
         void loadAdminData(loadedGroup, membersRes.members).catch(() => {
+          if (!alive.current) return;
+          setAdminDataError(
+            "No se pudieron actualizar las invitaciones y solicitudes. Puedes reintentarlo.",
+          );
           setInvitations([]);
           setJoinRequests([]);
         });
       } catch (err) {
+        if (!alive.current) return;
         const message =
           err instanceof Error ? err.message : "No se pudo cargar el grupo";
         if (/no perteneces|permisos|forbidden|403/i.test(message)) {
@@ -390,7 +444,9 @@ export function GroupPanelPage() {
         }
         setError(message);
       } finally {
-        setLoading(false);
+        if (alive.current) {
+          setLoading(false);
+        }
       }
     },
     [
@@ -404,7 +460,7 @@ export function GroupPanelPage() {
   );
 
   useEffect(() => {
-    void loadData({ showLoading: !cachedPanel });
+    void loadData({ showLoading: true });
   }, [cachedPanel, loadData]);
 
   const refreshMembersSnapshot = useCallback(async () => {
@@ -414,6 +470,7 @@ export function GroupPanelPage() {
       groupsService.getGroupDetails(groupId, accessToken),
       groupsService.getMembers(groupId, accessToken),
     ]);
+    if (!alive.current) return;
 
     const loadedCurrentMember = membersRes.members.find(
       (member) => String(member.usuario_id) === String(localUser?.id_usuario),
@@ -436,10 +493,12 @@ export function GroupPanelPage() {
         groupId,
         accessToken,
       );
+      if (!alive.current) return;
       const nextDelegations = delegationRes.requests ?? [];
       setAdminDelegations(nextDelegations);
       persistPanelCache({ adminDelegations: nextDelegations });
     } catch {
+      if (!alive.current) return;
       setAdminDelegations([]);
       persistPanelCache({ adminDelegations: [] });
     }
@@ -458,6 +517,7 @@ export function GroupPanelPage() {
       groupId,
       accessToken,
     );
+    if (!alive.current) return;
     setJoinRequests(requestsRes.requests);
     persistPanelCache({ joinRequests: requestsRes.requests });
   }, [accessToken, canManageGroup, groupId, isPrivateGroup, persistPanelCache]);
@@ -469,6 +529,7 @@ export function GroupPanelPage() {
       groupId,
       accessToken,
     );
+    if (!alive.current) return;
     setInvitations(invitationsRes.invitations);
     persistPanelCache({ invitations: invitationsRes.invitations });
   }, [accessToken, canManageGroup, groupId, persistPanelCache]);
@@ -625,14 +686,27 @@ export function GroupPanelPage() {
 
   const handleCopy = async () => {
     if (!inviteLink) return;
-    await navigator.clipboard.writeText(inviteLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      if (!alive.current) return;
+      setCopied(true);
+      setTimeout(() => {
+        if (alive.current) setCopied(false);
+      }, 1800);
+    } catch {
+      toast.show(
+        "No se pudo copiar el enlace. Puedes seleccionarlo y copiarlo manualmente.",
+        "error",
+      );
+    }
   };
 
   const handleToggleRole = async (member: GroupMember) => {
-    if (!accessToken || !group || !canManageGroup) return;
+    if (!accessToken || !group || !canManageGroup || !online) return;
 
+    if (actionLocks.current.has("people")) return;
+    actionLocks.current.add("people");
+    setActionError("");
     try {
       setRoleChangeLoading(true);
       const nextRole = member.rol === "admin" ? "viajero" : "admin";
@@ -642,12 +716,14 @@ export function GroupPanelPage() {
         nextRole,
         accessToken,
       );
+      if (!alive.current) return;
 
       if (nextRole === "admin" && response.member?.pendingDelegation) {
         const delegationRes = await groupsService.getAdminDelegations(
           group.id,
           accessToken,
         );
+        if (!alive.current) return;
         const nextDelegations = delegationRes.requests ?? [];
         setAdminDelegations(nextDelegations);
         persistPanelCache({ adminDelegations: nextDelegations });
@@ -657,17 +733,27 @@ export function GroupPanelPage() {
         );
       } else {
         const refreshed = await groupsService.getMembers(group.id, accessToken);
+        if (!alive.current) return;
         setMembers(refreshed.members);
         persistPanelCache({ members: refreshed.members });
       }
       setRoleChangeTarget(null);
     } catch (err) {
+      if (!alive.current) return;
+      setActionError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo confirmar la operación.",
+      );
       toast.show(
         err instanceof Error ? err.message : "No se pudo actualizar el rol",
         "error",
       );
     } finally {
-      setRoleChangeLoading(false);
+      actionLocks.current.delete("people");
+      if (alive.current) {
+        setRoleChangeLoading(false);
+      }
     }
   };
 
@@ -675,10 +761,13 @@ export function GroupPanelPage() {
     request: GroupJoinRequest,
     action: "approve" | "reject",
   ) => {
-    if (!accessToken || !group || !canManageGroup) return;
+    if (!accessToken || !group || !canManageGroup || !online) return;
 
     const loadingKey = `${request.id}:${action}`;
 
+    if (actionLocks.current.has("people")) return;
+    actionLocks.current.add("people");
+    setActionError("");
     try {
       setJoinRequestActionLoading(loadingKey);
       await groupsService.resolveJoinRequest(
@@ -687,10 +776,12 @@ export function GroupPanelPage() {
         action,
         accessToken,
       );
+      if (!alive.current) return;
       const [membersRes, requestsRes] = await Promise.all([
         groupsService.getMembers(group.id, accessToken),
         groupsService.getJoinRequests(group.id, accessToken),
       ]);
+      if (!alive.current) return;
       setMembers(membersRes.members);
       setJoinRequests(requestsRes.requests);
       persistPanelCache({
@@ -698,12 +789,16 @@ export function GroupPanelPage() {
         joinRequests: requestsRes.requests,
       });
     } catch (err) {
+      if (!alive.current) return;
       toast.show(
         err instanceof Error ? err.message : "No se pudo atender la solicitud",
         "error",
       );
     } finally {
-      setJoinRequestActionLoading(null);
+      actionLocks.current.delete("people");
+      if (alive.current) {
+        setJoinRequestActionLoading(null);
+      }
     }
   };
 
@@ -711,8 +806,18 @@ export function GroupPanelPage() {
     request: AdminDelegationRequest,
     action: "accept" | "reject",
   ) => {
-    if (!accessToken || !group) return;
+    if (
+      !accessToken ||
+      !group ||
+      isReadOnly ||
+      !online ||
+      String(request.to_user_id) !== String(localUser?.id_usuario)
+    )
+      return;
 
+    if (actionLocks.current.has("people")) return;
+    actionLocks.current.add("people");
+    setActionError("");
     try {
       setDelegationActionLoading(`${request.id}:${action}`);
       await groupsService.resolveAdminDelegation(
@@ -721,12 +826,14 @@ export function GroupPanelPage() {
         action,
         accessToken,
       );
+      if (!alive.current) return;
 
       const [membersRes, delegationRes, groupRes] = await Promise.all([
         groupsService.getMembers(group.id, accessToken),
         groupsService.getAdminDelegations(group.id, accessToken),
         groupsService.getGroupDetails(group.id, accessToken),
       ]);
+      if (!alive.current) return;
       const nextDelegations = delegationRes.requests ?? [];
       setMembers(membersRes.members);
       setAdminDelegations(nextDelegations);
@@ -738,6 +845,7 @@ export function GroupPanelPage() {
         adminDelegations: nextDelegations,
       });
     } catch (err) {
+      if (!alive.current) return;
       toast.show(
         err instanceof Error
           ? err.message
@@ -745,29 +853,46 @@ export function GroupPanelPage() {
         "error",
       );
     } finally {
-      setDelegationActionLoading(null);
+      actionLocks.current.delete("people");
+      if (alive.current) {
+        setDelegationActionLoading(null);
+      }
     }
   };
 
   const handleRemove = async (member: GroupMember) => {
-    if (!accessToken || !group || !canManageGroup) return;
+    if (!accessToken || !group || !canManageGroup || !online) return;
 
+    if (actionLocks.current.has("people")) return;
+    actionLocks.current.add("people");
+    setActionError("");
     try {
       setRemoveLoadingId(member.id);
       await groupsService.removeMember(group.id, member.id, accessToken);
+      if (!alive.current) return;
 
       const refreshed = await groupsService.getMembers(group.id, accessToken);
+      if (!alive.current) return;
       setMembers(refreshed.members);
       persistPanelCache({ members: refreshed.members });
       setRemoveTarget(null);
       toast.show("Integrante expulsado correctamente.", "success");
     } catch (err) {
+      if (!alive.current) return;
+      setActionError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo confirmar la operación.",
+      );
       toast.show(
         err instanceof Error ? err.message : "No se pudo eliminar al miembro",
         "error",
       );
     } finally {
-      setRemoveLoadingId(null);
+      actionLocks.current.delete("people");
+      if (alive.current) {
+        setRemoveLoadingId(null);
+      }
     }
   };
 
@@ -777,6 +902,7 @@ export function GroupPanelPage() {
   if (loading) {
     return (
       <AppLayout
+        editorial
         showTripSelector={false}
         showRightPanel={false}
         user={{
@@ -796,6 +922,7 @@ export function GroupPanelPage() {
   if (error || !group) {
     return (
       <AppLayout
+        editorial
         showTripSelector={false}
         showRightPanel={false}
         user={{
@@ -813,6 +940,13 @@ export function GroupPanelPage() {
             <p className="font-body text-sm text-red-500">
               {error || "Grupo no disponible"}
             </p>
+            <button
+              className="atlas-account-button"
+              disabled={!online}
+              onClick={() => void loadData()}
+            >
+              Reintentar Personas
+            </button>
             <button
               onClick={() => navigate("/my-trips")}
               className="mt-4 rounded-xl bg-[#1E6FD9] px-4 py-3 text-sm text-white"
@@ -832,6 +966,10 @@ export function GroupPanelPage() {
   return (
     <>
       <AppLayout
+        editorial
+        contextualNavigation={
+          <AccountTripNav group={group} activeTab="personas" />
+        }
         trip={{
           name: group.nombre,
           subtitle: group.destino || "Sin destino definido",
@@ -849,499 +987,331 @@ export function GroupPanelPage() {
         showTripSelector={false}
         showRightPanel={false}
       >
-        <div className="flex-1 overflow-x-hidden overflow-y-auto bg-[radial-gradient(circle_at_top_left,#EEF4FF_0%,transparent_34%),linear-gradient(180deg,#FFFFFF_0%,#F5F2FF_100%)] px-4 py-8">
-          <div className="mx-auto w-full max-w-5xl space-y-5">
-            <div className="relative overflow-hidden rounded-3xl border border-[#D9E4F7] bg-white shadow-[0_18px_46px_rgba(30,10,78,0.10)]">
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,#FFFFFF_0%,#F8FAFF_45%,#F3EEFF_100%)]" />
-              <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[#7A4FD6]/20 blur-3xl" />
-              <div className="absolute -bottom-20 left-16 h-48 w-48 rounded-full bg-[#35C56A]/20 blur-3xl" />
-
-              <div className="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-                <div className="min-w-0">
-                  <div className="mb-4 flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-[#1E0A4E] px-3 py-1.5 font-body text-[11px] font-bold uppercase tracking-[0.16em] text-white">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#35C56A]" />
-                      Panel del grupo
-                    </span>
-                    <span
-                      className={`rounded-full px-3 py-1.5 font-body text-[11px] font-bold ${group.es_publico ? "bg-[#EAFBF1] text-[#167A3D]" : "bg-[#FFF7E6] text-[#A86B00]"}`}
-                    >
-                      {group.es_publico ? "Grupo público" : "Grupo privado"}
-                    </span>
-                  </div>
-
-                  <h1
-                    className="max-w-full break-words font-heading text-3xl font-extrabold leading-tight text-[#1E0A4E]"
-                    title={group.nombre}
-                  >
-                    {group.nombre}
-                  </h1>
-
-                  <p
-                    className="mt-2 max-w-2xl break-words font-body text-sm leading-relaxed text-[#64748B]"
-                    title={group.descripcion || "Sin descripción"}
-                  >
-                    {group.descripcion || "Sin descripción"}
-                  </p>
-
-                  <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-[#CFE0FF] bg-[#EEF4FF] px-4 py-3">
-                      <p className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-[#1E6FD9]">
-                        Destino
-                      </p>
-                      <p className="mt-1 break-words font-body text-sm font-bold text-[#1E0A4E]">
-                        {group.destino || "Pendiente"}
-                      </p>
-                    </div>
-                    <div className="rounded-2xl border border-[#D8C8FF] bg-[#F3EEFF] px-4 py-3">
-                      <p className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-[#7A4FD6]">
-                        Fechas
-                      </p>
-                      <p className="mt-1 break-words font-body text-sm font-bold text-[#1E0A4E]">
-                        {formatDateRange(group.fecha_inicio, group.fecha_fin)}
-                      </p>
-                    </div>
-                    {!hasReachedCapacity && (
-                      <div className="rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3">
-                        <p className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-[#64748B]">
-                          Código
-                        </p>
-                        <p className="mt-1 break-words font-body text-sm font-bold text-[#1E0A4E]">
-                          {group.codigo_invitacion}
-                        </p>
-                      </div>
-                    )}
-                    <div className="rounded-2xl border border-[#BCEBCB] bg-[#EAFBF1] px-4 py-3">
-                      <p className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-[#167A3D]">
-                        Tu rol
-                      </p>
-                      <p className="mt-1 font-body text-sm font-bold text-[#1E0A4E]">
-                        {getDisplayRole(isAdmin ? "admin" : "viajero")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col justify-between rounded-3xl border border-white/80 bg-white/85 p-4 shadow-[0_14px_34px_rgba(30,10,78,0.10)] backdrop-blur">
-                  <div>
-                    <p className="font-body text-[11px] font-bold uppercase tracking-[0.16em] text-[#64748B]">
-                      Acciones rápidas
-                    </p>
-                    <div className="mt-4 grid gap-3">
-                      {canInviteGroup && (
-                        <button
-                          type="button"
-                          onClick={() => setIsInviteModalOpen(true)}
-                          className="flex min-h-12 items-center justify-between rounded-2xl bg-[#35C56A] px-4 py-3 text-left font-body text-sm font-bold text-white shadow-[0_12px_24px_rgba(53,197,106,0.24)] transition hover:-translate-y-0.5 hover:bg-[#2FB95F]"
-                        >
-                          <span>Invitar miembros</span>
-                          <span>+</span>
-                        </button>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={goToItinerary}
-                        className="flex min-h-12 items-center justify-between rounded-2xl bg-[#1E6FD9] px-4 py-3 text-left font-body text-sm font-bold text-white shadow-[0_12px_24px_rgba(30,111,217,0.22)] transition hover:-translate-y-0.5 hover:bg-[#1E5FC0]"
-                      >
-                        <span>Abrir itinerario</span>
-                        <span>›</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 rounded-2xl border border-[#D9E4F7] bg-[linear-gradient(135deg,#F8FAFF,#FFFFFF)] px-4 py-3">
-                    <p className="font-body text-[11px] font-bold uppercase tracking-[0.16em] text-[#64748B]">
-                      Ocupación
-                    </p>
-                    <p className="mt-1 font-heading text-2xl font-extrabold text-[#1E0A4E]">
-                      {members.length}
-                      {group.maximo_miembros
-                        ? ` / ${group.maximo_miembros}`
-                        : ""}
-                    </p>
-                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#E2E8F0]">
-                      <div
-                        className="h-full rounded-full bg-[linear-gradient(90deg,#1E6FD9,#35C56A)]"
-                        style={{
-                          width: `${group.maximo_miembros ? Math.min((members.length / Number(group.maximo_miembros)) * 100, 100) : 100}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {copied && (
-                <p className="relative px-6 pb-5 text-sm font-semibold text-[#35C56A]">
-                  Enlace copiado correctamente.
+        <div className="atlas-account-scroll">
+          <div className="atlas-account-page atlas-people-page">
+            <header className="atlas-account-heading">
+              <div>
+                <p className="atlas-account-eyebrow">EL VIAJE / PERSONAS</p>
+                <h1>
+                  Un viaje compartido.
+                  <br />
+                  <em>Un grupo por conocer.</em>
+                </h1>
+                <p>
+                  {group.nombre}
+                  {group.destino ? ` · ${group.destino}` : ""}
                 </p>
-              )}
-            </div>
-
+                <p>{formatDateRange(group.fecha_inicio, group.fecha_fin)}</p>
+              </div>
+              <div className="atlas-account-heading-actions">
+                {canInviteGroup && (
+                  <button
+                    className="atlas-account-button is-primary"
+                    disabled={!online}
+                    onClick={() => setIsInviteModalOpen(true)}
+                  >
+                    Invitar al viaje ↗
+                  </button>
+                )}
+                <button
+                  className="atlas-account-button"
+                  onClick={goToItinerary}
+                >
+                  Ver itinerario
+                </button>
+              </div>
+            </header>
+            {!online && (
+              <div className="atlas-account-notice" role="status">
+                Sin conexión. Puedes consultar la información cargada; las
+                acciones de gestión requieren reconectar.
+              </div>
+            )}
             {isReadOnly && (
-              <div className="rounded-2xl border border-[#CBD5E1] bg-white px-5 py-4 shadow-sm">
-                <p className="font-heading text-sm font-semibold text-[#1E0A4E]">
-                  Viaje cerrado · modo solo lectura
-                </p>
-                <p className="mt-1 font-body text-sm leading-relaxed text-[#64748B]">
-                  Este viaje ya finalizó. Puedes consultar integrantes,
-                  invitaciones históricas e itinerario, pero las acciones de
-                  gestión, invitación y expulsión están deshabilitadas.
-                </p>
+              <div className="atlas-account-notice" role="status">
+                Viaje cerrado · modo lectura. Las acciones de gestión,
+                invitación y expulsión están deshabilitadas.
               </div>
             )}
-
+            {adminDataError && (
+              <div className="atlas-account-notice is-error" role="alert">
+                {adminDataError}
+                <button
+                  className="atlas-account-link"
+                  onClick={() => void loadAdminData(group, members)}
+                >
+                  Reintentar invitaciones
+                </button>
+              </div>
+            )}
             {outgoingAdminDelegation && (
-              <div className="rounded-2xl border border-[#F7D37A] bg-[#FFF8E5] px-5 py-4 shadow-sm">
-                <p className="font-heading text-sm font-semibold text-[#8A5A00]">
-                  Delegación de administración pendiente
-                </p>
-                <p className="mt-1 font-body text-sm leading-relaxed text-[#8A5A00]">
-                  Esperando respuesta de{" "}
-                  {outgoingAdminDelegation.to_nombre ||
-                    outgoingAdminDelegation.to_email ||
-                    "el integrante"}
-                  . La solicitud expira a las{" "}
-                  {new Date(
-                    outgoingAdminDelegation.expires_at,
-                  ).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                  .
-                </p>
+              <div className="atlas-account-notice" role="status">
+                <strong>Delegación pendiente.</strong> Esperando a{" "}
+                {outgoingAdminDelegation.to_nombre ||
+                  outgoingAdminDelegation.to_email ||
+                  "la persona invitada"}
+                . Vence:{" "}
+                {new Date(outgoingAdminDelegation.expires_at).toLocaleString(
+                  "es-MX",
+                )}
+                .
               </div>
             )}
-
             {incomingAdminDelegation && (
-              <div className="rounded-2xl border border-[#BFDBFE] bg-[#EFF6FF] px-5 py-4 shadow-sm">
-                <p className="font-heading text-sm font-semibold text-[#1D4ED8]">
-                  Tienes una solicitud para ser organizador
+              <section className="atlas-people-delegation">
+                <p className="atlas-account-eyebrow">
+                  TU PARTICIPACIÓN / ADMINISTRACIÓN
                 </p>
-                <p className="mt-1 font-body text-sm leading-relaxed text-[#1E40AF]">
+                <h2>¿Aceptar la administración?</h2>
+                <p>
                   {incomingAdminDelegation.from_nombre ||
                     incomingAdminDelegation.from_email ||
                     "El organizador"}{" "}
-                  quiere delegarte la administración de este viaje. Puedes
-                  aceptarla o rechazarla desde el aviso emergente.
+                  quiere transferirte el rol de organizador. Si aceptas, esa
+                  persona pasará a viajero y tú podrás administrar el viaje.
                 </p>
-              </div>
-            )}
-
-            {canManageGroup && hasReachedCapacity && (
-              <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 shadow-sm">
-                <p className="font-heading text-sm font-semibold text-red-600">
-                  Capacidad máxima alcanzada
+                <p>
+                  Vence:{" "}
+                  {new Date(incomingAdminDelegation.expires_at).toLocaleString(
+                    "es-MX",
+                  )}
+                  .
                 </p>
-                <p className="mt-1 font-body text-sm leading-relaxed text-red-500">
-                  El grupo tiene {members.length}
-                  {group.maximo_miembros
-                    ? ` / ${group.maximo_miembros}`
-                    : ""}{" "}
-                  miembros. Se ocultaron el QR, el enlace y el envío de
-                  invitaciones para evitar solicitudes que el sistema debe
-                  rechazar.
-                </p>
-              </div>
-            )}
-
-            <div
-              className={
-                canInviteGroup
-                  ? "grid grid-cols-1 gap-5 lg:grid-cols-[1.2fr_0.8fr]"
-                  : "grid grid-cols-1 gap-5"
-              }
-            >
-              <div className="overflow-hidden rounded-3xl border border-[#D9E4F7] bg-white shadow-[0_16px_38px_rgba(30,10,78,0.08)]">
-                <div className="border-b border-[#E2E8F0] bg-[linear-gradient(90deg,#FFFFFF,#F8FAFF)] px-6 py-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="mb-1 inline-flex items-center gap-2 rounded-full bg-[#EEF4FF] px-3 py-1 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-[#1E6FD9]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#1E6FD9]" />
-                        Comunidad
-                      </p>
-                      <h2 className="font-heading text-xl font-extrabold text-[#1E0A4E]">
-                        Miembros del grupo
-                      </h2>
-                    </div>
-                    <HelpButton
-                      title="Miembros y roles"
-                      description="Consulta quién forma parte del viaje y su rol. Solo el organizador puede cambiar roles o expulsar integrantes; los viajeros solo ven la lista."
-                      placement="right"
-                    />
-                  </div>
+                <div className="atlas-account-dialog-actions">
+                  <button
+                    className="atlas-account-button"
+                    disabled={
+                      !online || isReadOnly || delegationActionLoading !== null
+                    }
+                    onClick={() =>
+                      void handleResolveAdminDelegation(
+                        incomingAdminDelegation,
+                        "reject",
+                      )
+                    }
+                  >
+                    Rechazar
+                  </button>
+                  <button
+                    className="atlas-account-button is-primary"
+                    disabled={
+                      !online || isReadOnly || delegationActionLoading !== null
+                    }
+                    onClick={() =>
+                      void handleResolveAdminDelegation(
+                        incomingAdminDelegation,
+                        "accept",
+                      )
+                    }
+                  >
+                    {delegationActionLoading
+                      ? "Procesando…"
+                      : "Aceptar administración"}
+                  </button>
                 </div>
-
-                <div className="space-y-3 p-6">
+              </section>
+            )}
+            <div className="atlas-people-layout">
+              <section
+                className="atlas-people-directory"
+                aria-labelledby="atlas-people-members"
+              >
+                <header>
+                  <div>
+                    <p className="atlas-account-eyebrow">
+                      QUIÉNES VAN / {members.length} INTEGRANTE(S)
+                    </p>
+                    <h2 id="atlas-people-members">Las personas del viaje.</h2>
+                  </div>
+                  <span>
+                    {group.es_publico
+                      ? "Acceso por código"
+                      : "Acceso con aprobación"}
+                  </span>
+                </header>
+                <ul className="atlas-people-list">
                   {members.map((member) => {
                     const isSelf =
                       String(member.usuario_id) ===
                       String(localUser?.id_usuario);
-                    const memberName =
-                      member.nombre || member.email || "Usuario";
-                    const memberInitials = getInitials(memberName) || "U";
-
+                    const name =
+                      member.nombre || member.email || "Nombre no informado";
                     return (
-                      <div
-                        key={member.id}
-                        className="grid grid-cols-1 gap-3 rounded-2xl border border-[#E2E8F0] bg-[#FAFCFF] px-4 py-4 transition hover:border-[#CFE0FF] hover:bg-white hover:shadow-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
-                      >
-                        <div className="flex min-w-0 items-center gap-3">
-                          <div
-                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl font-heading text-sm font-bold text-white ${member.rol === "admin" ? "bg-[#1E6FD9]" : "bg-[#7A4FD6]"}`}
-                          >
-                            {memberInitials}
-                          </div>
-                          <div className="min-w-0">
-                            <p
-                              className="truncate font-body text-sm font-bold text-[#1E0A4E]"
-                              title={memberName}
+                      <li key={member.id}>
+                        <AccountAvatar src={member.avatar_url} name={name} />
+                        <div className="atlas-member-identity">
+                          <strong>
+                            {name}
+                            {isSelf && <span> · tú</span>}
+                          </strong>
+                          {member.email && <p>{member.email}</p>}
+                          <small>{getDisplayRole(member.rol)}</small>
+                        </div>
+                        {canManageGroup && !isSelf && (
+                          <div className="atlas-member-actions">
+                            <button
+                              className="atlas-account-link"
+                              disabled={!online || roleChangeLoading}
+                              onClick={() => {
+                                setActionError("");
+                                setRoleChangeTarget(member);
+                              }}
                             >
-                              {memberName}{" "}
-                              {isSelf && (
-                                <span className="text-[#7A8799]">(tú)</span>
-                              )}
-                            </p>
-
-                            <p
-                              className="truncate font-body text-xs text-[#7A8799]"
-                              title={member.email || ""}
+                              {member.rol === "admin"
+                                ? "Cambiar a viajero"
+                                : "Delegar administración"}
+                            </button>
+                            <button
+                              className="atlas-account-link is-danger"
+                              disabled={!online || removeLoadingId !== null}
+                              onClick={() => {
+                                setActionError("");
+                                setRemoveTarget(member);
+                              }}
                             >
-                              {member.email}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:pl-4">
-                          <span
-                            className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${
-                              member.rol === "admin"
-                                ? "bg-[#E8F0FF] text-[#1E6FD9]"
-                                : "bg-[#F4F6F8] text-[#1E0A4E]"
-                            }`}
-                          >
-                            {getDisplayRole(member.rol)}
-                          </span>
-
-                          {canManageGroup && !isSelf && (
-                            <>
-                              <button
-                                onClick={() => setRoleChangeTarget(member)}
-                                className="whitespace-nowrap rounded-xl border border-[#D8C8FF] bg-white px-3 py-2 text-xs font-semibold text-[#6D45C0] hover:bg-[#F7F2FF]"
-                              >
-                                Cambiar rol
-                              </button>
-
-                              <button
-                                onClick={() => setRemoveTarget(member)}
-                                className="whitespace-nowrap rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-50"
-                              >
-                                Expulsar
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {canInviteGroup && (
-                <div className="overflow-hidden rounded-3xl border border-[#D9E4F7] bg-white shadow-[0_16px_38px_rgba(30,10,78,0.08)]">
-                  <div className="border-b border-[#E2E8F0] bg-[linear-gradient(90deg,#FFFFFF,#F7F2FF)] px-6 py-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="mb-1 inline-flex items-center gap-2 rounded-full bg-[#F3EEFF] px-3 py-1 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-[#7A4FD6]">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#7A4FD6]" />
-                          Acceso
-                        </p>
-                        <h2 className="font-heading text-xl font-extrabold text-[#1E0A4E]">
-                          Invitación del grupo
-                        </h2>
-                        <p className="mt-1 font-body text-sm text-[#7A8799]">
-                          Comparte el QR, el enlace o envía invitaciones por
-                          correo.
-                        </p>
-                      </div>
-                      <HelpButton
-                        title="Invitaciones"
-                        description="Comparte el acceso solo cuando el grupo tenga cupo. En grupos privados, las solicitudes quedan pendientes hasta que el organizador las apruebe."
-                        placement="right"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="p-6">
-                    <div className="rounded-3xl border border-[#E2E8F0] bg-[linear-gradient(180deg,#F8FAFC,#FFFFFF)] p-5 text-center">
-                      {qrBase64 ? (
-                        <img
-                          src={qrBase64}
-                          alt="QR de invitación"
-                          className="mx-auto h-48 w-48 rounded-2xl border border-[#E2E8F0] bg-white p-2 shadow-sm"
-                        />
-                      ) : (
-                        <div className="mx-auto h-48 w-48 rounded-xl border border-[#E2E8F0] bg-white" />
-                      )}
-
-                      <p className="mt-4 break-all font-body text-xs text-[#7A8799]">
-                        {inviteLink}
-                      </p>
-
-                      <button
-                        onClick={() => setIsInviteModalOpen(true)}
-                        className="mt-4 w-full rounded-2xl border border-[#D8C8FF] bg-white px-4 py-3 text-sm font-bold text-[#6D45C0] transition hover:-translate-y-0.5 hover:bg-[#F7F2FF]"
-                      >
-                        Compartir invitación
-                      </button>
-
-                      <button
-                        onClick={handleCopy}
-                        className="mt-2 w-full rounded-2xl bg-[#1E0A4E] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_24px_rgba(30,10,78,0.18)] transition hover:-translate-y-0.5 hover:opacity-90"
-                      >
-                        Copiar enlace
-                      </button>
-                    </div>
-
-                    {isPrivateGroup && (
-                      <div className="mt-6 rounded-3xl border border-[#FFE2A8] bg-[#FFFBF0] p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-[#A86B00]">
-                              <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B]" />
-                              Privado
-                            </p>
-                            <h3 className="mt-2 font-heading text-base font-bold text-[#1E0A4E]">
-                              Solicitudes de unión
-                            </h3>
-                          </div>
-                          <span className="rounded-full bg-[#FFF4D6] px-3 py-1 text-xs font-bold text-[#A86B00]">
-                            {joinRequests.length}
-                          </span>
-                        </div>
-                        <p className="mt-2 font-body text-xs leading-relaxed text-[#7A8799]">
-                          En grupos privados, quienes usen el código quedan
-                          pendientes hasta que el administrador apruebe o
-                          rechace la solicitud.
-                        </p>
-
-                        {joinRequests.length === 0 ? (
-                          <p className="mt-3 rounded-2xl border border-[#FFE2A8] bg-white px-4 py-3 font-body text-sm font-medium text-[#A86B00]">
-                            No hay solicitudes pendientes.
-                          </p>
-                        ) : (
-                          <div className="mt-3 space-y-2">
-                            {joinRequests.map((request) => (
-                              <div
-                                key={request.id}
-                                className="rounded-2xl border border-[#FFE2A8] bg-white px-4 py-3"
-                              >
-                                <div className="flex items-start justify-between gap-3">
-                                  <div>
-                                    <p className="font-body text-sm font-medium text-[#1E0A4E]">
-                                      {request.nombre ||
-                                        request.email ||
-                                        `Usuario ${request.usuario_id}`}
-                                    </p>
-                                    {request.email && (
-                                      <p className="font-body text-xs text-[#7A8799]">
-                                        {request.email}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <span className="rounded-full bg-[#FFF4D6] px-3 py-1 text-xs font-semibold text-[#A86B00]">
-                                    Pendiente
-                                  </span>
-                                </div>
-                                <div className="mt-3 grid grid-cols-2 gap-2">
-                                  <button
-                                    type="button"
-                                    disabled={joinRequestActionLoading !== null}
-                                    onClick={() =>
-                                      handleResolveJoinRequest(
-                                        request,
-                                        "approve",
-                                      )
-                                    }
-                                    className="rounded-xl bg-[#35C56A] px-3 py-2 text-xs font-bold text-white hover:bg-[#2FB95F] disabled:cursor-not-allowed disabled:opacity-60"
-                                  >
-                                    {joinRequestActionLoading ===
-                                    `${request.id}:approve`
-                                      ? "Aprobando..."
-                                      : "Aprobar"}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    disabled={joinRequestActionLoading !== null}
-                                    onClick={() =>
-                                      handleResolveJoinRequest(
-                                        request,
-                                        "reject",
-                                      )
-                                    }
-                                    className="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                  >
-                                    {joinRequestActionLoading ===
-                                    `${request.id}:reject`
-                                      ? "Rechazando..."
-                                      : "Rechazar"}
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
+                              Retirar del viaje
+                            </button>
                           </div>
                         )}
-                      </div>
-                    )}
-
-                    <div className="mt-6 rounded-3xl border border-[#D8C8FF] bg-[#FBF8FF] p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 font-body text-[10px] font-bold uppercase tracking-[0.16em] text-[#7A4FD6]">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#7A4FD6]" />
-                            Enviadas
-                          </p>
-                          <h3 className="mt-2 font-heading text-base font-bold text-[#1E0A4E]">
-                            Invitaciones pendientes
-                          </h3>
-                        </div>
-                        <span className="rounded-full bg-[#F3EEFF] px-3 py-1 text-xs font-bold text-[#7A4FD6]">
-                          {pendingInvitations.length}
-                        </span>
-                      </div>
-
-                      {pendingInvitations.length === 0 ? (
-                        <p className="mt-3 rounded-2xl border border-[#D8C8FF] bg-white px-4 py-3 font-body text-sm font-medium text-[#7A4FD6]">
-                          Todavía no hay invitaciones pendientes.
-                        </p>
-                      ) : (
-                        <div className="mt-3 space-y-2">
-                          {pendingInvitations.map((invitation) => (
-                            <div
-                              key={invitation.id}
-                              className="flex items-center justify-between gap-3 rounded-2xl border border-[#D8C8FF] bg-white px-4 py-3"
-                            >
-                              <div className="min-w-0">
-                                <p className="break-words font-body text-sm font-medium text-[#1E0A4E]">
-                                  {invitation.email}
-                                </p>
-
-                                <p className="font-body text-xs text-[#7A8799]">
-                                  Pendiente de aceptar
-                                </p>
-                              </div>
-
-                              <span className="rounded-full bg-[#FFF4D6] px-3 py-1 text-xs font-semibold text-[#A86B00]">
-                                Pendiente
-                              </span>
-                            </div>
-                          ))}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+              {canManageGroup && (
+                <aside className="atlas-people-access">
+                  <p className="atlas-account-eyebrow">
+                    ADMINISTRAR / ACCESO AL VIAJE
+                  </p>
+                  <h2>Una invitación al plan.</h2>
+                  <p>
+                    {members.length}
+                    {group.maximo_miembros
+                      ? ` de ${group.maximo_miembros}`
+                      : ""}{" "}
+                    integrantes actuales.
+                  </p>
+                  {hasReachedCapacity ? (
+                    <div className="atlas-account-notice">
+                      Capacidad máxima alcanzada. Puedes consultar las
+                      invitaciones existentes; los nuevos accesos dependen del
+                      cupo del viaje.
+                    </div>
+                  ) : (
+                    <>
+                      <p className="atlas-group-code">
+                        <span>Código del viaje</span>
+                        <strong>{group.codigo_invitacion}</strong>
+                      </p>
+                      {inviteLink && (
+                        <div className="atlas-people-invite-preview">
+                          <label htmlFor="atlas-group-link">
+                            Enlace de invitación
+                          </label>
+                          <input
+                            id="atlas-group-link"
+                            readOnly
+                            value={inviteLink}
+                          />
+                          <button
+                            className="atlas-account-link"
+                            onClick={() => void handleCopy()}
+                          >
+                            {copied ? "Enlace copiado" : "Copiar enlace"}
+                          </button>
                         </div>
                       )}
-                    </div>
-                  </div>
-                </div>
+                      {qrBase64 && (
+                        <img
+                          className="atlas-people-qr"
+                          src={qrBase64}
+                          alt="Código QR de invitación recibido del servidor"
+                        />
+                      )}
+                      <button
+                        className="atlas-account-button"
+                        disabled={!online}
+                        onClick={() => setIsInviteModalOpen(true)}
+                      >
+                        Administrar enlace y correos
+                      </button>
+                    </>
+                  )}
+                  {isPrivateGroup && (
+                    <section className="atlas-people-requests">
+                      <h3>Solicitudes de incorporación</h3>
+                      {joinRequests.length === 0 ? (
+                        <p>No hay solicitudes pendientes.</p>
+                      ) : (
+                        <ul>
+                          {joinRequests.map((request) => (
+                            <li key={request.id}>
+                              <strong>
+                                {request.nombre ||
+                                  request.email ||
+                                  "Nombre no informado"}
+                              </strong>
+                              {request.nombre && request.email && (
+                                <p>{request.email}</p>
+                              )}
+                              <small>Solicitud pendiente</small>
+                              <div className="atlas-account-dialog-actions">
+                                <button
+                                  className="atlas-account-button"
+                                  disabled={
+                                    !online || joinRequestActionLoading !== null
+                                  }
+                                  onClick={() =>
+                                    void handleResolveJoinRequest(
+                                      request,
+                                      "reject",
+                                    )
+                                  }
+                                >
+                                  Rechazar
+                                </button>
+                                <button
+                                  className="atlas-account-button is-primary"
+                                  disabled={
+                                    !online ||
+                                    hasReachedCapacity ||
+                                    joinRequestActionLoading !== null
+                                  }
+                                  onClick={() =>
+                                    void handleResolveJoinRequest(
+                                      request,
+                                      "approve",
+                                    )
+                                  }
+                                >
+                                  {joinRequestActionLoading ===
+                                  `${request.id}:approve`
+                                    ? "Aprobando…"
+                                    : "Aprobar"}
+                                </button>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </section>
+                  )}
+                  <section className="atlas-people-invitations">
+                    <h3>Invitaciones pendientes</h3>
+                    {pendingInvitations.length === 0 ? (
+                      <p>No hay invitaciones pendientes.</p>
+                    ) : (
+                      <ul>
+                        {pendingInvitations.map((invitation) => (
+                          <li key={invitation.id}>
+                            <strong>{invitation.email}</strong>
+                            <small>Pendiente de aceptar</small>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                </aside>
               )}
             </div>
           </div>
@@ -1387,115 +1357,46 @@ export function GroupPanelPage() {
       )}
 
       {canManageGroup && roleChangeTarget && (
-        <div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-4"
-          onClick={() => {
-            if (!roleChangeLoading) setRoleChangeTarget(null);
-          }}
+        <AccountDialog
+          title="Confirmar cambio de rol"
+          busy={roleChangeLoading}
+          onClose={() => setRoleChangeTarget(null)}
         >
-          <div
-            className="w-full max-w-md rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h3 className="font-heading text-lg font-bold text-[#1E0A4E]">
-              Confirmar cambio de rol
-            </h3>
-            <p className="mt-2 font-body text-sm leading-relaxed text-[#475569]">
-              {roleChangeTarget.rol === "admin"
-                ? `¿Confirmas que quieres cambiar a ${roleChangeTarget.nombre || roleChangeTarget.email} a viajero?`
-                : `Se enviará una solicitud a ${roleChangeTarget.nombre || roleChangeTarget.email}. La transferencia solo se completará si esa persona acepta ser organizadora.`}
+          {actionError && (
+            <p className="atlas-account-notice is-error" role="alert">
+              {actionError}
             </p>
-            <p className="mt-2 font-body text-xs text-[#64748B]">
-              {roleChangeTarget.rol === "admin"
-                ? "Este cambio afecta los permisos de administración del grupo y se sincroniza para todos los integrantes."
-                : "La delegación requiere aceptación activa del receptor y expira en 5 minutos. Mientras esté pendiente, tú sigues siendo organizador."}
-            </p>
-
-            <div className="mt-5 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                disabled={roleChangeLoading}
-                onClick={() => setRoleChangeTarget(null)}
-                className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-semibold text-[#1E0A4E] hover:bg-[#F8FAFC] disabled:opacity-60"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                disabled={roleChangeLoading}
-                onClick={() => handleToggleRole(roleChangeTarget)}
-                className="rounded-lg bg-[#1E6FD9] px-3 py-2 text-xs font-semibold text-white hover:bg-[#2C8BE6] disabled:opacity-60"
-              >
-                {roleChangeLoading
-                  ? "Procesando..."
-                  : roleChangeTarget.rol === "admin"
-                    ? "Confirmar"
-                    : "Enviar solicitud"}
-              </button>
-            </div>
+          )}
+          <p>
+            {roleChangeTarget.rol === "admin"
+              ? `¿Confirmas que quieres cambiar a ${roleChangeTarget.nombre || roleChangeTarget.email} a viajero?`
+              : `Se enviará una solicitud a ${roleChangeTarget.nombre || roleChangeTarget.email}. Los roles cambian únicamente cuando la persona acepta.`}
+          </p>
+          <p className="atlas-account-caption">
+            La solicitud de administración expira en cinco minutos. Mientras
+            esté pendiente, conservas tu rol actual.
+          </p>
+          <div className="atlas-account-dialog-actions">
+            <button
+              className="atlas-account-button"
+              disabled={roleChangeLoading}
+              onClick={() => setRoleChangeTarget(null)}
+            >
+              Cancelar
+            </button>
+            <button
+              className="atlas-account-button is-primary"
+              disabled={roleChangeLoading || !online}
+              onClick={() => void handleToggleRole(roleChangeTarget)}
+            >
+              {roleChangeLoading
+                ? "Procesando…"
+                : roleChangeTarget.rol === "admin"
+                  ? "Confirmar"
+                  : "Enviar solicitud"}
+            </button>
           </div>
-        </div>
-      )}
-
-      {incomingAdminDelegation && (
-        <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/45 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-xl">
-            <h3 className="font-heading text-lg font-bold text-[#1E0A4E]">
-              ¿Aceptar administración del viaje?
-            </h3>
-            <p className="mt-2 font-body text-sm leading-relaxed text-[#475569]">
-              {incomingAdminDelegation.from_nombre ||
-                incomingAdminDelegation.from_email ||
-                "El organizador"}{" "}
-              quiere transferirte el rol de organizador. Si aceptas, tendrás
-              permisos de administración y el organizador actual pasará a
-              viajero.
-            </p>
-            <p className="mt-2 font-body text-xs text-[#64748B]">
-              Esta solicitud expira a las{" "}
-              {new Date(incomingAdminDelegation.expires_at).toLocaleTimeString(
-                [],
-                { hour: "2-digit", minute: "2-digit" },
-              )}
-              .
-            </p>
-
-            <div className="mt-5 grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                disabled={delegationActionLoading !== null}
-                onClick={() =>
-                  handleResolveAdminDelegation(
-                    incomingAdminDelegation,
-                    "reject",
-                  )
-                }
-                className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-semibold text-[#1E0A4E] hover:bg-[#F8FAFC] disabled:opacity-60"
-              >
-                {delegationActionLoading ===
-                `${incomingAdminDelegation.id}:reject`
-                  ? "Rechazando..."
-                  : "Rechazar"}
-              </button>
-              <button
-                type="button"
-                disabled={delegationActionLoading !== null}
-                onClick={() =>
-                  handleResolveAdminDelegation(
-                    incomingAdminDelegation,
-                    "accept",
-                  )
-                }
-                className="rounded-lg bg-[#1E6FD9] px-3 py-2 text-xs font-semibold text-white hover:bg-[#2C8BE6] disabled:opacity-60"
-              >
-                {delegationActionLoading ===
-                `${incomingAdminDelegation.id}:accept`
-                  ? "Aceptando..."
-                  : "Aceptar"}
-              </button>
-            </div>
-          </div>
-        </div>
+        </AccountDialog>
       )}
 
       <ToastContainer toasts={toast.toasts} onDismiss={toast.dismiss} />
@@ -1505,7 +1406,16 @@ export function GroupPanelPage() {
         title="Expulsar integrante"
         description="Esta acción revocará su acceso al viaje y se notificará a los integrantes conectados."
         details={
-          removeTarget ? removeTarget.nombre || removeTarget.email : undefined
+          <>
+            {removeTarget
+              ? removeTarget.nombre || removeTarget.email
+              : undefined}
+            {actionError && (
+              <p className="atlas-account-notice is-error" role="alert">
+                {actionError}
+              </p>
+            )}
+          </>
         }
         confirmLabel="Expulsar integrante"
         cancelLabel="Cancelar"
@@ -1535,4 +1445,17 @@ export function GroupPanelPage() {
   );
 }
 
+export function GroupPanelPage() {
+  const [params] = useSearchParams();
+  const { localUser } = useAuth();
+  return (
+    <GroupPanelWorkspace
+      key={
+        String(params.get("groupId") || getCurrentGroup()?.id || "") +
+        ":" +
+        String(localUser?.id_usuario || "")
+      }
+    />
+  );
+}
 export default GroupPanelPage;

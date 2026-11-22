@@ -1,108 +1,118 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Dispatch, FC, ReactNode, SetStateAction } from 'react'
-import { useAuth } from '../../context/useAuth'
-import { useSocket } from '../../hooks/useSocket'
-import { useGroupRealtimeRefresh } from '../../hooks/useGroupRealtimeRefresh'
-import { budgetService, type BudgetCategory, type BudgetSplitType } from '../../services/budget'
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Dispatch, FC, ReactNode, SetStateAction } from "react";
+import { useAuth } from "../../context/useAuth";
+import { useSocket } from "../../hooks/useSocket";
+import { useGroupRealtimeRefresh } from "../../hooks/useGroupRealtimeRefresh";
+import {
+  budgetService,
+  type BudgetCategory,
+  type BudgetSplitType,
+} from "../../services/budget";
 import {
   documentsService,
   type DocumentMetadataInput,
   type TripDocument,
   type TripDocumentCategory,
-} from '../../services/documents'
+} from "../../services/documents";
 import {
   contextLinksService,
   type ContextEntityRef,
   type ContextEntitySummary,
   type ContextLink,
   type ContextLinkOptions,
-} from '../../services/context-links'
-import { ExpenseDraftForm } from '../budget/ExpenseDraftForm'
-import { ConfirmDialog } from '../ui/ConfirmDialog'
+} from "../../services/context-links";
+import { ExpenseDraftForm } from "../budget/ExpenseDraftForm";
+import {
+  AccountConfirmDialog as ConfirmDialog,
+  AccountDialog,
+} from "../account/AccountDialog";
+import { useNetworkMonitor } from "../../hooks/useNetworkMonitor";
+import {
+  canDeleteTripDocument,
+  documentKind,
+  validDocumentFile,
+  safeDocumentUrl,
+  documentSize as formatBytes,
+  documentDate as formatDate,
+} from "../account/account-data";
+import "../account/accounts-editorial.css";
 
-const ACCEPTED_FILES = '.pdf,.png,.jpg,.jpeg,.webp'
+const ACCEPTED_FILES = ".pdf,.txt,.png,.jpg,.jpeg,.webp";
 
-const CATEGORY_OPTIONS: Array<{ value: TripDocumentCategory; label: string }> = [
-  { value: 'vuelo', label: 'Vuelos' },
-  { value: 'hospedaje', label: 'Hospedajes' },
-  { value: 'gasto', label: 'Gastos' },
-  { value: 'actividad', label: 'Actividades' },
-  { value: 'otro', label: 'Otros' },
-]
+const CATEGORY_OPTIONS: Array<{ value: TripDocumentCategory; label: string }> =
+  [
+    { value: "vuelo", label: "Vuelos" },
+    { value: "hospedaje", label: "Hospedajes" },
+    { value: "gasto", label: "Gastos" },
+    { value: "actividad", label: "Actividades" },
+    { value: "otro", label: "Otros" },
+  ];
 
 const categoryLabel = (value: string): string =>
-  CATEGORY_OPTIONS.find((option) => option.value === value)?.label ?? 'Otros'
-
-const formatBytes = (bytes?: number): string => {
-  if (!bytes || bytes <= 0) return '—'
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
-const formatDate = (value?: string): string => {
-  if (!value) return '—'
-  try {
-    return new Date(value).toLocaleString('es-MX')
-  } catch {
-    return value
-  }
-}
+  CATEGORY_OPTIONS.find((option) => option.value === value)?.label ?? "Otros";
 
 interface Props {
-  groupId: string | null
+  groupId: string | null;
   members?: Array<{
-    usuario_id?: string | number
-    id?: string | number
-    nombre?: string
-    email?: string
-  }>
+    usuario_id?: string | number;
+    id?: string | number;
+    nombre?: string;
+    email?: string;
+  }>;
   currentUser?: {
-    id_usuario?: string | number
-    nombre?: string | null
-    email?: string | null
-  } | null
-  onOpenBudget?: () => void
-  onOpenItinerary?: () => void
-  onOpenSubgroups?: () => void
-  isReadOnly?: boolean
+    id_usuario?: string | number;
+    nombre?: string | null;
+    email?: string | null;
+  } | null;
+  onOpenBudget?: () => void;
+  onOpenItinerary?: () => void;
+  onOpenSubgroups?: () => void;
+  isReadOnly?: boolean;
 }
 
 type VaultActionModalState =
-  | { target: 'upload'; mode: 'expense' | 'activity' }
-  | { target: 'document'; docId: string; mode: 'expense' | 'activity' }
-  | null
+  | { target: "upload"; mode: "expense" | "activity" }
+  | { target: "document"; docId: string; mode: "expense" | "activity" }
+  | null;
 
-type VaultActionTab = 'associate' | 'create'
+type VaultActionTab = "associate" | "create";
 
 const EMPTY_LINK_OPTIONS: ContextLinkOptions = {
   expenses: [],
   documents: [],
   activities: [],
   subgroupActivities: [],
-}
+};
 
-const VAULT_CACHE_TTL_MS = 2 * 60 * 1000
+const VAULT_CACHE_TTL_MS = 2 * 60 * 1000;
 const vaultDataCache = new Map<
   string,
-  { items: TripDocument[]; links: ContextLink[]; options: ContextLinkOptions; savedAt: number }
->()
+  {
+    items: TripDocument[];
+    links: ContextLink[];
+    options: ContextLinkOptions;
+    savedAt: number;
+  }
+>();
 
 function getVaultCache(groupId: string) {
-  const cached = vaultDataCache.get(groupId)
-  if (!cached) return null
+  const cached = vaultDataCache.get(groupId);
+  if (!cached) return null;
   if (Date.now() - cached.savedAt > VAULT_CACHE_TTL_MS) {
-    vaultDataCache.delete(groupId)
-    return null
+    vaultDataCache.delete(groupId);
+    return null;
   }
-  return cached
+  return cached;
 }
 
 function VaultSkeleton() {
   return (
     <div className="space-y-3" aria-busy="true" aria-live="polite">
       {[0, 1, 2].map((item) => (
-        <div key={item} className="rounded-2xl border border-[#E2E8F0] bg-[#FCFDFE] px-4 py-4">
+        <div
+          key={item}
+          className="rounded-2xl border border-[#E2E8F0] bg-[#FCFDFE] px-4 py-4"
+        >
           <div className="h-4 w-56 animate-pulse rounded-full bg-[#E8EEF7]" />
           <div className="mt-3 flex gap-2">
             <div className="h-7 w-20 animate-pulse rounded-full bg-[#F1F5F9]" />
@@ -113,87 +123,95 @@ function VaultSkeleton() {
         </div>
       ))}
     </div>
-  )
+  );
 }
 
-const entityKey = (entity: ContextEntityRef): string => `${entity.type}:${entity.id}`
+const entityKey = (entity: ContextEntityRef): string =>
+  `${entity.type}:${entity.id}`;
 
 const parseEntityKey = (value: string): ContextEntityRef => {
-  const [type, ...idParts] = value.split(':')
+  const [type, ...idParts] = value.split(":");
   return {
-    type: type as ContextEntityRef['type'],
-    id: idParts.join(':'),
-  }
-}
+    type: type as ContextEntityRef["type"],
+    id: idParts.join(":"),
+  };
+};
 
-const otherEntityForDocument = (link: ContextLink, documentId: string): ContextEntitySummary | null => {
-  if (link.entityA.type === 'document' && link.entityA.id === documentId) return link.entityB
-  if (link.entityB.type === 'document' && link.entityB.id === documentId) return link.entityA
-  return null
-}
+const otherEntityForDocument = (
+  link: ContextLink,
+  documentId: string,
+): ContextEntitySummary | null => {
+  if (link.entityA.type === "document" && link.entityA.id === documentId)
+    return link.entityB;
+  if (link.entityB.type === "document" && link.entityB.id === documentId)
+    return link.entityA;
+  return null;
+};
 
-const isVaultContextType = (type: ContextEntityRef['type']): boolean =>
-  type === 'expense' || type === 'activity' || type === 'subgroup_activity'
+const isVaultContextType = (type: ContextEntityRef["type"]): boolean =>
+  type === "expense" || type === "activity" || type === "subgroup_activity";
 
-const todayValue = () => new Date().toISOString().split('T')[0]
+const todayValue = () => new Date().toISOString().split("T")[0];
 
 function ActionModal({
   open,
+  error,
+  busy = false,
   title,
   subtitle,
   confirmLabel,
   confirmDisabled = false,
-  panelClassName = 'max-w-lg',
+  panelClassName = "max-w-lg",
   onClose,
   onConfirm,
   children,
 }: {
-  open: boolean
-  title: string
-  subtitle: string
-  confirmLabel: string
-  confirmDisabled?: boolean
-  panelClassName?: string
-  onClose: () => void
-  onConfirm: () => void
-  children: ReactNode
+  open: boolean;
+  error?: string | null;
+  busy?: boolean;
+  title: string;
+  subtitle: string;
+  confirmLabel: string;
+  confirmDisabled?: boolean;
+  panelClassName?: string;
+  onClose: () => void;
+  onConfirm: () => void;
+  children: ReactNode;
 }) {
-  if (!open) return null
+  if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0D0820]/70 px-4" onClick={onClose}>
-      <div
-        className={`max-h-[84vh] w-full overflow-y-auto rounded-2xl bg-white shadow-xl ${panelClassName}`}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="border-b border-[#E2E8F0] px-5 py-4">
-          <h3 className="font-heading text-lg font-bold text-[#1E0A4E]">{title}</h3>
-          <p className="mt-1 font-body text-sm text-[#64748B]">{subtitle}</p>
-        </div>
-        <div className="px-5 py-4">{children}</div>
-        <div className="flex justify-end gap-3 border-t border-[#E2E8F0] px-5 py-4">
+    <AccountDialog title={title} onClose={onClose} busy={busy}>
+      <div className={`atlas-vault-action ${panelClassName}`}>
+        <p className="atlas-account-caption">{subtitle}</p>
+        {error && (
+          <p role="alert" className="atlas-account-notice is-error">
+            {error}
+          </p>
+        )}
+        <fieldset disabled={busy}>{children}</fieldset>
+        <div className="atlas-account-dialog-actions">
           <button
-            type="button"
+            className="atlas-account-button"
+            disabled={busy}
             onClick={onClose}
-            className="rounded-xl border border-[#D7DEEA] px-4 py-2.5 font-body text-sm font-semibold text-[#3D4A5C]"
           >
             Cancelar
           </button>
           <button
-            type="button"
+            className="atlas-account-button is-primary"
             onClick={onConfirm}
-            disabled={confirmDisabled}
-            className="rounded-xl bg-[#1E6FD9] px-4 py-2.5 font-body text-sm font-semibold text-white disabled:opacity-50"
+            disabled={confirmDisabled || busy}
           >
             {confirmLabel}
           </button>
         </div>
       </div>
-    </div>
-  )
+    </AccountDialog>
+  );
 }
 
-export const DocumentVaultPanel: FC<Props> = ({
+const DocumentVaultWorkspace: FC<Props> = ({
   groupId,
   members = [],
   currentUser = null,
@@ -202,344 +220,503 @@ export const DocumentVaultPanel: FC<Props> = ({
   onOpenSubgroups,
   isReadOnly = false,
 }) => {
-  const { accessToken } = useAuth()
-  const { socket } = useSocket(accessToken)
-  const [items, setItems] = useState<TripDocument[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
+  const { accessToken, sessionUser, localUser } = useAuth();
+  const authOwner = sessionUser?.id || localUser?.auth_user_id || null;
+  const vaultKey = String(authOwner || "") + ":" + String(groupId);
+  const online = useNetworkMonitor();
+  const alive = useRef(true),
+    mutationLocks = useRef(new Set<string>());
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+  const [documentQuery, setDocumentQuery] = useState("");
+  const { socket } = useSocket(accessToken);
+  const [items, setItems] = useState<TripDocument[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   // Lock síncrono para evitar subidas duplicadas: el estado isUploading se
   // actualiza de forma asíncrona, así que un doble clic rápido podía disparar
   // handleUpload dos veces antes de re-renderizar y subir el documento dos veces.
-  const uploadingRef = useRef(false)
-  const [error, setError] = useState<string | null>(null)
-  const [category, setCategory] = useState<TripDocumentCategory>('otro')
-  const [activeFilter, setActiveFilter] = useState<'todos' | TripDocumentCategory>('todos')
-  const [notes, setNotes] = useState('')
-  const [uploadFile, setUploadFile] = useState<File | null>(null)
-  const [showUploadModal, setShowUploadModal] = useState(false)
-  const [contextLinks, setContextLinks] = useState<ContextLink[]>([])
-  const [linkOptions, setLinkOptions] = useState<ContextLinkOptions>(EMPTY_LINK_OPTIONS)
-  const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([])
-  const [selectedActivityKeys, setSelectedActivityKeys] = useState<string[]>([])
-  const [editingExpenseIds, setEditingExpenseIds] = useState<string[]>([])
-  const [editingActivityKeys, setEditingActivityKeys] = useState<string[]>([])
-  const [savingLinksDocId, setSavingLinksDocId] = useState<string | null>(null)
-  const [actionModal, setActionModal] = useState<VaultActionModalState>(null)
-  const [documentPendingDelete, setDocumentPendingDelete] = useState<TripDocument | null>(null)
-  const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(null)
-  const [expenseFilter, setExpenseFilter] = useState('')
-  const [draftExpenseDescription, setDraftExpenseDescription] = useState('')
-  const [draftExpenseAmount, setDraftExpenseAmount] = useState('')
-  const [draftExpenseCategory, setDraftExpenseCategory] = useState<BudgetCategory>('otro')
-  const [draftExpenseDate, setDraftExpenseDate] = useState(todayValue())
-  const [draftExpensePaidBy, setDraftExpensePaidBy] = useState('')
-  const [draftExpenseSplitType, setDraftExpenseSplitType] = useState<BudgetSplitType>('equitativa')
-  const [draftExpenseSplitAmounts, setDraftExpenseSplitAmounts] = useState<Record<string, string>>({})
-  const [draftExpenseMemberIds, setDraftExpenseMemberIds] = useState<string[]>([])
-  const [expenseModalTab, setExpenseModalTab] = useState<VaultActionTab>('associate')
-  const lastVaultCacheKeyRef = useRef<string | null>(null)
-  const itemsLengthRef = useRef(0)
+  const uploadingRef = useRef(false);
+  const [error, setError] = useState<string | null>(null);
+  const [category, setCategory] = useState<TripDocumentCategory>("otro");
+  const [activeFilter, setActiveFilter] = useState<
+    "todos" | TripDocumentCategory
+  >("todos");
+  const [notes, setNotes] = useState("");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [contextLinks, setContextLinks] = useState<ContextLink[]>([]);
+  const [linkOptions, setLinkOptions] =
+    useState<ContextLinkOptions>(EMPTY_LINK_OPTIONS);
+  const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([]);
+  const [selectedActivityKeys, setSelectedActivityKeys] = useState<string[]>(
+    [],
+  );
+  const [editingExpenseIds, setEditingExpenseIds] = useState<string[]>([]);
+  const [editingActivityKeys, setEditingActivityKeys] = useState<string[]>([]);
+  const [savingLinksDocId, setSavingLinksDocId] = useState<string | null>(null);
+  const [actionModal, setActionModal] = useState<VaultActionModalState>(null);
+  const [documentPendingDelete, setDocumentPendingDelete] =
+    useState<TripDocument | null>(null);
+  const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(
+    null,
+  );
+  const [expenseFilter, setExpenseFilter] = useState("");
+  const [draftExpenseDescription, setDraftExpenseDescription] = useState("");
+  const [draftExpenseAmount, setDraftExpenseAmount] = useState("");
+  const [draftExpenseCategory, setDraftExpenseCategory] =
+    useState<BudgetCategory>("otro");
+  const [draftExpenseDate, setDraftExpenseDate] = useState(todayValue());
+  const [draftExpensePaidBy, setDraftExpensePaidBy] = useState("");
+  const [draftExpenseSplitType, setDraftExpenseSplitType] =
+    useState<BudgetSplitType>("equitativa");
+  const [draftExpenseSplitAmounts, setDraftExpenseSplitAmounts] = useState<
+    Record<string, string>
+  >({});
+  const [draftExpenseMemberIds, setDraftExpenseMemberIds] = useState<string[]>(
+    [],
+  );
+  const [expenseModalTab, setExpenseModalTab] =
+    useState<VaultActionTab>("associate");
+  const lastVaultCacheKeyRef = useRef<string | null>(null);
+  const itemsLengthRef = useRef(0);
 
   useEffect(() => {
-    itemsLengthRef.current = items.length
-  }, [items.length])
+    itemsLengthRef.current = items.length;
+  }, [items.length]);
 
   const memberOptions = useMemo(
     () =>
-      members.map((member) => {
-        const id = String(member.usuario_id ?? member.id ?? '')
-        return {
-          id,
-          label: member.nombre || member.email || `Usuario ${id}`,
-        }
-      }).filter((member) => member.id.length > 0),
-    [members]
-  )
+      members
+        .map((member) => {
+          const id = String(member.usuario_id ?? member.id ?? "");
+          return {
+            id,
+            label: member.nombre || member.email || `Usuario ${id}`,
+          };
+        })
+        .filter((member) => member.id.length > 0),
+    [members],
+  );
   const memberOptionsSafe = useMemo(() => {
-    if (memberOptions.length > 0) return memberOptions
-    const fallbackId = currentUser?.id_usuario != null ? String(currentUser.id_usuario) : ''
-    if (!fallbackId) return []
-    return [{
-      id: fallbackId,
-      label: currentUser?.nombre || currentUser?.email || `Usuario ${fallbackId}`,
-    }]
-  }, [currentUser?.email, currentUser?.id_usuario, currentUser?.nombre, memberOptions])
+    if (memberOptions.length > 0) return memberOptions;
+    const fallbackId =
+      currentUser?.id_usuario != null ? String(currentUser.id_usuario) : "";
+    if (!fallbackId) return [];
+    return [
+      {
+        id: fallbackId,
+        label:
+          currentUser?.nombre || currentUser?.email || `Usuario ${fallbackId}`,
+      },
+    ];
+  }, [
+    currentUser?.email,
+    currentUser?.id_usuario,
+    currentUser?.nombre,
+    memberOptions,
+  ]);
 
   const defaultExpensePayer = useMemo(() => {
-    const currentUserId = currentUser?.id_usuario != null ? String(currentUser.id_usuario) : ''
-    if (currentUserId && memberOptionsSafe.some((member) => member.id === currentUserId)) {
-      return currentUserId
+    const currentUserId =
+      currentUser?.id_usuario != null ? String(currentUser.id_usuario) : "";
+    if (
+      currentUserId &&
+      memberOptionsSafe.some((member) => member.id === currentUserId)
+    ) {
+      return currentUserId;
     }
-    return memberOptionsSafe[0]?.id ?? ''
-  }, [currentUser?.id_usuario, memberOptionsSafe])
+    return memberOptionsSafe[0]?.id ?? "";
+  }, [currentUser?.id_usuario, memberOptionsSafe]);
 
   const filteredItems = useMemo(
-    () => (activeFilter === 'todos' ? items : items.filter((item) => item.category === activeFilter)),
-    [activeFilter, items]
-  )
+    () =>
+      items.filter(
+        (item) =>
+          (activeFilter === "todos" || item.category === activeFilter) &&
+          `${item.file_name} ${item.metadata?.notes || ""}`
+            .toLocaleLowerCase("es-MX")
+            .includes(documentQuery.toLocaleLowerCase("es-MX")),
+      ),
+    [activeFilter, items, documentQuery],
+  );
 
   useEffect(() => {
-    if (!draftExpensePaidBy) setDraftExpensePaidBy(defaultExpensePayer)
+    if (!draftExpensePaidBy) setDraftExpensePaidBy(defaultExpensePayer);
     if (draftExpenseMemberIds.length === 0 && memberOptionsSafe.length > 0) {
-      setDraftExpenseMemberIds(memberOptionsSafe.map((member) => member.id))
+      setDraftExpenseMemberIds(memberOptionsSafe.map((member) => member.id));
     }
-  }, [defaultExpensePayer, draftExpenseMemberIds.length, draftExpensePaidBy, memberOptionsSafe])
+  }, [
+    defaultExpensePayer,
+    draftExpenseMemberIds.length,
+    draftExpensePaidBy,
+    memberOptionsSafe,
+  ]);
 
   const loadContextLinks = useCallback(async () => {
     if (!groupId || !accessToken) {
-      setContextLinks([])
-      setLinkOptions(EMPTY_LINK_OPTIONS)
-      return
+      setContextLinks([]);
+      setLinkOptions(EMPTY_LINK_OPTIONS);
+      return;
     }
 
     const [linksResponse, optionsResponse] = await Promise.all([
       contextLinksService.list(groupId, accessToken),
       contextLinksService.options(groupId, accessToken),
-    ])
-    setContextLinks(linksResponse.links)
-    setLinkOptions(optionsResponse.options)
+    ]);
+    if (!alive.current) return;
+    setContextLinks(linksResponse.links);
+    setLinkOptions(optionsResponse.options);
 
-    const cached = getVaultCache(String(groupId))
+    const cached = getVaultCache(vaultKey);
     if (cached) {
-      vaultDataCache.set(String(groupId), {
+      vaultDataCache.set(vaultKey, {
         ...cached,
         links: linksResponse.links,
         options: optionsResponse.options,
         savedAt: Date.now(),
-      })
+      });
     }
-  }, [accessToken, groupId])
+  }, [accessToken, groupId, vaultKey]);
 
   const getLinksForDocument = (documentId: string) =>
     contextLinks
       .map((link) => otherEntityForDocument(link, documentId))
-      .filter((entity): entity is ContextEntitySummary =>
-        entity !== null && isVaultContextType(entity.type)
-      )
+      .filter(
+        (entity): entity is ContextEntitySummary =>
+          entity !== null && isVaultContextType(entity.type),
+      );
 
   const syncDocumentLinks = async (
     documentId: string,
     expenseIds: string[],
     activityKeys: string[],
   ) => {
-    if (!groupId || !accessToken) return
+    if (!groupId || !accessToken) return;
 
     const desiredEntities: ContextEntityRef[] = [
-      ...expenseIds.map((id) => ({ type: 'expense' as const, id })),
+      ...expenseIds.map((id) => ({ type: "expense" as const, id })),
       ...activityKeys.map(parseEntityKey),
-    ]
+    ];
 
-    const desiredKeys = new Set(desiredEntities.map(entityKey))
-    const currentResponse = await contextLinksService.list(groupId, accessToken, {
-      type: 'document',
-      id: documentId,
-    })
+    const desiredKeys = new Set(desiredEntities.map(entityKey));
+    const currentResponse = await contextLinksService.list(
+      groupId,
+      accessToken,
+      {
+        type: "document",
+        id: documentId,
+      },
+    );
     const currentRelevant = currentResponse.links
-      .map((link) => ({ link, entity: otherEntityForDocument(link, documentId) }))
-      .filter((item): item is { link: ContextLink; entity: ContextEntitySummary } =>
-        item.entity !== null && isVaultContextType(item.entity.type)
-      )
+      .map((link) => ({
+        link,
+        entity: otherEntityForDocument(link, documentId),
+      }))
+      .filter(
+        (item): item is { link: ContextLink; entity: ContextEntitySummary } =>
+          item.entity !== null && isVaultContextType(item.entity.type),
+      );
 
     await Promise.all([
       ...currentRelevant
         .filter(({ entity }) => !desiredKeys.has(entityKey(entity)))
-        .map(({ link }) => contextLinksService.remove(groupId, link.id, accessToken)),
+        .map(({ link }) =>
+          contextLinksService.remove(groupId, link.id, accessToken),
+        ),
       ...desiredEntities
-        .filter((entity) => !currentRelevant.some((item) => entityKey(item.entity) === entityKey(entity)))
-        .map((entity) => contextLinksService.create(groupId, {
-          source: { type: 'document', id: documentId },
-          target: entity,
-        }, accessToken)),
-    ])
-  }
+        .filter(
+          (entity) =>
+            !currentRelevant.some(
+              (item) => entityKey(item.entity) === entityKey(entity),
+            ),
+        )
+        .map((entity) =>
+          contextLinksService.create(
+            groupId,
+            {
+              source: { type: "document", id: documentId },
+              target: entity,
+            },
+            accessToken,
+          ),
+        ),
+    ]);
+  };
 
   const resetLinkSelection = () => {
-    setSelectedExpenseIds([])
-    setSelectedActivityKeys([])
-  }
+    setSelectedExpenseIds([]);
+    setSelectedActivityKeys([]);
+  };
 
   const resetUploadDraft = () => {
-    setUploadFile(null)
-    setNotes('')
-    resetLinkSelection()
-    setActionModal(null)
-    setShowUploadModal(false)
-  }
+    setUploadFile(null);
+    setNotes("");
+    resetLinkSelection();
+    setActionModal(null);
+    setShowUploadModal(false);
+  };
 
   const resetExpenseDraft = () => {
-    setExpenseFilter('')
-    setDraftExpenseDescription('')
-    setDraftExpenseAmount('')
-    setDraftExpenseCategory('otro')
-    setDraftExpenseDate(todayValue())
-    setDraftExpensePaidBy(defaultExpensePayer)
-    setDraftExpenseSplitType('equitativa')
-    setDraftExpenseSplitAmounts({})
-    setDraftExpenseMemberIds(memberOptionsSafe.map((member) => member.id))
-  }
+    setExpenseFilter("");
+    setDraftExpenseDescription("");
+    setDraftExpenseAmount("");
+    setDraftExpenseCategory("otro");
+    setDraftExpenseDate(todayValue());
+    setDraftExpensePaidBy(defaultExpensePayer);
+    setDraftExpenseSplitType("equitativa");
+    setDraftExpenseSplitAmounts({});
+    setDraftExpenseMemberIds(memberOptionsSafe.map((member) => member.id));
+  };
 
-  const toggleValue = (value: string, setter: Dispatch<SetStateAction<string[]>>) => {
-    setter((prev) => prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value])
-  }
+  const toggleValue = (
+    value: string,
+    setter: Dispatch<SetStateAction<string[]>>,
+  ) => {
+    setter((prev) =>
+      prev.includes(value)
+        ? prev.filter((item) => item !== value)
+        : [...prev, value],
+    );
+  };
 
   const toggleDraftExpenseMember = (memberId: string) => {
     setDraftExpenseMemberIds((prev) => {
       const next = prev.includes(memberId)
         ? prev.filter((id) => id !== memberId)
-        : [...prev, memberId]
-      if (next.length === 0) return prev
-      if (!next.includes(draftExpensePaidBy)) setDraftExpensePaidBy(next[0] ?? '')
-      return next
-    })
-  }
+        : [...prev, memberId];
+      if (next.length === 0) return prev;
+      if (!next.includes(draftExpensePaidBy))
+        setDraftExpensePaidBy(next[0] ?? "");
+      return next;
+    });
+  };
 
   const setDraftExpenseSplitAmount = (memberId: string, value: string) => {
     setDraftExpenseSplitAmounts((prev) => ({
       ...prev,
       [memberId]: value,
-    }))
-  }
+    }));
+  };
 
   const draftExpenseSplitError = useMemo(() => {
-    const totalAmount = parseFloat(draftExpenseAmount) || 0
-    if (draftExpenseSplitType !== 'personalizada' || totalAmount <= 0) return null
+    const totalAmount = parseFloat(draftExpenseAmount) || 0;
+    if (draftExpenseSplitType !== "personalizada" || totalAmount <= 0)
+      return null;
     const splitSum = memberOptionsSafe
       .filter((member) => draftExpenseMemberIds.includes(member.id))
-      .reduce((sum, member) => sum + (parseFloat(draftExpenseSplitAmounts[member.id] ?? '0') || 0), 0)
+      .reduce(
+        (sum, member) =>
+          sum + (parseFloat(draftExpenseSplitAmounts[member.id] ?? "0") || 0),
+        0,
+      );
     return Math.abs(splitSum - totalAmount) > 0.01
-      ? 'La division personalizada debe sumar el monto total.'
-      : null
-  }, [draftExpenseAmount, draftExpenseMemberIds, draftExpenseSplitAmounts, draftExpenseSplitType, memberOptionsSafe])
+      ? "La division personalizada debe sumar el monto total."
+      : null;
+  }, [
+    draftExpenseAmount,
+    draftExpenseMemberIds,
+    draftExpenseSplitAmounts,
+    draftExpenseSplitType,
+    memberOptionsSafe,
+  ]);
 
   const startEditLinks = (item: TripDocument) => {
-    const linked = getLinksForDocument(item.id)
-    setEditingExpenseIds(linked.filter((entity) => entity.type === 'expense').map((entity) => entity.id))
+    const linked = getLinksForDocument(item.id);
+    setEditingExpenseIds(
+      linked
+        .filter((entity) => entity.type === "expense")
+        .map((entity) => entity.id),
+    );
     setEditingActivityKeys(
       linked
-        .filter((entity) => entity.type === 'activity' || entity.type === 'subgroup_activity')
-        .map(entityKey)
-    )
-  }
+        .filter(
+          (entity) =>
+            entity.type === "activity" || entity.type === "subgroup_activity",
+        )
+        .map(entityKey),
+    );
+  };
 
   const saveEditedLinks = async (documentId: string) => {
-    if (isReadOnly) return
-    if (!groupId || !accessToken) return
-    setSavingLinksDocId(documentId)
-    setError(null)
+    if (isReadOnly || !online) return;
+    if (!groupId || !accessToken) return;
+    if (mutationLocks.current.has("links")) return;
+    mutationLocks.current.add("links");
+    setSavingLinksDocId(documentId);
+    setError(null);
     try {
-      await syncDocumentLinks(documentId, editingExpenseIds, editingActivityKeys)
-      await loadContextLinks()
-      setEditingExpenseIds([])
-      setEditingActivityKeys([])
-      setActionModal(null)
+      await syncDocumentLinks(
+        documentId,
+        editingExpenseIds,
+        editingActivityKeys,
+      );
+      if (!alive.current) return;
+      await loadContextLinks();
+      if (!alive.current) return;
+      setEditingExpenseIds([]);
+      setEditingActivityKeys([]);
+      setActionModal(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudieron guardar las asociaciones')
+      if (!alive.current) return;
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudieron guardar las asociaciones",
+      );
     } finally {
-      setSavingLinksDocId(null)
-    }
-  }
-
-  const openDocumentAction = (item: TripDocument, mode: 'expense' | 'activity') => {
-    if (isReadOnly) return
-    startEditLinks(item)
-    resetExpenseDraft()
-    setActionModal({ target: 'document', docId: item.id, mode })
-  }
-
-  const load = useCallback(async (silent = false) => {
-    if (!groupId || !accessToken) return
-
-    const cacheKey = String(groupId)
-    const cached = getVaultCache(cacheKey)
-    if (cached && !silent) {
-      setItems(cached.items)
-      setContextLinks(cached.links)
-      setLinkOptions(cached.options)
-    }
-
-    const hasVisibleData = (cached?.items.length ?? itemsLengthRef.current) > 0
-    if (!silent && !hasVisibleData) setIsLoading(true)
-    setError(null)
-    try {
-      const [documents, linksResponse, optionsResponse] = await Promise.all([
-        documentsService.list(groupId, accessToken),
-        contextLinksService.list(groupId, accessToken),
-        contextLinksService.options(groupId, accessToken),
-      ])
-      vaultDataCache.set(cacheKey, {
-        items: documents,
-        links: linksResponse.links,
-        options: optionsResponse.options,
-        savedAt: Date.now(),
-      })
-      setItems(documents)
-      setContextLinks(linksResponse.links)
-      setLinkOptions(optionsResponse.options)
-    } catch (err) {
-      if (!cached) {
-        setError(err instanceof Error ? err.message : 'No se pudieron cargar los documentos')
+      mutationLocks.current.delete("links");
+      if (alive.current) {
+        setSavingLinksDocId(null);
       }
-    } finally {
-      setIsLoading(false)
     }
-  }, [accessToken, groupId])
+  };
 
+  const openDocumentAction = (
+    item: TripDocument,
+    mode: "expense" | "activity",
+  ) => {
+    if (isReadOnly || !online) return;
+    startEditLinks(item);
+    resetExpenseDraft();
+    setActionModal({ target: "document", docId: item.id, mode });
+  };
+
+  const load = useCallback(
+    async (silent = false) => {
+      if (!groupId || !accessToken) return;
+
+      const cacheKey = vaultKey;
+      const cached = getVaultCache(cacheKey);
+      if (cached && !silent) {
+        setItems(cached.items);
+        setContextLinks(cached.links);
+        setLinkOptions(cached.options);
+      }
+
+      const hasVisibleData =
+        (cached?.items.length ?? itemsLengthRef.current) > 0;
+      if (!silent && !hasVisibleData) setIsLoading(true);
+      setError(null);
+      try {
+        const [documents, linksResponse, optionsResponse] = await Promise.all([
+          documentsService.list(groupId, accessToken),
+          contextLinksService.list(groupId, accessToken),
+          contextLinksService.options(groupId, accessToken),
+        ]);
+        if (!alive.current) return;
+        vaultDataCache.set(cacheKey, {
+          items: documents,
+          links: linksResponse.links,
+          options: optionsResponse.options,
+          savedAt: Date.now(),
+        });
+        setItems(documents);
+        setContextLinks(linksResponse.links);
+        setLinkOptions(optionsResponse.options);
+      } catch (err) {
+        if (!alive.current) return;
+        if (alive.current) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "No se pudieron cargar los documentos",
+          );
+        }
+      } finally {
+        if (alive.current) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [accessToken, groupId, vaultKey],
+  );
 
   useEffect(() => {
-    const cacheKey = groupId ? String(groupId) : null
+    const cacheKey = groupId ? vaultKey : null;
     if (cacheKey !== lastVaultCacheKeyRef.current) {
-      lastVaultCacheKeyRef.current = cacheKey
-      setItems([])
-      setContextLinks([])
-      setLinkOptions(EMPTY_LINK_OPTIONS)
+      lastVaultCacheKeyRef.current = cacheKey;
+      setItems([]);
+      setContextLinks([]);
+      setLinkOptions(EMPTY_LINK_OPTIONS);
     }
-    void load()
-  }, [groupId, accessToken, load])
+    void load();
+  }, [groupId, accessToken, load, vaultKey]);
 
   useGroupRealtimeRefresh({
     socket,
     groupId,
-    events: ['dashboard_updated'],
+    events: ["dashboard_updated"],
     debounceMs: 250,
     onRefresh: async (payload) => {
-      const tipo = String(payload.tipo ?? '')
-      if (tipo.includes('documento') || tipo.includes('gasto') || tipo.includes('actividad')) {
-        await load(true)
+      const tipo = String(payload.tipo ?? "");
+      if (
+        tipo.includes("documento") ||
+        tipo.includes("gasto") ||
+        tipo.includes("actividad")
+      ) {
+        await load(true);
       }
     },
-  })
+  });
 
   const handleUpload = async (file: File | null) => {
-    if (isReadOnly) return
-    if (uploadingRef.current) return
-    if (!file || !groupId || !accessToken) return
+    if (isReadOnly || !online) return;
+    if (uploadingRef.current) return;
+    if (!file || !groupId || !accessToken) return;
+    const fileError = validDocumentFile(file);
+    if (fileError) {
+      setError(fileError);
+      return;
+    }
     if (!notes.trim()) {
-      setError('La nota es obligatoria para subir el documento a la boveda.')
-      return
+      setError("La nota es obligatoria para subir el documento a la boveda.");
+      return;
     }
-    if ((draftExpenseDescription.trim() || draftExpenseAmount.trim()) && !draftExpenseDescription.trim()) {
-      setError('La descripcion del gasto es obligatoria.')
-      return
+    if (
+      (draftExpenseDescription.trim() || draftExpenseAmount.trim()) &&
+      !draftExpenseDescription.trim()
+    ) {
+      setError("La descripcion del gasto es obligatoria.");
+      return;
     }
-    if ((draftExpenseDescription.trim() || draftExpenseAmount.trim()) && (!Number.isFinite(Number(draftExpenseAmount)) || Number(draftExpenseAmount) <= 0)) {
-      setError('El monto del gasto debe ser mayor a 0.')
-      return
+    if (
+      (draftExpenseDescription.trim() || draftExpenseAmount.trim()) &&
+      (!Number.isFinite(Number(draftExpenseAmount)) ||
+        Number(draftExpenseAmount) <= 0)
+    ) {
+      setError("El monto del gasto debe ser mayor a 0.");
+      return;
     }
-    if ((draftExpenseDescription.trim() || draftExpenseAmount.trim()) && !draftExpensePaidBy) {
-      setError('Selecciona quien pagara el gasto.')
-      return
+    if (
+      (draftExpenseDescription.trim() || draftExpenseAmount.trim()) &&
+      !draftExpensePaidBy
+    ) {
+      setError("Selecciona quien pagara el gasto.");
+      return;
     }
-    if ((draftExpenseDescription.trim() || draftExpenseAmount.trim()) && draftExpenseMemberIds.length === 0) {
-      setError('Selecciona al menos una persona para el gasto.')
-      return
+    if (
+      (draftExpenseDescription.trim() || draftExpenseAmount.trim()) &&
+      draftExpenseMemberIds.length === 0
+    ) {
+      setError("Selecciona al menos una persona para el gasto.");
+      return;
     }
-    if ((draftExpenseDescription.trim() || draftExpenseAmount.trim()) && draftExpenseSplitError) {
-      setError(draftExpenseSplitError)
-      return
+    if (
+      (draftExpenseDescription.trim() || draftExpenseAmount.trim()) &&
+      draftExpenseSplitError
+    ) {
+      setError(draftExpenseSplitError);
+      return;
     }
-    uploadingRef.current = true
-    setIsUploading(true)
-    setError(null)
+    uploadingRef.current = true;
+    setIsUploading(true);
+    setError(null);
+    let confirmedUpload: TripDocument | null = null;
     try {
       const metadata: DocumentMetadataInput = {
         linked_entity_type: null,
@@ -549,428 +726,522 @@ export const DocumentVaultPanel: FC<Props> = ({
         expense_reason: null,
         expense_amount: null,
         notes: notes || null,
-      }
+      };
 
-      const created = await documentsService.upload(groupId, file, category, metadata, accessToken)
-      const nextExpenseIds = [...selectedExpenseIds]
-      const nextActivityKeys = [...selectedActivityKeys]
+      const created = await documentsService.upload(
+        groupId,
+        file,
+        category,
+        metadata,
+        accessToken,
+      );
+      confirmedUpload = created;
+      const nextExpenseIds = [...selectedExpenseIds];
+      const nextActivityKeys = [...selectedActivityKeys];
       if (draftExpenseDescription.trim() && Number(draftExpenseAmount) > 0) {
-        const response = await budgetService.createExpense(groupId, {
-          paid_by_user_id: draftExpensePaidBy,
-          amount: Number(draftExpenseAmount),
-          description: draftExpenseDescription.trim(),
-          category: draftExpenseCategory,
-          split_type: draftExpenseSplitType,
-          member_ids: draftExpenseMemberIds,
-          split_amounts: draftExpenseSplitType === 'personalizada'
-            ? Object.fromEntries(
-              draftExpenseMemberIds.map((memberId) => [
-                memberId,
-                parseFloat(draftExpenseSplitAmounts[memberId] ?? '0') || 0,
-              ])
-            )
-            : undefined,
-          expense_date: draftExpenseDate || null,
-        }, accessToken)
-        const createdExpense = [...response.expenses].sort((a, b) =>
-          new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
-        )[0]
+        const response = await budgetService.createExpense(
+          groupId,
+          {
+            paid_by_user_id: draftExpensePaidBy,
+            amount: Number(draftExpenseAmount),
+            description: draftExpenseDescription.trim(),
+            category: draftExpenseCategory,
+            split_type: draftExpenseSplitType,
+            member_ids: draftExpenseMemberIds,
+            split_amounts:
+              draftExpenseSplitType === "personalizada"
+                ? Object.fromEntries(
+                    draftExpenseMemberIds.map((memberId) => [
+                      memberId,
+                      parseFloat(draftExpenseSplitAmounts[memberId] ?? "0") ||
+                        0,
+                    ]),
+                  )
+                : undefined,
+            expense_date: draftExpenseDate || null,
+          },
+          accessToken,
+        );
+        const createdExpense = [...response.expenses].sort(
+          (a, b) =>
+            new Date(b.createdAt ?? 0).getTime() -
+            new Date(a.createdAt ?? 0).getTime(),
+        )[0];
         if (createdExpense) {
-          nextExpenseIds.push(createdExpense.id)
+          nextExpenseIds.push(createdExpense.id);
         }
       }
       await syncDocumentLinks(
         created.id,
         Array.from(new Set(nextExpenseIds)),
         Array.from(new Set(nextActivityKeys)),
-      )
-      await loadContextLinks()
+      );
+      await loadContextLinks();
+      if (!alive.current) return;
       setItems((prev) => {
-        const nextItems = [created, ...prev]
+        const nextItems = [created, ...prev];
         if (groupId) {
-          const cached = getVaultCache(String(groupId))
-          vaultDataCache.set(String(groupId), {
+          const cached = getVaultCache(vaultKey);
+          vaultDataCache.set(vaultKey, {
             items: nextItems,
             links: cached?.links ?? contextLinks,
             options: cached?.options ?? linkOptions,
             savedAt: Date.now(),
-          })
+          });
         }
-        return nextItems
-      })
-      resetExpenseDraft()
-      resetUploadDraft()
+        return nextItems;
+      });
+      resetExpenseDraft();
+      resetUploadDraft();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo subir el documento')
+      if (!alive.current) return;
+      if (confirmedUpload) {
+        const confirmed = confirmedUpload;
+        setItems((prev) => [
+          confirmed,
+          ...prev.filter((item) => item.id !== confirmed.id),
+        ]);
+        resetUploadDraft();
+        setError(
+          "El archivo ya fue guardado, pero no se pudieron confirmar todas sus asociaciones. Puedes revisarlas desde la lista.",
+        );
+      } else
+        setError(
+          err instanceof Error ? err.message : "No se pudo subir el documento",
+        );
     } finally {
-      uploadingRef.current = false
-      setIsUploading(false)
+      uploadingRef.current = false;
+      if (alive.current) setIsUploading(false);
     }
-  }
+  };
 
   const requestDeleteDocument = (document: TripDocument) => {
-    if (isReadOnly) return
-    setError(null)
-    setDocumentPendingDelete(document)
-  }
+    if (!canDeleteTripDocument(document, authOwner, isReadOnly) || !online)
+      return;
+    setError(null);
+    setDocumentPendingDelete(document);
+  };
 
   const confirmDeleteDocument = async () => {
-    if (isReadOnly) return
-    if (!groupId || !accessToken || !documentPendingDelete) return
-    const docId = documentPendingDelete.id
-    setError(null)
-    setDeletingDocumentId(docId)
+    if (isReadOnly || !online) return;
+    if (
+      !groupId ||
+      !accessToken ||
+      !documentPendingDelete ||
+      !canDeleteTripDocument(documentPendingDelete, authOwner, isReadOnly) ||
+      mutationLocks.current.has("delete")
+    )
+      return;
+    mutationLocks.current.add("delete");
+    const docId = documentPendingDelete.id;
+    setError(null);
+    setDeletingDocumentId(docId);
     try {
-      await documentsService.remove(groupId, docId, accessToken)
+      await documentsService.remove(groupId, docId, accessToken);
+      if (!alive.current) return;
       setItems((prev) => {
-        const nextItems = prev.filter((item) => item.id !== docId)
+        const nextItems = prev.filter((item) => item.id !== docId);
         if (groupId) {
-          const cached = getVaultCache(String(groupId))
-          vaultDataCache.set(String(groupId), {
+          const cached = getVaultCache(vaultKey);
+          vaultDataCache.set(vaultKey, {
             items: nextItems,
             links: (cached?.links ?? contextLinks).filter(
               (link) => otherEntityForDocument(link, docId) === null,
             ),
             options: cached?.options ?? linkOptions,
             savedAt: Date.now(),
-          })
+          });
         }
-        return nextItems
-      })
-      setContextLinks((prev) => prev.filter((link) => otherEntityForDocument(link, docId) === null))
-      setDocumentPendingDelete(null)
+        return nextItems;
+      });
+      setContextLinks((prev) =>
+        prev.filter((link) => otherEntityForDocument(link, docId) === null),
+      );
+      setDocumentPendingDelete(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo eliminar el documento')
+      if (!alive.current) return;
+      setError(
+        err instanceof Error ? err.message : "No se pudo eliminar el documento",
+      );
     } finally {
-      setDeletingDocumentId(null)
+      mutationLocks.current.delete("delete");
+      if (alive.current) setDeletingDocumentId(null);
     }
-  }
+  };
 
   const createExpenseForDocument = async (documentId: string) => {
-    if (isReadOnly) return
-    if (!groupId || !accessToken) return
-    const amount = Number(draftExpenseAmount)
-    const payerId = currentUser?.id_usuario != null ? String(currentUser.id_usuario) : ''
-    const effectivePayerId = draftExpensePaidBy || payerId
+    if (isReadOnly || !online) return;
+    if (!groupId || !accessToken) return;
+    const amount = Number(draftExpenseAmount);
+    const payerId =
+      currentUser?.id_usuario != null ? String(currentUser.id_usuario) : "";
+    const effectivePayerId = draftExpensePaidBy || payerId;
     if (!effectivePayerId) {
-      setError('No se encontro tu usuario para registrar el gasto.')
-      return
+      setError("No se encontro tu usuario para registrar el gasto.");
+      return;
     }
     if (!draftExpenseDescription.trim()) {
-      setError('La descripcion del gasto es obligatoria.')
-      return
+      setError("La descripcion del gasto es obligatoria.");
+      return;
     }
     if (!Number.isFinite(amount) || amount <= 0) {
-      setError('El monto del gasto debe ser mayor a 0.')
-      return
+      setError("El monto del gasto debe ser mayor a 0.");
+      return;
     }
     if (!draftExpensePaidBy) {
-      setError('Selecciona quien pagara el gasto.')
-      return
+      setError("Selecciona quien pagara el gasto.");
+      return;
     }
     if (draftExpenseMemberIds.length === 0) {
-      setError('Selecciona al menos una persona para el gasto.')
-      return
+      setError("Selecciona al menos una persona para el gasto.");
+      return;
     }
     if (draftExpenseSplitError) {
-      setError(draftExpenseSplitError)
-      return
+      setError(draftExpenseSplitError);
+      return;
     }
 
+    if (mutationLocks.current.has("links")) return;
+    mutationLocks.current.add("links");
+    setSavingLinksDocId(documentId);
     try {
-      setError(null)
-      const response = await budgetService.createExpense(groupId, {
-        paid_by_user_id: effectivePayerId,
-        amount,
-        description: draftExpenseDescription.trim(),
-        category: draftExpenseCategory,
-        split_type: draftExpenseSplitType,
-        member_ids: draftExpenseMemberIds,
-        split_amounts: draftExpenseSplitType === 'personalizada'
-          ? Object.fromEntries(
-            draftExpenseMemberIds.map((memberId) => [
-              memberId,
-              parseFloat(draftExpenseSplitAmounts[memberId] ?? '0') || 0,
-            ])
-          )
-          : undefined,
-        expense_date: draftExpenseDate || null,
-      }, accessToken)
-      const createdExpense = [...response.expenses].sort((a, b) =>
-        new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
-      )[0]
-      if (!createdExpense) throw new Error('No se pudo ubicar el gasto creado.')
-      await contextLinksService.create(groupId, {
-        source: { type: 'document', id: documentId },
-        target: { type: 'expense', id: createdExpense.id },
-      }, accessToken)
-      resetExpenseDraft()
-      setActionModal(null)
-      await load()
+      setError(null);
+      const response = await budgetService.createExpense(
+        groupId,
+        {
+          paid_by_user_id: effectivePayerId,
+          amount,
+          description: draftExpenseDescription.trim(),
+          category: draftExpenseCategory,
+          split_type: draftExpenseSplitType,
+          member_ids: draftExpenseMemberIds,
+          split_amounts:
+            draftExpenseSplitType === "personalizada"
+              ? Object.fromEntries(
+                  draftExpenseMemberIds.map((memberId) => [
+                    memberId,
+                    parseFloat(draftExpenseSplitAmounts[memberId] ?? "0") || 0,
+                  ]),
+                )
+              : undefined,
+          expense_date: draftExpenseDate || null,
+        },
+        accessToken,
+      );
+      const createdExpense = [...response.expenses].sort(
+        (a, b) =>
+          new Date(b.createdAt ?? 0).getTime() -
+          new Date(a.createdAt ?? 0).getTime(),
+      )[0];
+      if (!createdExpense)
+        throw new Error("No se pudo ubicar el gasto creado.");
+      await contextLinksService.create(
+        groupId,
+        {
+          source: { type: "document", id: documentId },
+          target: { type: "expense", id: createdExpense.id },
+        },
+        accessToken,
+      );
+      if (!alive.current) return;
+      resetExpenseDraft();
+      setActionModal(null);
+      await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo crear el gasto')
+      if (!alive.current) return;
+      setError(
+        err instanceof Error ? err.message : "No se pudo crear el gasto",
+      );
+    } finally {
+      mutationLocks.current.delete("links");
+      if (alive.current) setSavingLinksDocId(null);
     }
-  }
+  };
 
   return (
-    <div className="flex flex-1 flex-col gap-4 overflow-y-auto bg-surface px-6 py-6">
-      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-2xl">
-            <h2 className="font-heading text-[28px] font-bold text-[#1E0A4E]">Archivos del viaje</h2>
-            <p className="mt-2 font-body text-sm text-[#64748B]">
-              Ten a la mano tus boletos, reservas y comprobantes para que el viaje fluya sin estar buscando entre fotos,
-              chats o correos. Guarda cada archivo con una nota y, si te sirve, relaciónalo después con un gasto o una actividad.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <span className="rounded-full border border-[#D7DEEA] bg-[#F8FAFC] px-3 py-1.5 font-body text-xs font-semibold text-[#475569]">
-                Archivo obligatorio
-              </span>
-              <span className="rounded-full border border-[#D7DEEA] bg-[#F8FAFC] px-3 py-1.5 font-body text-xs font-semibold text-[#475569]">
-                Nota obligatoria
-              </span>
-              <span className="rounded-full border border-[#D7DEEA] bg-[#F8FAFC] px-3 py-1.5 font-body text-xs font-semibold text-[#475569]">
-                Relacionar actividad o gasto
-              </span>
-            </div>
-          </div>
-
-          <div className="flex shrink-0 flex-wrap gap-2">
-            {!isReadOnly && (
-              <button
-                type="button"
-                onClick={() => {
-                  setError(null)
-                  setShowUploadModal(true)
-                }}
-                disabled={isUploading}
-                className="rounded-xl bg-[#1E6FD9] px-4 py-2.5 font-body text-sm font-semibold text-white hover:bg-[#2C8BE6] disabled:opacity-50"
-              >
-                {isUploading ? 'Subiendo...' : 'Subir documento'}
-              </button>
-            )}
+    <div className="atlas-vault">
+      <header className="atlas-account-heading">
+        <div>
+          <p className="atlas-account-eyebrow">EL VIAJE / ARCHIVOS</p>
+          <h1>
+            Lo que necesitas.
+            <br />
+            <em>Siempre en el plan.</em>
+          </h1>
+          <p>
+            Boletos, reservas y documentos compartidos, con sus notas y
+            asociaciones existentes.
+          </p>
+        </div>
+        <div className="atlas-account-heading-actions">
+          {!isReadOnly && (
             <button
-              type="button"
-              onClick={() => void load()}
-              disabled={isLoading}
-              className="rounded-xl border border-[#E2E8F0] px-4 py-2.5 font-body text-sm font-semibold text-[#3D4A5C] hover:bg-[#F8FAFC] disabled:opacity-50"
+              className="atlas-account-button is-primary"
+              disabled={!online || isUploading}
+              onClick={() => {
+                setError(null);
+                setShowUploadModal(true);
+              }}
             >
-              {isLoading ? 'Cargando...' : 'Refrescar'}
+              Subir documento ↗
             </button>
-          </div>
-        </div>
-
-        {isReadOnly && (
-          <div className="mt-4 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] px-4 py-3 font-body text-sm text-[#64748B]">
-            Este viaje ya finalizó. La bóveda está en modo lectura: puedes abrir documentos existentes, pero no subir, relacionar ni eliminar archivos.
-          </div>
-        )}
-
-        {error && (
-          <div className="mt-3 rounded-xl border border-[#FBC7C7] bg-[#FFF5F5] px-3 py-2 font-body text-sm text-[#C03535]">
-            {error}
-          </div>
-        )}
-      </div>
-
-      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-5">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <h3 className="font-heading text-base font-bold text-[#1E0A4E]">Documentos del viaje</h3>
-            <p className="mt-1 font-body text-sm text-[#7A8799]">
-              Filtra por tipo y encuentra rápido lo que necesitas antes de salir o mientras están en ruta.
-            </p>
-          </div>
-          <span className="rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 font-body text-xs font-semibold text-[#475569]">
-            {filteredItems.length} {filteredItems.length === 1 ? 'documento' : 'documentos'}
-          </span>
-        </div>
-
-        <div className="mb-4 flex flex-wrap gap-2">
+          )}
           <button
-            type="button"
-            onClick={() => setActiveFilter('todos')}
-            className={`rounded-full px-3 py-1.5 font-body text-xs font-semibold ${activeFilter === 'todos' ? 'bg-[#1E6FD9] text-white' : 'bg-[#EEF2FF] text-[#1E0A4E]'}`}
+            className="atlas-account-button"
+            disabled={!online || isLoading}
+            onClick={() => void load()}
           >
-            Todos
+            {isLoading ? "Actualizando…" : "Actualizar archivos"}
           </button>
-          {CATEGORY_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setActiveFilter(option.value)}
-              className={`rounded-full px-3 py-1.5 font-body text-xs font-semibold ${activeFilter === option.value ? 'bg-[#1E6FD9] text-white' : 'bg-[#EEF2FF] text-[#1E0A4E]'}`}
-            >
-              {option.label}
-            </button>
-          ))}
         </div>
-
-        {isLoading && items.length === 0 ? (
-          <VaultSkeleton />
-        ) : filteredItems.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-4 py-12 text-center">
-            <p className="font-body text-sm font-semibold text-[#1E0A4E]">
-              {activeFilter === 'todos' ? 'Todavía no hay documentos guardados.' : 'No hay documentos en esta categoría.'}
-            </p>
-            <p className="mt-1 font-body text-sm text-[#7A8799]">
-              {isReadOnly
-                ? 'No hay documentos guardados para consultar en este viaje cerrado.'
-                : 'Sube un boleto, una reservación o cualquier comprobante que quieras tener listo durante el viaje.'}
-            </p>
-            {!isReadOnly && (
+      </header>
+      {!online && (
+        <div className="atlas-account-notice" role="status">
+          Sin conexión. Puedes consultar los archivos cargados; abrir sus
+          enlaces y guardar cambios requieren acceso al servicio.
+        </div>
+      )}
+      {isReadOnly && (
+        <div className="atlas-account-notice" role="status">
+          Viaje en modo lectura. Puedes abrir los documentos existentes, sin
+          subir, relacionar ni eliminar archivos.
+        </div>
+      )}
+      {error && (
+        <div className="atlas-account-notice is-error" role="alert">
+          {error}
+        </div>
+      )}
+      <div className="atlas-vault-tools">
+        <div role="group" aria-label="Categorías de documentos">
+          {[{ value: "todos", label: "Todos" }, ...CATEGORY_OPTIONS].map(
+            (option) => (
               <button
-                type="button"
-                onClick={() => {
-                  setError(null)
-                  setShowUploadModal(true)
-                }}
-                className="mt-4 rounded-xl bg-[#1E6FD9] px-4 py-2.5 font-body text-sm font-semibold text-white hover:bg-[#2C8BE6]"
+                key={option.value}
+                aria-pressed={activeFilter === option.value}
+                onClick={() =>
+                  setActiveFilter(option.value as typeof activeFilter)
+                }
               >
-                Subir primer documento
+                {option.label}
               </button>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {filteredItems.map((item) => {
-              const linkedEntities = getLinksForDocument(item.id)
-              const linkedExpenses = linkedEntities.filter((entity) => entity.type === 'expense')
-              const linkedActivities = linkedEntities.filter((entity) => entity.type === 'activity' || entity.type === 'subgroup_activity')
-
-              return (
-                <div key={item.id} className="rounded-2xl border border-[#E2E8F0] bg-[#FCFDFE] px-4 py-4">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="min-w-0 flex-1">
-                      <a
-                        href={item.file_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="truncate font-body text-base font-semibold text-[#1E6FD9] hover:underline"
-                      >
+            ),
+          )}
+        </div>
+        <label htmlFor="atlas-document-query">
+          Buscar archivo
+          <input
+            id="atlas-document-query"
+            type="search"
+            value={documentQuery}
+            onChange={(e) => setDocumentQuery(e.target.value)}
+            placeholder="Nombre o nota"
+          />
+        </label>
+        <span role="status">{filteredItems.length} documento(s)</span>
+      </div>
+      {isLoading && items.length === 0 ? (
+        <VaultSkeleton />
+      ) : filteredItems.length === 0 ? (
+        <section className="atlas-vault-empty">
+          <span aria-hidden="true">↗</span>
+          <h2>
+            {error
+              ? "No se pudo cargar la colección."
+              : items.length
+                ? "No hay archivos con esta selección."
+                : "Un lugar para los detalles del viaje."}
+          </h2>
+          <p>
+            {error
+              ? "Reintenta actualizar los archivos."
+              : items.length
+                ? "Cambia la categoría o la búsqueda para ver los demás documentos."
+                : "Los documentos que compartas aparecerán aquí con su información real y sus vínculos al viaje."}
+          </p>
+          {!isReadOnly && !error && (
+            <button
+              className="atlas-account-button"
+              disabled={!online}
+              onClick={() => {
+                setError(null);
+                setShowUploadModal(true);
+              }}
+            >
+              Subir primer documento
+            </button>
+          )}
+        </section>
+      ) : (
+        <div className="atlas-vault-list" aria-label="Documentos compartidos">
+          {filteredItems.map((item) => {
+            const linked = getLinksForDocument(item.id),
+              url = safeDocumentUrl(item.file_url);
+            const author =
+              String(item.user_id) === String(authOwner)
+                ? localUser?.nombre
+                : null;
+            return (
+              <article key={item.id} className="atlas-document-row">
+                <span className="atlas-document-type" aria-hidden="true">
+                  {documentKind(item.mime_type, item.file_name)}
+                </span>
+                <div className="atlas-document-info">
+                  <h2>
+                    {url ? (
+                      <a href={url} target="_blank" rel="noreferrer">
                         {item.file_name}
                       </a>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <span className="rounded-full border border-[#D7DEEA] bg-white px-2.5 py-1 font-body text-[11px] font-semibold text-[#475569]">
-                          {categoryLabel(item.category)}
-                        </span>
-                        <span className="rounded-full border border-[#D7DEEA] bg-white px-2.5 py-1 font-body text-[11px] font-semibold text-[#475569]">
-                          {formatBytes(item.file_size)}
-                        </span>
-                        <span className="rounded-full border border-[#D7DEEA] bg-white px-2.5 py-1 font-body text-[11px] font-semibold text-[#475569]">
-                          {formatDate(item.created_at)}
-                        </span>
-                      </div>
-                      {item.metadata?.notes && (
-                        <p className="mt-3 rounded-xl border border-[#E2E8F0] bg-white px-3 py-2 font-body text-sm text-[#3D4A5C]">
-                          {String(item.metadata.notes)}
-                        </p>
-                      )}
-                      <div className="mt-3">
-                        <p className="font-body text-xs font-semibold uppercase tracking-wide text-[#7A8799]">Asociaciones confirmadas</p>
-                        <p className="mt-1 font-body text-xs text-[#7A8799]">Estos gastos y comprobantes ya estan vinculados a este elemento.</p>
-                        {(linkedExpenses.length > 0 || linkedActivities.length > 0) ? (
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            {linkedExpenses.map((entity) => (
-                              <button
-                                key={entityKey(entity)}
-                                type="button"
-                                onClick={onOpenBudget}
-                                className="max-w-full rounded-full border border-[#CFE0FF] bg-[#EEF4FF] px-2.5 py-1 font-body text-[11px] font-semibold text-[#1E6FD9] hover:bg-[#E2EDFF]"
-                                title={entity.label}
-                              >
-                                Gasto: <span className="font-medium">{entity.label}</span>
-                              </button>
-                            ))}
-                            {linkedActivities.map((entity) => (
-                              <button
-                                key={entityKey(entity)}
-                                type="button"
-                                onClick={() => {
-                                  if (entity.type === 'subgroup_activity') onOpenSubgroups?.()
-                                  else onOpenItinerary?.()
-                                }}
-                                className="max-w-full rounded-full border border-[#D8C8FF] bg-[#F3EEFF] px-2.5 py-1 font-body text-[11px] font-semibold text-[#5B35B1] hover:bg-[#ECE4FF]"
-                                title={entity.label}
-                              >
-                                {entity.type === 'subgroup_activity' ? 'Subgrupo' : 'Actividad'}:{' '}
-                                <span className="font-medium">{entity.label}</span>
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="mt-2 rounded-lg bg-[#F8FAFC] px-2.5 py-1.5 font-body text-xs text-[#7A8799]">
-                            Aun no hay asociaciones confirmadas.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {!isReadOnly && (
-                    <div className="flex shrink-0 flex-col gap-2 lg:w-[170px]">
+                    ) : (
+                      item.file_name
+                    )}
+                  </h2>
+                  <p>
+                    {categoryLabel(item.category)} ·{" "}
+                    {formatBytes(item.file_size)} ·{" "}
+                    {formatDate(item.created_at)}
+                  </p>
+                  {author && <p>Compartido por {author}</p>}
+                  {item.metadata?.generatedBy === "checkout_simulation" && (
+                    <span className="atlas-document-protected">
+                      Comprobante de operación simulada
+                    </span>
+                  )}
+                  {item.metadata?.immutable === true && (
+                    <span className="atlas-document-protected">
+                      Documento protegido contra eliminación
+                    </span>
+                  )}
+                  {item.metadata?.notes && (
+                    <p className="atlas-document-note">
+                      {String(item.metadata.notes)}
+                    </p>
+                  )}
+                  {typeof item.metadata?.folio === "string" && (
+                    <p>Folio: {item.metadata.folio}</p>
+                  )}
+                  {typeof item.metadata?.receipt_folio === "string" && (
+                    <p>Folio: {item.metadata.receipt_folio}</p>
+                  )}
+                  {linked.length > 0 ? (
+                    <ul className="atlas-document-links">
+                      {linked.map((entity) => (
+                        <li key={entityKey(entity)}>
+                          <button
+                            className="atlas-account-link"
+                            onClick={() =>
+                              entity.type === "expense"
+                                ? onOpenBudget?.()
+                                : entity.type === "subgroup_activity"
+                                  ? onOpenSubgroups?.()
+                                  : onOpenItinerary?.()
+                            }
+                          >
+                            {entity.type === "expense"
+                              ? "Gasto"
+                              : entity.type === "subgroup_activity"
+                                ? "Subgrupo"
+                                : "Actividad"}{" "}
+                            · {entity.label} ↗
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <small>No hay asociaciones confirmadas.</small>
+                  )}
+                </div>
+                <div className="atlas-document-actions">
+                  {url ? (
+                    <a
+                      className="atlas-account-link"
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Abrir / descargar ↗
+                    </a>
+                  ) : (
+                    <small>Enlace no disponible</small>
+                  )}
+                  {!isReadOnly && (
+                    <>
                       <button
-                        type="button"
+                        className="atlas-account-link"
+                        disabled={!online}
                         onClick={() => {
-                          setExpenseModalTab('associate')
-                          openDocumentAction(item, 'expense')
+                          setExpenseModalTab("associate");
+                          openDocumentAction(item, "expense");
                         }}
-                        className="rounded-xl border border-[#D7DEEA] px-3 py-2 font-body text-xs font-semibold text-[#3D4A5C] hover:bg-[#F8FAFC]"
                       >
                         Elegir gasto
                       </button>
                       <button
-                        type="button"
-                        onClick={() => openDocumentAction(item, 'activity')}
-                        className="rounded-xl border border-[#D7DEEA] px-3 py-2 font-body text-xs font-semibold text-[#5B35B1] hover:bg-[#F3EEFF]"
+                        className="atlas-account-link"
+                        disabled={!online}
+                        onClick={() => openDocumentAction(item, "activity")}
                       >
                         Elegir actividad
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => requestDeleteDocument(item)}
-                        className="rounded-xl border border-[#FBC7C7] px-3 py-2 font-body text-xs font-semibold text-[#C03535] hover:bg-[#FFF5F5]"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                    )}
-                  </div>
+                      {canDeleteTripDocument(item, authOwner, isReadOnly) && (
+                        <button
+                          className="atlas-account-link is-danger"
+                          disabled={!online || deletingDocumentId !== null}
+                          onClick={() => requestDeleteDocument(item)}
+                        >
+                          Eliminar documento
+                        </button>
+                      )}
+                    </>
+                  )}
                 </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
 
       <ConfirmDialog
         open={documentPendingDelete !== null}
         title="Eliminar documento"
         description="Esta acción es irreversible. El documento se eliminará de la bóveda del viaje solo si confirmas la operación."
-        details={documentPendingDelete?.file_name ?? 'Documento seleccionado'}
+        details={
+          <>
+            {documentPendingDelete?.file_name ?? "Documento seleccionado"}
+            {error && (
+              <p className="atlas-account-notice is-error" role="alert">
+                {error}
+              </p>
+            )}
+          </>
+        }
         confirmLabel="Eliminar documento"
         cancelLabel="Conservar"
         variant="danger"
         loading={
-          documentPendingDelete !== null && deletingDocumentId === documentPendingDelete.id
+          documentPendingDelete !== null &&
+          deletingDocumentId === documentPendingDelete.id
         }
         onCancel={() => {
-          if (deletingDocumentId === null) setDocumentPendingDelete(null)
+          if (deletingDocumentId === null) setDocumentPendingDelete(null);
         }}
         onConfirm={() => {
-          void confirmDeleteDocument()
+          void confirmDeleteDocument();
         }}
       />
 
       <ActionModal
-        open={showUploadModal && !isReadOnly}
+        error={error}
+        busy={isUploading || savingLinksDocId !== null}
+        open={showUploadModal && !actionModal && !isReadOnly}
         title="Subir documento"
         subtitle="Guarda un archivo del viaje con una nota clara. Si quieres, después lo relacionas con un gasto o una actividad existente."
-        confirmLabel={isUploading ? 'Subiendo...' : 'Subir a boveda'}
-        confirmDisabled={isUploading || !uploadFile || !notes.trim()}
+        confirmLabel={isUploading ? "Subiendo..." : "Subir a boveda"}
+        confirmDisabled={!online || isUploading || !uploadFile || !notes.trim()}
         panelClassName="max-w-xl"
         onClose={() => {
-          if (isUploading) return
-          resetUploadDraft()
+          if (isUploading) return;
+          resetUploadDraft();
         }}
         onConfirm={() => void handleUpload(uploadFile)}
       >
@@ -980,13 +1251,17 @@ export const DocumentVaultPanel: FC<Props> = ({
               Archivo
             </label>
             <input
+              id="atlas-upload-file"
+              aria-label="Archivo del viaje"
               type="file"
               accept={ACCEPTED_FILES}
-              onChange={(event) => setUploadFile(event.target.files?.[0] ?? null)}
+              onChange={(event) =>
+                setUploadFile(event.target.files?.[0] ?? null)
+              }
               className="w-full rounded-xl border border-[#D7DEEA] bg-white px-3 py-2.5 font-body text-sm text-[#3D4A5C] outline-none focus:border-[#1E6FD9]"
             />
             <p className="mt-2 font-body text-xs text-[#7A8799]">
-              PDF, imagen o comprobante digital.
+              PDF, TXT, PNG, JPG o WEBP · máximo 10 MB.
             </p>
           </div>
 
@@ -996,12 +1271,17 @@ export const DocumentVaultPanel: FC<Props> = ({
                 Categoría
               </label>
               <select
+                aria-label="Categoría del documento"
                 value={category}
-                onChange={(event) => setCategory(event.target.value as TripDocumentCategory)}
+                onChange={(event) =>
+                  setCategory(event.target.value as TripDocumentCategory)
+                }
                 className="w-full rounded-xl border border-[#D7DEEA] bg-white px-3 py-2.5 font-body text-sm outline-none focus:border-[#1E6FD9]"
               >
                 {CATEGORY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -1010,6 +1290,7 @@ export const DocumentVaultPanel: FC<Props> = ({
                 Nota
               </label>
               <textarea
+                aria-label="Nota del documento"
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
                 placeholder="Ej. Boleto de ferry, reservación del hotel o recibo de la comida del primer día."
@@ -1022,17 +1303,20 @@ export const DocumentVaultPanel: FC<Props> = ({
           <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="font-body text-sm font-semibold text-[#1E0A4E]">Vincular este comprobante con una actividad o gasto</p>
+                <p className="font-body text-sm font-semibold text-[#1E0A4E]">
+                  Vincular este comprobante con una actividad o gasto
+                </p>
                 <p className="mt-1 font-body text-xs text-[#64748B]">
-                  Relaciona este comprobante con un gasto (taxi, entradas, comida) o una actividad (tour, cena, traslado).
+                  Relaciona este comprobante con un gasto (taxi, entradas,
+                  comida) o una actividad (tour, cena, traslado).
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => {
-                    setExpenseModalTab('associate')
-                    setActionModal({ target: 'upload', mode: 'expense' })
+                    setExpenseModalTab("associate");
+                    setActionModal({ target: "upload", mode: "expense" });
                   }}
                   className="rounded-xl border border-[#D7DEEA] bg-white px-3 py-2 font-body text-xs font-semibold text-[#1E6FD9]"
                 >
@@ -1041,7 +1325,7 @@ export const DocumentVaultPanel: FC<Props> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    setActionModal({ target: 'upload', mode: 'activity' })
+                    setActionModal({ target: "upload", mode: "activity" });
                   }}
                   className="rounded-xl border border-[#D7DEEA] bg-white px-3 py-2 font-body text-xs font-semibold text-[#7A4FD6]"
                 >
@@ -1050,25 +1334,40 @@ export const DocumentVaultPanel: FC<Props> = ({
               </div>
             </div>
 
-            {(selectedExpenseIds.length > 0 || selectedActivityKeys.length > 0) ? (
+            {selectedExpenseIds.length > 0 ||
+            selectedActivityKeys.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-2">
                 {selectedExpenseIds.map((expenseId) => {
-                  const expense = linkOptions.expenses.find((item) => item.id === expenseId)
-                  if (!expense) return null
+                  const expense = linkOptions.expenses.find(
+                    (item) => item.id === expenseId,
+                  );
+                  if (!expense) return null;
                   return (
-                    <span key={expenseId} className="rounded-full border border-[#CFE0FF] bg-[#EEF4FF] px-3 py-1.5 font-body text-xs font-semibold text-[#1E6FD9]">
+                    <span
+                      key={expenseId}
+                      className="rounded-full border border-[#CFE0FF] bg-[#EEF4FF] px-3 py-1.5 font-body text-xs font-semibold text-[#1E6FD9]"
+                    >
                       Gasto: {expense.label}
                     </span>
-                  )
+                  );
                 })}
                 {selectedActivityKeys.map((activityKey) => {
-                  const activity = [...linkOptions.activities, ...linkOptions.subgroupActivities].find((item) => entityKey(item) === activityKey)
-                  if (!activity) return null
+                  const activity = [
+                    ...linkOptions.activities,
+                    ...linkOptions.subgroupActivities,
+                  ].find((item) => entityKey(item) === activityKey);
+                  if (!activity) return null;
                   return (
-                    <span key={activityKey} className="rounded-full border border-[#D8C8FF] bg-[#F3EEFF] px-3 py-1.5 font-body text-xs font-semibold text-[#5B35B1]">
-                      {activity.type === 'subgroup_activity' ? 'Subgrupo' : 'Actividad'}: {activity.label}
+                    <span
+                      key={activityKey}
+                      className="rounded-full border border-[#D8C8FF] bg-[#F3EEFF] px-3 py-1.5 font-body text-xs font-semibold text-[#5B35B1]"
+                    >
+                      {activity.type === "subgroup_activity"
+                        ? "Subgrupo"
+                        : "Actividad"}
+                      : {activity.label}
                     </span>
-                  )
+                  );
                 })}
               </div>
             ) : (
@@ -1081,43 +1380,54 @@ export const DocumentVaultPanel: FC<Props> = ({
       </ActionModal>
 
       <ActionModal
-        open={actionModal?.mode === 'expense' && !isReadOnly}
+        error={error}
+        busy={isUploading || savingLinksDocId !== null}
+        open={actionModal?.mode === "expense" && !isReadOnly}
         title="Vincular este comprobante con una actividad o gasto"
         subtitle="Elige o crea el gasto de este comprobante, por ejemplo taxi, entradas o comida."
         confirmLabel={
-          expenseModalTab === 'associate'
-            ? (actionModal?.target === 'document' && savingLinksDocId ? 'Guardando...' : 'Guardar seleccion')
-            : (actionModal?.target === 'document' ? 'Crear y asociar' : 'Guardar gasto')
+          expenseModalTab === "associate"
+            ? actionModal?.target === "document" && savingLinksDocId
+              ? "Guardando..."
+              : "Guardar seleccion"
+            : actionModal?.target === "document"
+              ? "Crear y asociar"
+              : "Guardar gasto"
         }
-        confirmDisabled={actionModal?.target === 'document' && savingLinksDocId != null}
+        confirmDisabled={
+          !online ||
+          (actionModal?.target === "document" && savingLinksDocId != null)
+        }
         onClose={() => setActionModal(null)}
         onConfirm={() => {
-          if (expenseModalTab === 'associate') {
-            if (actionModal?.target === 'document') void saveEditedLinks(actionModal.docId)
-            else setActionModal(null)
-            return
+          if (expenseModalTab === "associate") {
+            if (actionModal?.target === "document")
+              void saveEditedLinks(actionModal.docId);
+            else setActionModal(null);
+            return;
           }
-          if (actionModal?.target === 'document') void createExpenseForDocument(actionModal.docId)
-          else setActionModal(null)
+          if (actionModal?.target === "document")
+            void createExpenseForDocument(actionModal.docId);
+          else setActionModal(null);
         }}
       >
         <div className="mb-4 inline-flex rounded-lg border border-[#D7DEEA] bg-[#F8FAFC] p-1">
           <button
             type="button"
-            onClick={() => setExpenseModalTab('associate')}
-            className={`rounded-md px-3 py-1.5 text-sm font-semibold ${expenseModalTab === 'associate' ? 'bg-[#1E6FD9] text-white' : 'text-[#475569]'}`}
+            onClick={() => setExpenseModalTab("associate")}
+            className={`rounded-md px-3 py-1.5 text-sm font-semibold ${expenseModalTab === "associate" ? "bg-[#1E6FD9] text-white" : "text-[#475569]"}`}
           >
             Asociar
           </button>
           <button
             type="button"
-            onClick={() => setExpenseModalTab('create')}
-            className={`rounded-md px-3 py-1.5 text-sm font-semibold ${expenseModalTab === 'create' ? 'bg-[#1E6FD9] text-white' : 'text-[#475569]'}`}
+            onClick={() => setExpenseModalTab("create")}
+            className={`rounded-md px-3 py-1.5 text-sm font-semibold ${expenseModalTab === "create" ? "bg-[#1E6FD9] text-white" : "text-[#475569]"}`}
           >
             Crear
           </button>
         </div>
-        {expenseModalTab === 'associate' ? (
+        {expenseModalTab === "associate" ? (
           <div className="space-y-3">
             <input
               value={expenseFilter}
@@ -1128,29 +1438,33 @@ export const DocumentVaultPanel: FC<Props> = ({
             <div className="flex max-h-56 flex-wrap gap-2 overflow-y-auto">
               {linkOptions.expenses
                 .filter((expense) => {
-                  const filter = expenseFilter.trim().toLowerCase()
-                  if (!filter) return true
-                  return `${expense.label} ${expense.subtitle ?? ''}`.toLowerCase().includes(filter)
+                  const filter = expenseFilter.trim().toLowerCase();
+                  if (!filter) return true;
+                  return `${expense.label} ${expense.subtitle ?? ""}`
+                    .toLowerCase()
+                    .includes(filter);
                 })
                 .map((expense) => {
-              const selected =
-                actionModal?.target === 'document'
-                  ? editingExpenseIds.includes(expense.id)
-                  : selectedExpenseIds.includes(expense.id)
-              return (
-                <button
-                  key={expense.id}
-                  type="button"
-                  onClick={() =>
-                    actionModal?.target === 'document'
-                      ? toggleValue(expense.id, setEditingExpenseIds)
-                      : toggleValue(expense.id, setSelectedExpenseIds)
-                  }
-                  className={`max-w-full rounded-full border px-3 py-1.5 font-body text-xs font-semibold ${selected ? 'border-[#1E6FD9] bg-[#1E6FD9] text-white' : 'border-[#D7DEEA] bg-white text-[#3D4A5C]'}`}
-                >
-                  <span className="inline-block max-w-[220px] truncate align-bottom">{expense.label}</span>
-                </button>
-              )
+                  const selected =
+                    actionModal?.target === "document"
+                      ? editingExpenseIds.includes(expense.id)
+                      : selectedExpenseIds.includes(expense.id);
+                  return (
+                    <button
+                      key={expense.id}
+                      type="button"
+                      onClick={() =>
+                        actionModal?.target === "document"
+                          ? toggleValue(expense.id, setEditingExpenseIds)
+                          : toggleValue(expense.id, setSelectedExpenseIds)
+                      }
+                      className={`max-w-full rounded-full border px-3 py-1.5 font-body text-xs font-semibold ${selected ? "border-[#1E6FD9] bg-[#1E6FD9] text-white" : "border-[#D7DEEA] bg-white text-[#3D4A5C]"}`}
+                    >
+                      <span className="inline-block max-w-[220px] truncate align-bottom">
+                        {expense.label}
+                      </span>
+                    </button>
+                  );
                 })}
             </div>
           </div>
@@ -1178,44 +1492,74 @@ export const DocumentVaultPanel: FC<Props> = ({
       </ActionModal>
 
       <ActionModal
-        open={actionModal?.mode === 'activity' && !isReadOnly}
+        error={error}
+        busy={isUploading || savingLinksDocId !== null}
+        open={actionModal?.mode === "activity" && !isReadOnly}
         title="Vincular este comprobante con una actividad o gasto"
         subtitle="Elige la actividad relacionada con este comprobante, por ejemplo tour, cena o traslado."
-        confirmLabel={actionModal?.target === 'document' && savingLinksDocId ? 'Guardando...' : 'Guardar seleccion'}
-        confirmDisabled={actionModal?.target === 'document' && savingLinksDocId != null}
+        confirmLabel={
+          actionModal?.target === "document" && savingLinksDocId
+            ? "Guardando..."
+            : "Guardar seleccion"
+        }
+        confirmDisabled={
+          !online ||
+          (actionModal?.target === "document" && savingLinksDocId != null)
+        }
         onClose={() => setActionModal(null)}
         onConfirm={() => {
-          if (actionModal?.target === 'document') void saveEditedLinks(actionModal.docId)
-          else setActionModal(null)
+          if (actionModal?.target === "document")
+            void saveEditedLinks(actionModal.docId);
+          else setActionModal(null);
         }}
       >
         <div className="flex max-h-56 flex-wrap gap-2 overflow-y-auto">
-          {[...linkOptions.activities, ...linkOptions.subgroupActivities].map((activity) => {
-            const key = entityKey(activity)
-            const selected =
-              actionModal?.target === 'document'
-                ? editingActivityKeys.includes(key)
-                : selectedActivityKeys.includes(key)
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() =>
-                  actionModal?.target === 'document'
-                    ? toggleValue(key, setEditingActivityKeys)
-                    : toggleValue(key, setSelectedActivityKeys)
-                }
-                className={`max-w-full rounded-full border px-3 py-1.5 font-body text-xs font-semibold ${selected ? 'border-[#7A4FD6] bg-[#7A4FD6] text-white' : 'border-[#D7DEEA] bg-white text-[#3D4A5C]'}`}
-              >
-                <span className="mr-1 text-[10px] opacity-75">
-                  {activity.type === 'subgroup_activity' ? 'Subgrupo' : 'Itinerario'}
-                </span>
-                <span className="inline-block max-w-[190px] truncate align-bottom">{activity.label}</span>
-              </button>
-            )
-          })}
+          {[...linkOptions.activities, ...linkOptions.subgroupActivities].map(
+            (activity) => {
+              const key = entityKey(activity);
+              const selected =
+                actionModal?.target === "document"
+                  ? editingActivityKeys.includes(key)
+                  : selectedActivityKeys.includes(key);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() =>
+                    actionModal?.target === "document"
+                      ? toggleValue(key, setEditingActivityKeys)
+                      : toggleValue(key, setSelectedActivityKeys)
+                  }
+                  className={`max-w-full rounded-full border px-3 py-1.5 font-body text-xs font-semibold ${selected ? "border-[#7A4FD6] bg-[#7A4FD6] text-white" : "border-[#D7DEEA] bg-white text-[#3D4A5C]"}`}
+                >
+                  <span className="mr-1 text-[10px] opacity-75">
+                    {activity.type === "subgroup_activity"
+                      ? "Subgrupo"
+                      : "Itinerario"}
+                  </span>
+                  <span className="inline-block max-w-[190px] truncate align-bottom">
+                    {activity.label}
+                  </span>
+                </button>
+              );
+            },
+          )}
         </div>
       </ActionModal>
     </div>
-  )
-}
+  );
+};
+
+export const DocumentVaultPanel: FC<Props> = (props) => {
+  const { sessionUser, localUser } = useAuth();
+  return (
+    <DocumentVaultWorkspace
+      key={
+        String(props.groupId) +
+        ":" +
+        String(sessionUser?.id || localUser?.auth_user_id || "")
+      }
+      {...props}
+    />
+  );
+};
