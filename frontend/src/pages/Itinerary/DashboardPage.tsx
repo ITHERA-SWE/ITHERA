@@ -1,5 +1,5 @@
 import { ExploreHub } from "../../components/trip/ExploreHub";
-import { EditorialError, EditorialLoading, TripDecisions, TripOverview } from "../../components/trip/TripOverview";
+import { EditorialError, EditorialLoading, TripOverview } from "../../components/trip/TripOverview";
 import { TripNavigation } from "../../components/trip/TripNavigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -3261,23 +3261,14 @@ export function DashboardPage() {
           onComments={(activity) => { void openChatModal(activity); }} onVoteHistory={setVoteHistoryActivity}
           onRetry={() => setRetryVersion(version => version + 1)} />
       ) : activeTab === "decisiones" ? (
-        <TripDecisions key={group?.id} days={daysWithContext} votes={voteResultByProposal} votesAvailable={votesAvailable} membersAvailable={membersAvailable}
-          isReadOnly={isReadOnly} onComments={(activity) => { void openChatModal(activity); }}
-          onVoteHistory={setVoteHistoryActivity}
-          onReview={(activity) => {
-            const day = days.find(item => item.activities.some(entry => entry.id === activity.id));
-            if (day) { setActiveDay(day.dayNumber); setExpandedDay(day.dayNumber); }
-            setDashboardView("general"); setActiveTab("inicio");
-          }} />
+        <ComparisonPage key={group?.id} group={group} mode="decisions" onBack={() => setActiveTab("resumen")} />
+      ) : activeTab === "comparar" ? (
+        <ComparisonPage key={group?.id} group={group} onBack={() => setActiveTab("resumen")} />
       ) : isEmpty &&
         !(activeTab === "inicio" && dashboardView === "subgrupos") ? (
         <EmptyState
           onAdd={isReadOnly ? () => {} : () => setShowActivityModal(true)}
         />
-      ) : activeTab === "comparar" ? (
-        <div className="flex-1 overflow-y-auto px-4 py-6">
-          <ComparisonPage onBack={() => setActiveTab("pagar")} />
-        </div>
       ) : activeTab === "mapas" ? (
         <div className="flex flex-col flex-1 overflow-hidden bg-[#F0EEF8]">
           <MapsTabView days={days} group={group} />
@@ -4086,12 +4077,15 @@ export function DashboardPage() {
           }}
           socket={socket}
           isOnline={areRealtimeActionsEnabled}
+          isReadOnly={isReadOnly}
+          onUpdated={() => { void reloadDashboard(); }}
         />
       )}
       {showConfirm && selectedProposal && (
         <ConfirmProposalModal
           proposal={selectedProposal}
           isOnline={isBrowserOnline && isSocketConnected}
+          isReadOnly={isReadOnly}
           onClose={() => setShowConfirm(false)}
           onConfirm={() => {
             setDays((prev) =>

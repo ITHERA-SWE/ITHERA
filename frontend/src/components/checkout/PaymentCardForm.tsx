@@ -1,10 +1,21 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { SimulatedCheckoutPayload } from '../../services/checkout'
 
 type Mode = 'vuelo' | 'hospedaje'
 
-type ValidationErrors = Partial<Record<'cardHolder' | 'cardNumber' | 'expirationMonth' | 'expirationYear' | 'cvv' | 'email' | 'mainPerson', string>>
+type ValidationErrors = Partial<
+  Record<
+    | 'cardHolder'
+    | 'cardNumber'
+    | 'expirationMonth'
+    | 'expirationYear'
+    | 'cvv'
+    | 'email'
+    | 'mainPerson',
+    string
+  >
+>
 
 const onlyDigits = (value: string) => value.replace(/\D/g, '')
 
@@ -44,16 +55,22 @@ const validateExpiry = (monthValue: string, yearValue: string) => {
   const now = new Date()
   const currentMonth = now.getMonth() + 1
   const currentYear = now.getFullYear()
-  const fullYear = yearDigits.length === 2 ? Number(`20${yearDigits}`) : Number(yearDigits)
+  const fullYear =
+    yearDigits.length === 2 ? Number(`20${yearDigits}`) : Number(yearDigits)
 
-  if (!Number.isInteger(month) || month < 1 || month > 12) return 'El mes debe estar entre 01 y 12.'
-  if (!Number.isInteger(fullYear) || fullYear < currentYear) return 'El año de vencimiento no puede estar vencido.'
-  if (fullYear === currentYear && month < currentMonth) return 'La tarjeta no puede estar vencida.'
-  if (fullYear > currentYear + 10) return 'Usa una vigencia razonable, máximo 10 años hacia adelante.'
+  if (!Number.isInteger(month) || month < 1 || month > 12)
+    return 'El mes debe estar entre 01 y 12.'
+  if (!Number.isInteger(fullYear) || fullYear < currentYear)
+    return 'El año de vencimiento no puede estar vencido.'
+  if (fullYear === currentYear && month < currentMonth)
+    return 'La tarjeta no puede estar vencida.'
+  if (fullYear > currentYear + 10)
+    return 'Usa una vigencia razonable, máximo 10 años hacia adelante.'
   return null
 }
 
-const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim())
+const validateEmail = (value: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim())
 
 const formatCardNumber = (value: string) => {
   const digits = onlyDigits(value).slice(0, 19)
@@ -63,11 +80,13 @@ const formatCardNumber = (value: string) => {
 export function PaymentCardForm({
   mode,
   loading,
+  disabled = false,
   defaultEmail,
   onSubmit,
 }: {
   mode: Mode
   loading: boolean
+  disabled?: boolean
   defaultEmail?: string
   onSubmit: (payload: SimulatedCheckoutPayload) => Promise<void> | void
 }) {
@@ -81,10 +100,13 @@ export function PaymentCardForm({
   const [mainPerson, setMainPerson] = useState('')
   const [notes, setNotes] = useState('')
   const [errors, setErrors] = useState<ValidationErrors>({})
+  const [acknowledged, setAcknowledged] = useState(false)
+  const submitting = useRef(false)
 
   const helperText = useMemo(() => {
-    if (mode === 'vuelo') return 'Datos del pasajero principal y método de pago.'
-    return 'Datos del huésped principal y método de pago.'
+    if (mode === 'vuelo')
+      return 'Datos de prueba del pasajero y del método simulado.'
+    return 'Datos de prueba del huésped y del método simulado.'
   }, [mode])
 
   const validateForm = () => {
@@ -93,118 +115,189 @@ export function PaymentCardForm({
     const cleanCvv = onlyDigits(cvv)
     const expiryError = validateExpiry(expirationMonth, expirationYear)
 
-    if (!cardHolder.trim()) nextErrors.cardHolder = 'Escribe el nombre del titular.'
-    if (!mainPerson.trim() && !cardHolder.trim()) nextErrors.mainPerson = 'Escribe el nombre principal.'
+    if (!cardHolder.trim())
+      nextErrors.cardHolder = 'Escribe el nombre del titular.'
+    if (!mainPerson.trim() && !cardHolder.trim())
+      nextErrors.mainPerson = 'Escribe el nombre principal.'
     if (!cleanCard) nextErrors.cardNumber = 'Escribe el número de tarjeta.'
-    else if (cleanCard.length < 13 || cleanCard.length > 19) nextErrors.cardNumber = 'El número debe tener entre 13 y 19 dígitos.'
-    else if (isSameDigitRepeated(cleanCard)) nextErrors.cardNumber = 'No se aceptan tarjetas formadas por un solo dígito repetido.'
-    else if (hasTooManyConsecutiveEqualDigits(cleanCard)) nextErrors.cardNumber = 'No se aceptan más de 3 dígitos iguales consecutivos.'
-    else if (!luhnCheck(cleanCard)) nextErrors.cardNumber = 'El número no pasa la validación Luhn.'
+    else if (cleanCard.length < 13 || cleanCard.length > 19)
+      nextErrors.cardNumber = 'El número debe tener entre 13 y 19 dígitos.'
+    else if (isSameDigitRepeated(cleanCard))
+      nextErrors.cardNumber =
+        'No se aceptan tarjetas formadas por un solo dígito repetido.'
+    else if (hasTooManyConsecutiveEqualDigits(cleanCard))
+      nextErrors.cardNumber =
+        'No se aceptan más de 3 dígitos iguales consecutivos.'
+    else if (!luhnCheck(cleanCard))
+      nextErrors.cardNumber = 'El número no pasa la validación Luhn.'
 
     if (expiryError) {
       nextErrors.expirationMonth = expiryError
       nextErrors.expirationYear = expiryError
     }
 
-    if (cleanCvv.length < 3 || cleanCvv.length > 4) nextErrors.cvv = 'El CVV debe tener 3 o 4 dígitos.'
-    else if (isSameDigitRepeated(cleanCvv)) nextErrors.cvv = 'Por seguridad, no uses un CVV con todos los dígitos iguales.'
+    if (cleanCvv.length < 3 || cleanCvv.length > 4)
+      nextErrors.cvv = 'El CVV debe tener 3 o 4 dígitos.'
+    else if (isSameDigitRepeated(cleanCvv))
+      nextErrors.cvv =
+        'Por seguridad, no uses un CVV con todos los dígitos iguales.'
 
-    if (!validateEmail(email)) nextErrors.email = 'Escribe un correo válido para recibir los boletos.'
+    if (!validateEmail(email))
+      nextErrors.email = 'Escribe un correo válido para el comprobante.'
 
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!validateForm()) return
+    if (
+      loading ||
+      disabled ||
+      submitting.current ||
+      !acknowledged ||
+      !validateForm()
+    )
+      return
+    submitting.current = true
 
     const person = {
       fullName: mainPerson.trim() || cardHolder.trim(),
       documentNumber: null,
     }
 
-    onSubmit({
-      cardHolder: cardHolder.trim(),
-      cardNumber: onlyDigits(cardNumber),
-      expirationMonth: onlyDigits(expirationMonth).padStart(2, '0'),
-      expirationYear: onlyDigits(expirationYear),
-      cvv: onlyDigits(cvv),
-      email: email.trim(),
-      phone: phone.trim() || null,
-      passengers: mode === 'vuelo' ? [person] : undefined,
-      guests: mode === 'hospedaje' ? [person] : undefined,
-      notes: notes.trim() || null,
-    })
+    try {
+      await onSubmit({
+        cardHolder: cardHolder.trim(),
+        cardNumber: onlyDigits(cardNumber),
+        expirationMonth: onlyDigits(expirationMonth).padStart(2, '0'),
+        expirationYear: onlyDigits(expirationYear),
+        cvv: onlyDigits(cvv),
+        email: email.trim(),
+        phone: phone.trim() || null,
+        passengers: mode === 'vuelo' ? [person] : undefined,
+        guests: mode === 'hospedaje' ? [person] : undefined,
+        notes: notes.trim() || null,
+      })
+    } finally {
+      submitting.current = false
+    }
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5 rounded-3xl border border-white/60 bg-white/90 p-6 shadow-xl shadow-[#1E0A4E]/10 backdrop-blur">
-      {/* Header */}
+    <form
+      onSubmit={(event) => void submit(event)}
+      className="atlas-checkout-form"
+      aria-busy={loading}
+      aria-label="Confirmar simulación"
+    >
       <div>
-        <p className="font-body text-sm font-bold uppercase tracking-[0.18em] text-[#1E6FD9]">
-          Pago seguro
-        </p>
-        <h2 className="mt-1.5 font-heading text-2xl font-extrabold text-[#1E0A4E]">
-          Confirmar {mode === 'vuelo' ? 'compra' : 'reserva'}
-        </h2>
-        <p className="mt-1 font-body text-base text-[#64748B]">{helperText}</p>
+        <p className="atlas-eyebrow">DATOS EXCLUSIVAMENTE DE PRUEBA</p>
+        <h2>Confirmar simulación</h2>
+        <p>{helperText} No uses tarjetas ni documentos reales.</p>
       </div>
-
-      {/* Card preview */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1E0A4E] via-[#31206E] to-[#1E6FD9] p-5 text-white shadow-lg">
-        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-        <div className="absolute -bottom-8 left-4 h-24 w-24 rounded-full bg-[#7A4FD6]/30 blur-xl" />
-        <div className="relative">
-          <div className="flex items-center justify-between">
-            <span className="font-body text-sm font-bold uppercase tracking-[0.2em] text-white/60">ITHERA Card</span>
-            <span className="rounded-full bg-white/15 px-3 py-1 font-body text-xs font-bold uppercase tracking-wide">Pago</span>
+      <fieldset disabled={loading || disabled}>
+        <legend className="sr-only">Datos de prueba</legend>
+        <div className="atlas-checkout-fields">
+          <Field
+            label="Titular de prueba"
+            value={cardHolder}
+            onChange={setCardHolder}
+            placeholder="Nombre de prueba"
+            required
+            error={errors.cardHolder}
+          />
+          <Field
+            label={
+              mode === 'vuelo'
+                ? 'Pasajero principal de prueba'
+                : 'Huésped principal de prueba'
+            }
+            value={mainPerson}
+            onChange={setMainPerson}
+            placeholder="Puede ser el mismo titular"
+            error={errors.mainPerson}
+          />
+          <Field
+            label="Número de tarjeta de prueba"
+            value={cardNumber}
+            onChange={(value) => setCardNumber(formatCardNumber(value))}
+            required
+            error={errors.cardNumber}
+            inputMode="numeric"
+          />
+          <div className="atlas-checkout-expiry">
+            <Field
+              label="Mes"
+              value={expirationMonth}
+              onChange={(value) =>
+                setExpirationMonth(onlyDigits(value).slice(0, 2))
+              }
+              required
+              error={errors.expirationMonth}
+              inputMode="numeric"
+            />
+            <Field
+              label="Año"
+              value={expirationYear}
+              onChange={(value) =>
+                setExpirationYear(onlyDigits(value).slice(0, 4))
+              }
+              required
+              error={errors.expirationYear}
+              inputMode="numeric"
+            />
+            <Field
+              label="CVV de prueba"
+              value={cvv}
+              onChange={(value) => setCvv(onlyDigits(value).slice(0, 4))}
+              required
+              error={errors.cvv}
+              inputMode="numeric"
+            />
           </div>
-          <p className="mt-7 font-mono text-xl tracking-[0.22em]">{cardNumber || '•••• •••• •••• ••••'}</p>
-          <div className="mt-5 flex items-end justify-between gap-4">
-            <div>
-              <p className="font-body text-xs uppercase text-white/45">Titular</p>
-              <p className="mt-0.5 font-body text-base font-semibold">{cardHolder || 'Nombre del titular'}</p>
-            </div>
-            <p className="font-mono text-base">{expirationMonth || 'MM'}/{expirationYear || 'AA'}</p>
-          </div>
+          <Field
+            label="Correo para el comprobante de simulación"
+            type="email"
+            value={email}
+            onChange={setEmail}
+            required
+            error={errors.email}
+          />
+          <Field
+            label="Teléfono (opcional)"
+            value={phone}
+            onChange={setPhone}
+          />
         </div>
-      </div>
-
-      {/* Form fields */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Titular de la tarjeta" value={cardHolder} onChange={setCardHolder} placeholder="Eduardo Pérez" required error={errors.cardHolder} />
-        <Field label={mode === 'vuelo' ? 'Pasajero principal' : 'Huésped principal'} value={mainPerson} onChange={setMainPerson} placeholder="Puede ser el mismo titular" error={errors.mainPerson} />
-        <Field label="Número de tarjeta" value={cardNumber} onChange={(value) => setCardNumber(formatCardNumber(value))} placeholder="4242 4242 4242 4242" required error={errors.cardNumber} inputMode="numeric" />
-        <div className="grid grid-cols-3 gap-2">
-          <Field label="Mes" value={expirationMonth} onChange={(value) => setExpirationMonth(onlyDigits(value).slice(0, 2))} placeholder="12" required error={errors.expirationMonth} inputMode="numeric" />
-          <Field label="Año" value={expirationYear} onChange={(value) => setExpirationYear(onlyDigits(value).slice(0, 4))} placeholder="30" required error={errors.expirationYear} inputMode="numeric" />
-          <Field label="CVV" value={cvv} onChange={(value) => setCvv(onlyDigits(value).slice(0, 4))} placeholder="123" required error={errors.cvv} inputMode="numeric" />
-        </div>
-        <Field label="Correo para recibir boletos" type="email" value={email} onChange={setEmail} placeholder="correo@ejemplo.com" required error={errors.email} />
-        <Field label="Teléfono" value={phone} onChange={setPhone} placeholder="Opcional" />
-      </div>
-
-      <label className="block font-body text-sm font-bold text-[#1E0A4E]">
-        Notas
-        <textarea
-          value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-          placeholder="Preferencias o comentarios para el comprobante..."
-          className="mt-1.5 min-h-[80px] w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 font-body text-base text-[#1E0A4E] outline-none transition focus:border-[#1E6FD9] focus:ring-4 focus:ring-[#1E6FD9]/10"
+        <label>
+          Notas
+          <textarea
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+          />
+        </label>
+      </fieldset>
+      <label className="atlas-simulation-ack">
+        <input
+          type="checkbox"
+          checked={acknowledged}
+          onChange={(event) => setAcknowledged(event.target.checked)}
+          disabled={loading || disabled}
         />
+        Entiendo que la operación es simulada y que el flujo existente puede
+        generar el gasto asociado en el registro financiero del grupo.
       </label>
-
-      <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 font-body text-sm text-[#64748B]">
-        Se valida longitud, dígito verificador Luhn, patrones repetidos, vigencia, CVV y correo antes de generar el PDF.
-      </div>
-
       <button
         type="submit"
-        disabled={loading}
-        className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-[#1E6FD9] to-[#7A4FD6] px-5 py-4 font-body text-base font-bold text-white shadow-lg shadow-[#1E6FD9]/20 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
+        className="atlas-button atlas-button-primary"
+        disabled={loading || disabled || !acknowledged}
       >
-        {loading ? 'Procesando...' : mode === 'vuelo' ? 'Confirmar compra' : 'Confirmar reserva'}
+        {loading
+          ? 'Procesando simulación…'
+          : mode === 'vuelo'
+            ? 'Simular compra de vuelo'
+            : 'Simular reserva de hotel'}
       </button>
     </form>
   )
@@ -227,10 +320,11 @@ function Field({
   required?: boolean
   type?: string
   error?: string
-  inputMode?: 'text' | 'numeric' | 'decimal' | 'tel' | 'search' | 'email' | 'url'
+  inputMode?:
+    'text' | 'numeric' | 'decimal' | 'tel' | 'search' | 'email' | 'url'
 }) {
   return (
-    <label className="font-body text-sm font-bold text-[#1E0A4E]">
+    <label>
       {label}
       <input
         type={type}
@@ -240,9 +334,20 @@ function Field({
         required={required}
         inputMode={inputMode}
         aria-invalid={Boolean(error)}
+        aria-describedby={
+          error ? `error-${label.replace(/[^a-z0-9]/gi, '-')}` : undefined
+        }
+        autoComplete="off"
         className={`mt-1.5 w-full rounded-2xl border bg-white px-4 py-3 font-body text-base text-[#1E0A4E] outline-none transition focus:ring-4 ${error ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/10' : 'border-[#E2E8F0] focus:border-[#1E6FD9] focus:ring-[#1E6FD9]/10'}`}
       />
-      {error && <span className="mt-1 block font-body text-xs font-semibold text-[#EF4444]">{error}</span>}
+      {error && (
+        <span
+          id={`error-${label.replace(/[^a-z0-9]/gi, '-')}`}
+          className="mt-1 block font-body text-xs font-semibold text-[#EF4444]"
+        >
+          {error}
+        </span>
+      )}
     </label>
   )
 }

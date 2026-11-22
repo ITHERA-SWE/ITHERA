@@ -173,8 +173,8 @@ function normalizeProposal(raw: RawProposal): Proposal {
     creado_por: raw.creado_por as string | number | undefined,
     payload: asRecord(raw.payload),
     detalle: asRecord(raw.detalle) as Proposal['detalle'],
-    createdAt: String(raw.createdAt ?? raw.fecha_creacion ?? raw.created_at ?? new Date().toISOString()),
-    updatedAt: String(raw.updatedAt ?? raw.ultima_actualizacion ?? raw.updated_at ?? new Date().toISOString()),
+    createdAt: String(raw.createdAt ?? raw.fecha_creacion ?? raw.created_at ?? ''),
+    updatedAt: String(raw.updatedAt ?? raw.ultima_actualizacion ?? raw.updated_at ?? ''),
   }
 }
 
@@ -185,8 +185,8 @@ function normalizeComment(raw: RawProposalComment): ProposalComment {
     usuarioId: String(raw.usuarioId ?? raw.id_usuario ?? ''),
     authorName: raw.authorName ?? raw.nombre ?? null,
     contenido: String(raw.contenido ?? ''),
-    createdAt: String(raw.createdAt ?? raw.created_at ?? new Date().toISOString()),
-    updatedAt: String(raw.updatedAt ?? raw.updated_at ?? new Date().toISOString()),
+    createdAt: String(raw.createdAt ?? raw.created_at ?? ''),
+    updatedAt: String(raw.updatedAt ?? raw.updated_at ?? ''),
   }
 }
 
